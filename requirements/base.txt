@@ -21,4 +21,4 @@ django-redis==5.2.0  # https://github.com/jazzband/django-redis
 # My Stuff
 # ------------------------------------------------------------------------------
 mpmath==1.2.1
-sympy==1.11.1
+sympy==1.12
