@@ -11,3 +11,36 @@
   background-color: #f2dede;
   border-color: #eed3d7;
 }
+
+.no-margin {
+  margin: 0;
+}
+
+.my-mathquill {
+  border-radius: var(--ar-border-radius);
+  border: var(--ar-border-width) solid var(--ar-gray-400);
+  transition: border-color 0.15s ease-in-out;
+}
+
+.hotspots {
+  --ar-hotspots-inner-bg: rgba(var(--ar-info-rgb), 0.2) !important;
+  --ar-hotspots-hover-border-color: rgba(var(--ar-info-rgb), 0.5) !important;
+  --ar-hotspots-hover-inner-bg: var(--ar-info) !important;
+  --ar-hotspots-color: var(--ar-info) !important;
+}
+
+.mistake-dropdown {
+  border-color: #ed5050 !important;
+}
+
+.mistake-dropdown:hover {
+  border-color: #ed5050 !important;
+}
+
+.mistake-feedback {
+  color: #ed5050 !important;
+}
+
+#sidebar-nav {
+  width: 400px;
+}
