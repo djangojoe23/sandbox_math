@@ -1,10 +1,146 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% load static i18n compress %}
 
-</body>
-</html>
+{% block css %}
+  {{ block.super }}
+  <link href="{% static 'css/mathquill-basic.css' %}" rel="stylesheet">
+{% endblock css %}
+
+{% block javascript %}
+  {{ block.super }}
+    <script defer src="{% static 'js/algebra.js' %}"></script>
+    <script defer src="{% static 'js/mathquill-0.10.1/mathquill-basic.js' %}"></script>
+{% endblock javascript %}
+
+{% block content %}
+<div class="container py-5 mt-4 mt-lg-5 mb-lg-4 my-xl-5">
+  <div class="row pt-sm-2 pt-lg-0">
+    <div class="col pt-4 pb-4 pb-sm-4 pe-0">
+      <div class="row position-relative overflow-hidden gx-2 zindex-1">
+        <div class="col" >
+          <div class="offcanvas offcanvas-start position-absolute bg-light rounded-5 border" id="offcanvasMenu" data-bs-scroll="true" data-bs-backdrop="false">
+            <div class="rounded-5 overflow-hidden">
+              <div class="card-header w-100 border-0 px-4 pt-4 pb-3">
+                <div class="d-flex justify-content-end mt-n2 mb-2">
+                  <button class="btn btn-outline-secondary border-0 px-3 me-n2" type="button" data-bs-dismiss="offcanvas" data-bs-target=" #offcanvasMenu"><i class="ai-cross me-2"></i>Close</button>
+                </div>
+              </div>
+              <div class="card-body px-0 pb-4 pb-xl-0 pt-1">
+                <!-- Offcanvas Menu-->
+                <ul class="nav nav-tabs flex-column" role="tablist">
+                  <li class="nav-item">
+                    <a class="nav-link active" href="#current" data-bs-toggle="tab" role="tab">Current</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="#recent" data-bs-toggle="tab" role="tab">Recent</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="#examples" data-bs-toggle="tab" role="tab">Examples</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="#suggestions" data-bs-toggle="tab" role="tab">Suggestions</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="{% url 'algebra:base' %}" data-bs-toggle="" role="link">New Blank</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="card border-0">
+            <!-- Header-->
+            <div class="navbar card-header w-100 mx-0 px-4">
+              <div class="d-flex align-items-center w-100 px-sm-3">
+                <button class="navbar-toggler me-3 me-sm-4" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu" aria-controls="contactsList" aria-label="Toggle contacts list"><span class="navbar-toggler-icon"></span></button>
+                <div class="h6 ps-2 ms-1 mb-0">Current</div>
+              </div>
+            </div>
+            <!-- Body-->
+            <div class="card-body pb-4 pt-1 px-2">
+              <div class="tab-content">
+                <div class="tab-pane fade show active" id="current" role="tabpanel">
+                  {% csrf_token %}
+                  <div class="d-flex flex-row align-items-stretch">
+                    <div class="d-flex flex-column flex-grow-1">
+                      <div class="ms-auto">
+                        <a href="#" data-bs-target="#sidebar" data-bs-toggle="collapse" class="fs-4"><i class="ai-arrow-left"></i><i class="ai-messages"></i><i class="ai-arrow-right"></i></a>
+                      </div>
+                      <div class="d-none" id="unique-problem-id" >{{ problem.id }}</div>
+                      <div id="algebra" class="steps mt-1" style="margin: 10px;">
+                        {% for step in steps %}
+                          <div id="step{{ step.id }}" class="step algebra-step pb-1 {{ step.step_type }} {% if forloop.counter > 2 %}pt-3{% else %}pt-0{% endif %}" style="">
+{#                            {% include "algebra/new_step.html" with is_new_problem=is_new_problem problem=problem step_num=forloop.counter step=step step_prompts=step_prompts total_steps=steps|length %}#}
+                          </div>
+                        {% endfor %}
+                        <div id="addStepButtonStep" class="step py-0" style="">
+                          <div class="step-number" style="visibility: hidden">
+                            <div class="step-number-inner"></div>
+                          </div>
+                          <div class="step-body ps-2 container-fluid">
+                            <div class="d-flex flex-column align-items-center pb-2">
+                              <div class="mt-1">
+                                  <button id="checkSolutionButton" type="button" class="btn btn-lg btn-outline-primary d-none"><i class="ai-check me-2"></i>Check Solution</button>
+                              </div>
+                              <div class="mt-1">
+                                  <button id="addStepButton" type="button" class="btn btn-lg btn-outline-primary"><i class="ai-list me-2"></i>Add Step</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="border-start ms-auto">
+                      <div id="sidebar" class="collapse collapse-horizontal show h-100">
+                          <div id="sidebar-nav" class="rounded-0 text-sm-start h-100">
+{#                            {% include "calculator/calculator_base.html" with previous_messages=previous_calculator_messages active_check_process=active_check_process %}#}
+                          </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="tab-pane fade" id="recent" role="tabpanel">
+{#                  {% include "student/recent_problems.html" %}#}
+                </div>
+                <div class="tab-pane fade" id="examples" role="tabpanel">
+{#                  {% include "algebra/examples.html" %}#}
+                </div>
+                <div class="tab-pane fade" id="suggestions" role="tabpanel">
+                  <h4>Suggestions</h4>
+                </div>
+              </div>
+            </div>
+            <!-- Footer (Textarea)-->
+            <div class="card-footer w-100 border-0 mx-0 px-4 py-1">
+
+            </div>
+
+{#            <div id="expressionHelp" style="display: none;">#}
+{#              {% for step in steps %}#}
+{#                <div id="step{{ step.id }}Help">#}
+{#                {% for mistake in step|get_step_mistakes %}#}
+{#                  <div class="{{ mistake.side }}-help-button-title">#}
+{#                    {{ mistake.title}}#}
+{#                  </div>#}
+{#                  <div class="{{ mistake.side }}-help-button-content">#}
+{#                    {{ mistake.content }}#}
+{#                  </div>#}
+{#                {% endfor %}#}
+{#                </div>#}
+{#              {% endfor %}#}
+{#            </div>#}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block footer %}
+
+{% endblock footer %}
+
+{% block inline_javascript %}
+  {{ block.super }}
+
+{% endblock inline_javascript %}

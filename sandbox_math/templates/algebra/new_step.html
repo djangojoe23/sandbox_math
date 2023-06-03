@@ -1,0 +1,81 @@
+
+<div class="step-number">
+  <div class="step-number-inner">{{ step_num }}</div>
+</div>
+<div class="step-body ps-2 container-fluid">
+  <div class="btn-toolbar" role="toolbar" aria-label="Step toolbar">
+    <div class="btn-group dropdown step-type-dropdown me-2">
+      <button type="button" class="btn btn-secondary justify-content-end dropdown-toggle mb-1 py-2" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" >
+        {% if is_new_problem or not step or step.step_type == 'none' %}
+          {% if step_num == 1 %}
+            {{ step_prompts.1 }}
+          {% elif step_num == 2 %}
+            {{ step_prompts.2 }}
+          {% else %}
+            {{ step_prompts.3 }}
+          {% endif %}
+        {% else %}
+          {% if step.step_type == 'define' %}
+            <i class="ai-pause me-2" style="transform: rotate(90deg);"></i>Define
+          {% elif step.step_type == 'rewrite' %}
+            <i class="ai-repeat me-2"></i>Rewrite
+          {% elif step.step_type == 'manipulate' %}
+            <i class="ai-square-plus me-2"></i>Manipulate
+          {% elif step.step_type == 'delete' %}
+            <i class="ai-trash me-2"></i>Delete
+          {% endif %}
+        {% endif %}
+      </button>
+      <div class="dropdown-menu dropdown-menu-end my-1">
+        <button class="dropdown-item"><i class="ai-pause me-2" style="transform: rotate(90deg);"></i>Define</button>
+        <button class="dropdown-item"><i class="ai-repeat me-2"></i>Rewrite</button>
+        <button class="dropdown-item"><i class="ai-square-plus me-2"></i>Manipulate</button>
+        {% if step_num > 1 %}
+          <button class="dropdown-item"><i class="ai-trash me-2"></i>Delete</button>
+        {% endif %}
+      </div>
+    </div>
+    {% if step_num > 1 %}
+      <div class="btn-group delete-step" role="group" aria-label="Delete step" {% if step.step_type != 'delete' %}style="visibility: hidden"{% endif %}>
+        <button type="button" class="btn btn-outline-danger btn-icon btn-sm">
+          <i class="ai-trash"></i>
+        </button>
+      </div>
+    {% endif %}
+  </div>
+  <div class="d-flex justify-content-center align-items-center">
+    <div class="d-flex align-items-center my-mathquill w-50 left-expr-border">
+      <div class="nav flex-nowrap">
+        <a tabindex="0" class="btn btn-link text-muted p-1 left-help-button" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top" data-bs-title="title" data-bs-content="content">
+          <i class="ai-circle-help fs-s"></i>
+        </a>
+      </div>
+      <div class="w-100 mq-expr-parent" style="overflow: hidden;"><p class="no-margin"><span class="py-2 w-100 left-mq-input" style="font-size: 200%; text-align: right;">{{ step.expr1.latex|default_if_none:"" }}</span></p></div>
+    </div>
+    <div class="w-auto"><p class="no-margin"><span class="mq-equal-sign" style="font-size: 200%;">=</span></p></div>
+    <div class="d-flex align-items-center my-mathquill w-50 right-expr-border">
+      <div class="w-100 mq-expr-parent" style="overflow: hidden;"><p class="no-margin"><span class="py-2 w-100 right-mq-input" style="font-size:200%;">{{ step.expr2.latex|default_if_none:"" }}</span></p></div>
+      <div class="nav flex-nowrap">
+        <a tabindex="0" class="btn btn-link text-muted p-1 right-help-button" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top" data-bs-title="title" data-bs-content="content">
+          <i class="ai-circle-help fs-s"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+  {% if step_num == 1 %}
+    <div id="chooseVariable" class="d-flex justify-content-center no-margin">
+      <div class="d-flex flex-row mt-1">
+          <p class="me-1 mb-0 align-self-center fs-xs">Solve for</p>
+          <div id="variableDropdown" class="btn-group dropdown">
+            <button type="button" class="btn btn-outline-secondary dropdown-toggle fs-xs p-2" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              {% if problem.variable %}
+                {{ problem.variable }}
+              {% endif %}
+            </button>
+            <div class="dropdown-menu my-1">
+            </div>
+          </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
