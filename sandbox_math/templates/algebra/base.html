@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static i18n compress %}
+{% load algebra_extras %}
 
 {% block css %}
   {{ block.super }}
@@ -114,20 +115,20 @@
 
             </div>
 
-{#            <div id="expressionHelp" style="display: none;">#}
-{#              {% for step in steps %}#}
-{#                <div id="step{{ step.id }}Help">#}
-{#                {% for mistake in step|get_step_mistakes %}#}
-{#                  <div class="{{ mistake.side }}-help-button-title">#}
-{#                    {{ mistake.title}}#}
-{#                  </div>#}
-{#                  <div class="{{ mistake.side }}-help-button-content">#}
-{#                    {{ mistake.content }}#}
-{#                  </div>#}
-{#                {% endfor %}#}
-{#                </div>#}
-{#              {% endfor %}#}
-{#            </div>#}
+            <div id="expressionHelp" style="display: none;">
+              {% for step in steps %}
+                <div id="step{{ step.id }}Help">
+                {% for mistake in step|get_step_mistakes %}
+                  <div class="{{ mistake.side }}-help-button-title">
+                    {{ mistake.title}}
+                  </div>
+                  <div class="{{ mistake.side }}-help-button-content">
+                    {{ mistake.content }}
+                  </div>
+                {% endfor %}
+                </div>
+              {% endfor %}
+            </div>
           </div>
         </div>
       </div>

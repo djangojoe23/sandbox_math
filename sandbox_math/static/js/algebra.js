@@ -79,17 +79,28 @@ function InitializeNewStep(stepID) {
     //void DeleteStep(stepID)
   });
 
-  $(
+  let helpButtons = $(
     '#' + stepID + ' .left-help-button, #' + stepID + ' .right-help-button',
-  ).click(function () {
-    // let thisButton = $(this)
-    // $(this).css('pointer-events', 'none')
-    // ToggleExpressionHelp(stepID, $(this).prop("class")).then(r => {
-    //     setTimeout(function(){
-    //         thisButton.css('pointer-events', '')
-    //     }, 1000)
-    // })
+  );
+  helpButtons.off('click');
+  helpButtons.click(function () {
+    let thisButton = $(this);
+    $(this).css('pointer-events', 'none');
+    ToggleExpressionHelp(stepID, $(this)).then(function () {
+      // this code runs 2 seconds after the help button is displayed
+      // this is to avoid rapid repetitive help clicks
+      setTimeout(function () {
+        thisButton.css('pointer-events', '');
+      }, 2000);
+    });
   });
+
+  const popoverTriggerList = document.querySelectorAll(
+    '[data-bs-toggle="popover"]',
+  );
+  const popoverList = [...popoverTriggerList].map(
+    (popoverTriggerEl) => new bootstrap.Popover(popoverTriggerEl),
+  );
 }
 
 function InitializeMathQuillInput(mqInputObject) {
@@ -117,7 +128,7 @@ function InitializeMathQuillInput(mqInputObject) {
           ) {
             // Do nothing
           } else {
-            //ExpressionChanged(inputObject)
+            ExpressionChanged(inputObject);
           }
         }, 500);
       },
@@ -196,21 +207,19 @@ function SaveNewProblem() {
           $('#unique-problem-id').html(response['unique-problem-id']);
           window.history.replaceState(
             'Problem ' + response['unique-problem-id'],
-            'Title of this problem!',
+            '',
             '/algebra/' + response['unique-problem-id'],
           );
           let newStepID = 'step' + response['unique-step-id'];
           $('#step0').attr('id', newStepID);
           $('#step0Help').attr('id', newStepID + 'Help');
           InitializeNewStep(newStepID);
-          $('#addStepButton').prop('disabled', false);
-          $('#checkSolutionButton').prop('disabled', false);
+          ToggleAddAndCheckButtons(false);
           resolve(newStepID);
         })
         .fail(function (error) {
           console.log(error);
-          $('#addStepButton').prop('disabled', false);
-          $('#checkSolutionButton').prop('disabled', false);
+          ToggleAddAndCheckButtons(false);
           resolve(error);
         });
     } else {
@@ -248,5 +257,100 @@ async function StepTypeChanged(menuButtonObject) {
     //do nothing
   } else {
     toggleButton.html(selectedHTML);
+
+    ToggleAddAndCheckButtons(true);
+    let uniqueStepID = parseInt(stepID.substring('step'.length, stepID.length));
+    let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    $.ajax({
+      url: '/algebra/update-step-type/',
+      type: 'POST',
+      headers: { 'X-CSRFToken': csrfToken },
+      data: { 'step-id': uniqueStepID, 'step-type': selectedHTML },
+    })
+      .done(function (response) {
+        UpdateAllExpressionHelp(response['mistakes']);
+        let stepNumber = parseInt(
+          $('#' + stepID + ' .step-number-inner').html(),
+        );
+        if (stepNumber === 1) {
+          let varToggle = $('#variableDropdown .dropdown-toggle');
+          if (selectedHTML.includes('Define')) {
+            if ($('#variableDropdown > div.dropdown-menu button').length > 0) {
+              // varToggle.prop("disabled", false)
+              varToggle.html(response['selected_variable']);
+            }
+          } else {
+            // varToggle.prop("disabled", true)
+            varToggle.html('');
+            // i don't tell the server to forget the variable they had selected here
+          }
+        }
+        ToggleAddAndCheckButtons(false);
+      })
+      .fail(function () {
+        ToggleAddAndCheckButtons(false);
+      });
   }
+}
+
+function UpdateAllExpressionHelp(updatedHelpDict) {
+  for (const [stepID, helpDict] of Object.entries(updatedHelpDict)) {
+    $('#step' + stepID + 'Help .left-help-button-title').html(
+      helpDict[0]['title'],
+    );
+    $('#step' + stepID + 'Help .left-help-button-content').html(
+      helpDict[0]['content'],
+    );
+
+    $('#step' + stepID + 'Help .right-help-button-title').html(
+      helpDict[1]['title'],
+    );
+    $('#step' + stepID + 'Help .right-help-button-content').html(
+      helpDict[1]['content'],
+    );
+  }
+}
+
+async function ToggleExpressionHelp(stepID, exprObject) {
+  let exprClass = '';
+  if (exprObject.hasClass('left-help-button')) {
+    exprClass = 'left-help-button';
+  } else if (exprObject.hasClass('right-help-button')) {
+    exprClass = 'right-help-button';
+  } else {
+    console.log('toggle expression help error!');
+  }
+  let helpTitle = $('#' + stepID + 'Help .' + exprClass + '-title').html();
+  let helpContent = $('#' + stepID + 'Help .' + exprClass + '-content').html();
+
+  const popover = bootstrap.Popover.getOrCreateInstance(
+    $('#' + stepID + ' .' + exprClass)[0],
+  );
+  popover.setContent({
+    '.popover-header': helpTitle,
+    '.popover-body': helpContent,
+  });
+
+  let uniqueStepID = parseInt(stepID.substring('step'.length, stepID.length));
+  if (uniqueStepID !== 0) {
+    ToggleAddAndCheckButtons(true);
+    let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    $.ajax({
+      url: '/algebra/update-help-click/',
+      type: 'POST',
+      headers: { 'X-CSRFToken': csrfToken },
+      data: { 'step-id': uniqueStepID, side: exprClass },
+    })
+      .done(function () {
+        ToggleAddAndCheckButtons(false);
+      })
+      .fail(function () {
+        ToggleAddAndCheckButtons(false);
+      });
+  }
+}
+
+function ToggleAddAndCheckButtons(isDisabled) {
+  $('#addStepButton').prop('disabled', isDisabled);
+  $('#checkSolutionButton').prop('disabled', isDisabled);
 }

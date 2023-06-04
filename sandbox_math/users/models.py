@@ -164,10 +164,10 @@ class Mistake(models.Model):
     def save_new(cls, mistake_event_instance, mistake_type):
         new_mistake = Mistake.objects.none()
         for mistake_event_type in Mistake.MISTAKE_EVENT_TYPES:
-            if mistake_event_type == mistake_event_instance.__class__.__name__:
+            if mistake_event_type[0] == mistake_event_instance.__class__.__name__:
                 new_mistake = Mistake(
                     mistake_type=mistake_type,
-                    mistake_event_type=mistake_event_type,
+                    mistake_event_type=mistake_event_type[0],
                     event_id=mistake_event_instance.id,
                 )
                 new_mistake.save()

@@ -19,8 +19,8 @@
             <i class="ai-pause me-2" style="transform: rotate(90deg);"></i>Define
           {% elif step.step_type == 'rewrite' %}
             <i class="ai-repeat me-2"></i>Rewrite
-          {% elif step.step_type == 'manipulate' %}
-            <i class="ai-square-plus me-2"></i>Manipulate
+          {% elif step.step_type == 'arithmetic' %}
+            <i class="ai-square-plus me-2"></i>Arithmetic
           {% elif step.step_type == 'delete' %}
             <i class="ai-trash me-2"></i>Delete
           {% endif %}
@@ -29,7 +29,7 @@
       <div class="dropdown-menu dropdown-menu-end my-1">
         <button class="dropdown-item"><i class="ai-pause me-2" style="transform: rotate(90deg);"></i>Define</button>
         <button class="dropdown-item"><i class="ai-repeat me-2"></i>Rewrite</button>
-        <button class="dropdown-item"><i class="ai-square-plus me-2"></i>Manipulate</button>
+        <button class="dropdown-item"><i class="ai-square-plus me-2"></i>Arithmetic</button>
         {% if step_num > 1 %}
           <button class="dropdown-item"><i class="ai-trash me-2"></i>Delete</button>
         {% endif %}

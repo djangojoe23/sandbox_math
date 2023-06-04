@@ -4,6 +4,8 @@ from django.utils import timezone
 from django.views.generic.base import TemplateView, View
 
 from sandbox_math.algebra.models import Problem, Step
+from sandbox_math.sandbox.models import Sandbox
+from sandbox_math.users.models import HelpClick, Mistake
 
 # from sandbox_math.calculator.models import UserMessage
 
@@ -69,3 +71,63 @@ class SaveNewView(View):
         first_step = Step.save_new(new_saved_problem)
 
         return JsonResponse({"unique-problem-id": new_saved_problem.id, "unique-step-id": first_step.id})
+
+
+class UpdateStepTypeView(View):
+    @classmethod
+    def post(cls, request):
+        response = None
+        step = Step.objects.get(id=int(request.POST["step-id"]))
+        if "Define" in request.POST["step-type"]:
+            step.step_type = Step.DEFINE
+        elif "Rewrite" in request.POST["step-type"]:
+            step.step_type = Step.REWRITE
+        elif "Arithmetic" in request.POST["step-type"]:
+            step.step_type = Step.ARITHMETIC
+        elif "Delete" in request.POST["step-type"]:
+            step.step_type = Step.DELETE
+        else:
+            response = JsonResponse({"error": "there was an error updating the step type"})
+
+        if not response:
+            step.save()
+
+            feedback = {
+                "mistakes": Problem.get_all_steps_mistakes(step.problem),
+            }
+
+            response = JsonResponse(feedback)
+
+        return response
+
+
+class UpdateHelpClickView(View):
+    @classmethod
+    def post(cls, request):
+        response = None
+        step = Step.objects.get(id=int(request.POST["step-id"]))
+        mistake_titles = Step.get_mistakes(step)
+
+        help_obj = HelpClick.objects.none()
+        mistake_index = 0
+        if "left" in request.POST["side"]:
+            help_obj = HelpClick(
+                sandbox=Sandbox.ALGEBRA, object_type=HelpClick.EXPRESSION, object_id=step.left_expr.id
+            )
+            help_obj.save()
+            mistake_index = 0
+        elif "right" in request.POST["side"]:
+            help_obj = HelpClick(
+                sandbox=Sandbox.ALGEBRA, object_type=HelpClick.EXPRESSION, object_id=step.right_expr.id
+            )
+            help_obj.save()
+            mistake_index = 1
+        else:
+            response = JsonResponse({"error": "there was an error updating the help clicks"})
+
+        if not response:
+            Mistake.save_new(help_obj, mistake_titles[mistake_index])
+            # remind them how often they check for help or something?
+            response = JsonResponse({})
+
+        return response

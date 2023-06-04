@@ -107,7 +107,9 @@ class Problem(models.Model):
         has_variables = [False, False]
 
         for s in range(0, 2):
-            this_latex = getattr(this_step, f"expr{s+1}").latex
+            this_latex = this_step.left_expr.latex
+            if s == 1:
+                this_latex = this_step.right_expr.latex
             if this_latex:
                 sympy_expr = Expression.get_sympy_expression_from_latex(this_latex)
 
@@ -135,13 +137,10 @@ class Problem(models.Model):
 
         return mistakes
 
-    """
-    This method returns a two item list where the first item is the left side's mistakes and the second item is the
-    right side's mistakes
-    """
-
+    # This method returns a two item list where the first item is the left side's mistakes and the second item is the
+    # right side's mistakes
     @classmethod
-    def get_change_both_sides_mistakes(cls, this_step):
+    def get_arithmetic_mistakes(cls, this_step):
         prev_step = Step.get_prev(this_step)
         mistakes = [Mistake.NONE, Mistake.NONE]
         prev_latex_index = [-1, -1]
@@ -228,11 +227,8 @@ class Problem(models.Model):
 
         return mistakes
 
-    """
-    This method returns a two item list where the first item is the left side's mistakes and the second item is the
-    right side's mistakes
-    """
-
+    # This method returns a two item list where the first item is the left side's mistakes and the second item is the
+    # right side's mistakes
     @classmethod
     def get_rewrite_mistakes(cls, this_step):
         prev_step = Step.get_prev(this_step)
@@ -296,7 +292,7 @@ class Problem(models.Model):
 # Expressions cannot have underscores
 # Expressions cannot have functions other than arithmetic and exponents (no sqrt or trig)
 class Expression(models.Model):
-    latex = models.CharField(max_length=100, blank=True, null=True)
+    latex = models.CharField(max_length=100, blank=True, null=False, default="")
 
     """
     This method takes a latex expression and converts it into a human-readable string that SymPy can use
@@ -602,7 +598,7 @@ class Step(models.Model):
                         mistakes[1] = Mistake.NO_VAR_SELECTED
             elif step.step_type == Step.ARITHMETIC:
                 if step.problem.variable:
-                    mistakes = Problem.get_change_both_sides_mistakes(step)
+                    mistakes = Problem.get_arithmetic_mistakes(step)
                 else:
                     if mistakes[0] != Mistake.BLANK_EXPR:
                         mistakes[0] = Mistake.NO_VAR_SELECTED
