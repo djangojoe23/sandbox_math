@@ -128,9 +128,9 @@ class Problem(models.Model):
             elif has_variables[0] or has_variables[1]:
                 if this_step.problem.variable:
                     if this_step.problem.variable not in Expression.get_variables_in_latex_expression(
-                        this_step.expr1.latex
+                        this_step.left_expr.latex
                     ) and this_step.problem.variable not in Expression.get_variables_in_latex_expression(
-                        this_step.expr2.latex
+                        this_step.right_expr.latex
                     ):
                         mistakes[0] = Mistake.VAR_NOT_IN_EQUATION  # fmt: skip
                         mistakes[1] = Mistake.VAR_NOT_IN_EQUATION  # fmt: skip
@@ -458,17 +458,13 @@ class Expression(models.Model):
 
         return symbol_list
 
-    """
-    This calls the method get_variables_in_sympy expression
-    Takes the results and returns a sorted set of variables in an expression
-    """
-
+    # This calls the method get_variables_in_sympy expression
+    # Takes the results and returns a sorted set of variables in an expression
     @classmethod
     def get_variables_in_latex_expression(cls, latex_expr):
         if latex_expr:
             sympy_expr = Expression.get_sympy_expression_from_latex(latex_expr)
-
-            if sympy_expr not in Mistake.MISTAKE_TYPES:
+            if sympy_expr not in list(zip(*Mistake.MISTAKE_TYPES))[0]:
                 symbols_list = Expression.get_variables_in_sympy_expression(sympy_expr)
                 symbols_list.sort()
                 return list(set(symbols_list))

@@ -10,6 +10,7 @@
 {% block javascript %}
   {{ block.super }}
     <script defer src="{% static 'js/algebra.js' %}"></script>
+    <script defer src="{% static 'js/calculator.js' %}"></script>
     <script defer src="{% static 'js/mathquill-0.10.1/mathquill-basic.js' %}"></script>
 {% endblock javascript %}
 
@@ -73,7 +74,7 @@
 {#                            {% include "algebra/new_step.html" with is_new_problem=is_new_problem problem=problem step_num=forloop.counter step=step step_prompts=step_prompts total_steps=steps|length %}#}
                           </div>
                         {% endfor %}
-                        <div id="addStepButtonStep" class="step py-0" style="">
+                        <div id="newStepButtonStep" class="step py-0" style="">
                           <div class="step-number" style="visibility: hidden">
                             <div class="step-number-inner"></div>
                           </div>
@@ -83,7 +84,7 @@
                                   <button id="checkSolutionButton" type="button" class="btn btn-lg btn-outline-primary d-none"><i class="ai-check me-2"></i>Check Solution</button>
                               </div>
                               <div class="mt-1">
-                                  <button id="addStepButton" type="button" class="btn btn-lg btn-outline-primary"><i class="ai-list me-2"></i>Add Step</button>
+                                  <button id="newStepButton" type="button" class="btn btn-lg btn-outline-primary"><i class="ai-list me-2"></i>New Step</button>
                               </div>
                             </div>
                           </div>

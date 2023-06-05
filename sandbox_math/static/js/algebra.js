@@ -32,9 +32,10 @@ $(document).ready(function () {
     }
   });
 
-  if ($('.algebra-step').length) {
+  if ($('#unique-problem-id').html().length) {
     //LoadSavedProblem()
   } else {
+    //Start New Problem
     $('#algebra').prepend(
       $('<div id="step0" class="step algebra-step pb-1 pt-0" style=""></div>'),
     );
@@ -59,6 +60,10 @@ $(document).ready(function () {
       });
     });
   }
+
+  $('#newStepButton').click(function () {
+    AttemptNewStep();
+  });
 });
 
 function InitializeNewStep(stepID) {
@@ -128,7 +133,7 @@ function InitializeMathQuillInput(mqInputObject) {
           ) {
             // Do nothing
           } else {
-            ExpressionChanged(inputObject);
+            void ExpressionChanged(mqInputObject);
           }
         }, 500);
       },
@@ -195,8 +200,7 @@ function SaveNewProblem() {
     let uniqueProblemID = $('#unique-problem-id').html();
     let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     if (!uniqueProblemID.length) {
-      $('#addStepButton').prop('disabled', true);
-      $('#checkSolutionButton').prop('disabled', true);
+      ToggleNewAndCheckButtons(true);
       $.ajax({
         url: '/algebra/save-new/',
         type: 'GET',
@@ -214,12 +218,12 @@ function SaveNewProblem() {
           $('#step0').attr('id', newStepID);
           $('#step0Help').attr('id', newStepID + 'Help');
           InitializeNewStep(newStepID);
-          ToggleAddAndCheckButtons(false);
+          ToggleNewAndCheckButtons(false);
           resolve(newStepID);
         })
         .fail(function (error) {
           console.log(error);
-          ToggleAddAndCheckButtons(false);
+          ToggleNewAndCheckButtons(false);
           resolve(error);
         });
     } else {
@@ -258,7 +262,7 @@ async function StepTypeChanged(menuButtonObject) {
   } else {
     toggleButton.html(selectedHTML);
 
-    ToggleAddAndCheckButtons(true);
+    ToggleNewAndCheckButtons(true);
     let uniqueStepID = parseInt(stepID.substring('step'.length, stepID.length));
     let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     $.ajax({
@@ -273,6 +277,7 @@ async function StepTypeChanged(menuButtonObject) {
           $('#' + stepID + ' .step-number-inner').html(),
         );
         if (stepNumber === 1) {
+          //TODO tell the server to forget the variable selected if it isn't present in the equation
           let varToggle = $('#variableDropdown .dropdown-toggle');
           if (selectedHTML.includes('Define')) {
             if ($('#variableDropdown > div.dropdown-menu button').length > 0) {
@@ -285,12 +290,160 @@ async function StepTypeChanged(menuButtonObject) {
             // i don't tell the server to forget the variable they had selected here
           }
         }
-        ToggleAddAndCheckButtons(false);
+        ToggleNewAndCheckButtons(false);
       })
       .fail(function () {
-        ToggleAddAndCheckButtons(false);
+        ToggleNewAndCheckButtons(false);
       });
   }
+}
+
+async function ExpressionChanged(expressionObject) {
+  let newExpression = MQ(expressionObject[0]).latex();
+
+  let stepID = expressionObject.parents('.step').attr('id');
+  if (stepID === 'step0') {
+    stepID = await SaveNewProblem();
+  }
+  let uniqueStepID = parseInt(stepID.substring('step'.length, stepID.length));
+
+  let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  $.ajax({
+    url: '/algebra/update-expression/',
+    type: 'POST',
+    headers: { 'X-CSRFToken': csrfToken },
+    data: {
+      'step-id': uniqueStepID,
+      expression: newExpression,
+      side: expressionObject.attr('class'),
+    },
+  })
+    .done(function (response) {
+      UpdateAllExpressionHelp(response['mistakes']);
+      let stepNumber = parseInt($('#' + stepID + ' .step-number-inner').html());
+      if (stepNumber === 1) {
+        let varToggle = $('#variableDropdown .dropdown-toggle');
+        let varMenu = $('#variableDropdown .dropdown-menu');
+
+        varToggle.html(response['selected_variable']);
+        varMenu.html('');
+        if (response['variable_options'].length > 0) {
+          // varToggle.prop("disabled", false)
+          for (let i = 0; i < response['variable_options'].length; i++) {
+            varMenu.append(
+              '<button class ="dropdown-item">' +
+                response['variable_options'][i] +
+                '</button>',
+            );
+          }
+        } else if (varToggle.html().length === 0) {
+          // varToggle.prop("disabled", true)
+        }
+
+        $('#variableDropdown > div.dropdown-menu button').click(function () {
+          VariableChanged($(this).html());
+        });
+      }
+
+      ToggleNewAndCheckButtons(false);
+
+      SetCalculatorHeight();
+    })
+    .fail(function () {
+      ToggleNewAndCheckButtons(false);
+    });
+}
+
+function VariableChanged(varSelected) {
+  $('#variableDropdown .dropdown-toggle').html(varSelected);
+  ToggleNewAndCheckButtons(true);
+
+  let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  $.ajax({
+    url: '/algebra/update-variable/',
+    type: 'POST',
+    headers: { 'X-CSRFToken': csrfToken },
+    data: {
+      'problem-id': parseInt($('#unique-problem-id').html()),
+      variable: varSelected,
+    },
+  })
+    .done(function (response) {
+      UpdateAllExpressionHelp(response['mistakes']);
+
+      ToggleNewAndCheckButtons(false);
+    })
+    .fail(function () {
+      ToggleNewAndCheckButtons(false);
+    });
+}
+
+function AttemptNewStep() {
+  let problemID = $('#unique-problem-id').html();
+  if (problemID.length === 0) {
+    console.log('alert!');
+  } else {
+    ToggleNewAndCheckButtons(true);
+    let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    $.ajax({
+      url: '/algebra/attempt-append-step/',
+      type: 'POST',
+      headers: { 'X-CSRFToken': csrfToken },
+      data: { 'problem-id': problemID },
+    })
+      .done(function (response) {
+        if (response['next_action'] === 'append') {
+          NewStep(response['new_step_id']);
+        } else if (response['next_action'] === 'alert') {
+          console.log('alert!');
+        }
+        ToggleNewAndCheckButtons(false);
+      })
+      .fail(function () {
+        ToggleNewAndCheckButtons(false);
+      });
+  }
+}
+
+function NewStep(uniqueStepID) {
+  let stepID = 'step' + uniqueStepID;
+
+  $(
+    '<div id="' + stepID + '" class="step algebra-step pb-1" style=""></div>',
+  ).insertBefore('#newStepButtonStep');
+
+  $('#expressionHelp').append($('<div id="' + stepID + 'Help"></div>'));
+  $('#' + stepID + 'Help').append(
+    $(
+      '<div class="left-help-button-title"></div><div class="left-help-button-content"></div>',
+    ),
+    $(
+      '<div class="right-help-button-title"></div><div class="right-help-button-content"></div>',
+    ),
+  );
+  $(
+    '#' +
+      stepID +
+      'Help .left-help-button-title, #' +
+      stepID +
+      'Help .right-help-button-title',
+  ).html('Define the Expression');
+  $(
+    '#' +
+      stepID +
+      'Help .left-help-button-content, #' +
+      stepID +
+      'Help .right-help-button-content',
+  ).html('This is blank. Type in math expressions to define an equation!');
+
+  $('#' + stepID).load(
+    '/algebra/new-step/?problem-id=' + $('#unique-problem-id').html(),
+    function () {
+      InitializeNewStep(stepID);
+
+      $('#checkSolutionButton').addClass('d-none');
+    },
+  );
 }
 
 function UpdateAllExpressionHelp(updatedHelpDict) {
@@ -333,7 +486,7 @@ async function ToggleExpressionHelp(stepID, exprObject) {
 
   let uniqueStepID = parseInt(stepID.substring('step'.length, stepID.length));
   if (uniqueStepID !== 0) {
-    ToggleAddAndCheckButtons(true);
+    ToggleNewAndCheckButtons(true);
     let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     $.ajax({
       url: '/algebra/update-help-click/',
@@ -342,15 +495,15 @@ async function ToggleExpressionHelp(stepID, exprObject) {
       data: { 'step-id': uniqueStepID, side: exprClass },
     })
       .done(function () {
-        ToggleAddAndCheckButtons(false);
+        ToggleNewAndCheckButtons(false);
       })
       .fail(function () {
-        ToggleAddAndCheckButtons(false);
+        ToggleNewAndCheckButtons(false);
       });
   }
 }
 
-function ToggleAddAndCheckButtons(isDisabled) {
-  $('#addStepButton').prop('disabled', isDisabled);
+function ToggleNewAndCheckButtons(isDisabled) {
+  $('#newStepButton').prop('disabled', isDisabled);
   $('#checkSolutionButton').prop('disabled', isDisabled);
 }
