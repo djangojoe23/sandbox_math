@@ -33,7 +33,12 @@ $(document).ready(function () {
   });
 
   if ($('#unique-problem-id').html().length) {
-    //LoadSavedProblem()
+    //Load Existing Problem
+    $('.algebra-step').each(function () {
+      InitializeNewStep($(this).attr('id'));
+      //This will populate the variable options menu
+      void ExpressionChanged($('.algebra-step:first-child .left-mq-input'));
+    });
   } else {
     //Start New Problem
     $('#algebra').prepend(
@@ -81,7 +86,7 @@ function InitializeNewStep(stepID) {
   );
 
   $('#' + stepID + ' .delete-step button').click(function () {
-    //void DeleteStep(stepID)
+    void DeleteStep(stepID);
   });
 
   let helpButtons = $(
@@ -386,7 +391,7 @@ function AttemptNewStep() {
     ToggleNewAndCheckButtons(true);
     let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     $.ajax({
-      url: '/algebra/attempt-append-step/',
+      url: '/algebra/attempt-new-step/',
       type: 'POST',
       headers: { 'X-CSRFToken': csrfToken },
       data: { 'problem-id': problemID },
@@ -444,6 +449,35 @@ function NewStep(uniqueStepID) {
       $('#checkSolutionButton').addClass('d-none');
     },
   );
+}
+
+async function DeleteStep(stepID) {
+  ToggleNewAndCheckButtons(true);
+  let uniqueStepID = parseInt(stepID.substring('step'.length, stepID.length));
+  let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  $.ajax({
+    url: '/algebra/delete-step/',
+    type: 'POST',
+    headers: { 'X-CSRFToken': csrfToken },
+    data: { 'step-id': uniqueStepID },
+  })
+    .done(function (response) {
+      $('#' + stepID).remove();
+      let stepCount = 1;
+      $('.step-number-inner').each(function () {
+        $(this).html(stepCount);
+        stepCount++;
+      });
+
+      UpdateAllExpressionHelp(response['mistakes']);
+
+      ToggleNewAndCheckButtons(false);
+
+      SetCalculatorHeight();
+    })
+    .fail(function () {
+      ToggleNewAndCheckButtons(false);
+    });
 }
 
 function UpdateAllExpressionHelp(updatedHelpDict) {

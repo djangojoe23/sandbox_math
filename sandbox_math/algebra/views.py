@@ -244,4 +244,8 @@ class DeleteStepView(View):
         step.right_expr.delete()
         step.delete()
 
-        return JsonResponse({})
+        feedback = {
+            "mistakes": Problem.get_all_steps_mistakes(step.problem),
+        }
+
+        return JsonResponse(feedback)

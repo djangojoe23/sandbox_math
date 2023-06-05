@@ -89,18 +89,15 @@ class Problem(models.Model):
             .filter(and_filter)
             .annotate(step_count=Count("step_problem"))
             .annotate(created=Subquery(step_qs.values("created")[:1]))
-            .annotate(left=Subquery(step_qs.values("expr1__latex")[:1]))
-            .annotate(right=Subquery(step_qs.values("expr2__latex")[:1]))
+            .annotate(left=Subquery(step_qs.values("left_expr__latex")[:1]))
+            .annotate(right=Subquery(step_qs.values("right_expr__latex")[:1]))
             .filter(equation_filter)
             .order_by(order_by)
         )
         return recent
 
-    """
-    This method returns a two item list where the first item is the left side's mistakes and the second item is the
-    right side's mistakes
-    """
-
+    # This method returns a two item list where the first item is the left side's mistakes and the second item is the
+    # right side's mistakes
     @classmethod
     def get_define_equation_mistakes(cls, this_step):
         mistakes = [Mistake.NONE, Mistake.NONE]
@@ -113,7 +110,7 @@ class Problem(models.Model):
             if this_latex:
                 sympy_expr = Expression.get_sympy_expression_from_latex(this_latex)
 
-                if sympy_expr not in Mistake.MISTAKE_TYPES:
+                if sympy_expr not in list(zip(*Mistake.MISTAKE_TYPES))[0]:
                     if Expression.get_variables_in_latex_expression(this_latex):
                         has_variables[s] = True
                 else:
@@ -147,11 +144,15 @@ class Problem(models.Model):
 
         # STEP 1: Is the new expression on each side a recognizable math expression?
         for s in range(0, 2):
-            this_latex = getattr(this_step, f"expr{s+1}").latex
+            this_latex = this_step.left_expr.latex
+            prev_latex = prev_step.left_expr.latex
+            if s == 1:
+                this_latex = this_step.right_expr.latex
+                prev_latex = prev_step.right_expr.latex
             if this_latex:
-                prev_latex_index[s] = this_latex.find(getattr(prev_step, f"expr{s+1}"))
+                prev_latex_index[s] = this_latex.find(prev_latex)
                 sympy_expr = Expression.get_sympy_expression_from_latex(this_latex)
-                if sympy_expr in Mistake.MISTAKE_TYPES:
+                if sympy_expr in list(zip(*Mistake.MISTAKE_TYPES))[0]:
                     mistakes[s] = sympy_expr
             else:
                 mistakes[s] = Mistake.BLANK_EXPR
@@ -159,8 +160,11 @@ class Problem(models.Model):
         # STEP 2: Is the previous expression on each side in the current expression on the same side?
         if mistakes[0] == mistakes[1] == Mistake.NONE:
             for s in range(0, 2):
-                this_latex = getattr(this_step, f"expr{s + 1}").latex
-                prev_latex = getattr(prev_step, f"expr{s + 1}").latex
+                this_latex = this_step.left_expr.latex
+                prev_latex = prev_step.left_expr.latex
+                if s == 1:
+                    this_latex = this_step.right_expr.latex
+                    prev_latex = prev_step.right_expr.latex
                 includes_prev_expression = True
                 if prev_latex_index[s] < 0:
                     includes_prev_expression = False
@@ -189,17 +193,18 @@ class Problem(models.Model):
                     # Put parentheses around the new expression and see if it changes the value of it
                     latex_this_with_parens_around_prev = (
                         f"{this_latex[:prev_latex_index[s]]}"
-                        f"\\left{prev_latex}\\right"
+                        f"\\left({prev_latex}\\right)"
                         f"{this_latex[(prev_latex_index[s] + len(prev_latex)):]}"
                     )
                     sympy_this_with_parens_around_prev = Expression.get_sympy_expression_from_latex(
                         latex_this_with_parens_around_prev
                     )
-                    if sympy_this_with_parens_around_prev not in Mistake.MISTAKE_TYPES:
+                    if sympy_this_with_parens_around_prev not in list(zip(*Mistake.MISTAKE_TYPES))[0]:
                         this_sympy = Expression.get_sympy_expression_from_latex(this_latex)
                         if simplify(this_sympy - sympy_this_with_parens_around_prev) != 0:
                             mistakes[s] = Mistake.MISSING_PARENS
                     else:
+                        print(latex_this_with_parens_around_prev)
                         mistakes[s] = sympy_this_with_parens_around_prev
 
         # STEP 3: Is each side’s previous expression substituted in each side’s current expression the same?
@@ -207,17 +212,23 @@ class Problem(models.Model):
         # To see if this is the same, we would check if 12x - 4 + 4 == 12x - 4 + 16/4 AND if 32 + 16/4 == 32 + 4
         if mistakes[0] == mistakes[1] == Mistake.NONE:
             for s in range(0, 2):
-                this_latex = getattr(this_step, f"expr{s + 1}").latex
-                prev_latex = getattr(prev_step, f"expr{s + 1}").latex
-                other_side_latex = getattr(this_step, f"expr{(s % 2) + 1}").latex
-                other_side_prev_latex = getattr(prev_step, f"expr{(s % 2) + 1}").latex
+                this_latex = this_step.left_expr.latex
+                prev_latex = prev_step.left_expr.latex
+                other_side_latex = this_step.right_expr.latex
+                other_side_prev_latex = prev_step.right_expr.latex
+                if s == 1:
+                    this_latex = this_step.right_expr.latex
+                    prev_latex = prev_step.right_expr.latex
+                    other_side_latex = this_step.left_expr.latex
+                    other_side_prev_latex = prev_step.left_expr.latex
+
                 latex_this_in_other_side = (
                     f"{other_side_latex[:prev_latex_index[(s+1)%2]]}"
-                    f"\\left{prev_latex}\\right"
-                    f"{other_side_latex[prev_latex_index[(s+1)%2]] + len(other_side_prev_latex):]}"
+                    f"\\left({prev_latex}\\right)"
+                    f"{other_side_latex[prev_latex_index[(s+1)%2] + len(other_side_prev_latex):]}"
                 )
                 sympy_this_in_other_side = Expression.get_sympy_expression_from_latex(latex_this_in_other_side)
-                if sympy_this_in_other_side not in Mistake.MISTAKE_TYPES:
+                if sympy_this_in_other_side not in list(zip(*Mistake.MISTAKE_TYPES))[0]:
                     this_sympy = Expression.get_sympy_expression_from_latex(this_latex)
                     if simplify(this_sympy - sympy_this_in_other_side) != 0:
                         mistakes[s] = Mistake.UNEQUAL_ARITHMETIC
@@ -235,23 +246,27 @@ class Problem(models.Model):
         mistakes = [Mistake.NONE, Mistake.NONE]
 
         for s in range(0, 2):
-            this_latex = getattr(this_step, f"expr{s + 1}").latex
-            prev_latex = getattr(prev_step, f"expr{s + 1}").latex
+            this_latex = this_step.left_expr.latex
+            prev_latex = prev_step.left_expr.latex
+            if s == 1:
+                this_latex = this_step.right_expr.latex
+                prev_latex = prev_step.right_expr.latex
             if not prev_latex:
                 mistakes[s] = Mistake.CANNOT_REWRITE
             elif this_latex:
                 sympy_prev = Expression.get_sympy_expression_from_latex(prev_latex)
                 sympy_this = Expression.get_sympy_expression_from_latex(this_latex)
 
-                if sympy_prev not in Mistake.MISTAKE_TYPES and sympy_this not in Mistake.MISTAKE_TYPES:
+                all_mistake_types = list(zip(*Mistake.MISTAKE_TYPES))[0]
+                if sympy_prev not in all_mistake_types and sympy_this not in all_mistake_types:
                     if simplify(sympy_this - sympy_prev) == 0:
                         mistakes[s] = Mistake.NONE
                     else:
                         mistakes[s] = Mistake.REWRITE
                 else:
-                    if sympy_prev in Mistake.MISTAKE_TYPES:
+                    if sympy_prev in all_mistake_types:
                         mistakes[s] = Mistake.CANNOT_REWRITE
-                    elif sympy_this in Mistake.MISTAKE_TYPES:
+                    elif sympy_this in all_mistake_types:
                         mistakes[s] = sympy_this
             else:
                 mistakes[s] = Mistake.BLANK_EXPR
@@ -277,11 +292,15 @@ class Problem(models.Model):
     @classmethod
     def variable_isolated_side(cls, problem):
         last_step = Step.objects.filter(problem=problem).order_by("created").last()
-        if last_step.expr1.latex == problem.variable:
-            if last_step.expr1.latex not in Expression.get_variables_in_latex_expression(last_step.expr2.latex):
+        if last_step.left_expr.latex == problem.variable:
+            if last_step.left_expr.latex not in Expression.get_variables_in_latex_expression(
+                last_step.right_expr.latex
+            ):
                 return "right"
-        elif last_step.expr2.latex == problem.variable:
-            if last_step.expr2.latex not in Expression.get_variables_in_latex_expression(last_step.expr1.latex):
+        elif last_step.right_expr.latex == problem.variable:
+            if last_step.right_expr.latex not in Expression.get_variables_in_latex_expression(
+                last_step.left_expr.latex
+            ):
                 return "left"
 
         return None
@@ -294,11 +313,8 @@ class Problem(models.Model):
 class Expression(models.Model):
     latex = models.CharField(max_length=100, blank=True, null=False, default="")
 
-    """
-    This method takes a latex expression and converts it into a human-readable string that SymPy can use
-    Only called by the get_sympy_expression_from_latex
-    """
-
+    # This method takes a latex expression and converts it into a human-readable string that SymPy can use
+    # Only called by the get_sympy_expression_from_latex
     @classmethod
     def parse_latex(cls, latex_expression):
         if not latex_expression:
@@ -393,11 +409,8 @@ class Expression(models.Model):
 
         return f"(({fraction['numerator']})/({fraction['denominator']}))", expression_start  # fmt: skip
 
-    """
-    This method converts a latex expression into it's equivalent SymPy expression
-    If it is not a valid math expression, then it will return a mistake from users/models.py Mistake
-    """
-
+    # This method converts a latex expression into it's equivalent SymPy expression
+    # If it is not a valid math expression, then it will return a mistake from users/models.py Mistake
     @classmethod
     def get_sympy_expression_from_latex(cls, latex_expr):
         sympy_friendly_str = Expression.parse_latex(latex_expr)
@@ -439,13 +452,10 @@ class Expression(models.Model):
         else:
             return feedback
 
-    """
-    This is only used by the method get_variables_in_latex_expression
-    This is a recursive function that returns a list of variables in expr
-    If symbols are next to each other, multiplication is assumed: ie "xyz" -> [x, y, z]
-    If a symbol appears more than once, it will be listed more than once
-    """
-
+    # This is only used by the method get_variables_in_latex_expression
+    # This is a recursive function that returns a list of variables in expr
+    # If symbols are next to each other, multiplication is assumed: ie "xyz" -> [x, y, z]
+    # If a symbol appears more than once, it will be listed more than once
     @classmethod
     def get_variables_in_sympy_expression(cls, sympy_expr):
         symbol_list = []

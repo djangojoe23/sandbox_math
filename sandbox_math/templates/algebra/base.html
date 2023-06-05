@@ -71,7 +71,7 @@
                       <div id="algebra" class="steps mt-1" style="margin: 10px;">
                         {% for step in steps %}
                           <div id="step{{ step.id }}" class="step algebra-step pb-1 {{ step.step_type }} {% if forloop.counter > 2 %}pt-3{% else %}pt-0{% endif %}" style="">
-{#                            {% include "algebra/new_step.html" with is_new_problem=is_new_problem problem=problem step_num=forloop.counter step=step step_prompts=step_prompts total_steps=steps|length %}#}
+                            {% include "algebra/new_step.html" with is_new_problem=is_new_problem problem=problem step_num=forloop.counter step=step step_prompts=step_prompts total_steps=steps|length %}
                           </div>
                         {% endfor %}
                         <div id="newStepButtonStep" class="step py-0" style="">
