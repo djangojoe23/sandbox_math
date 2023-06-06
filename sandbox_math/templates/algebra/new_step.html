@@ -44,7 +44,12 @@
     {% endif %}
   </div>
   <div class="d-flex justify-content-center align-items-center">
-    <div class="d-flex align-items-center my-mathquill w-50 left-expr-border">
+    <div class="d-flex justify-content-center w-50" id="left-loading">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+    <div class="d-flex align-items-center my-mathquill w-50 left-expr-border d-none" style="display: none;">
       <div class="nav flex-nowrap">
         <a tabindex="0" class="btn btn-link text-muted p-1 left-help-button" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top" data-bs-title="title" data-bs-content="content">
           <i class="ai-circle-help fs-s"></i>
@@ -53,7 +58,12 @@
       <div class="w-100 mq-expr-parent" style="overflow: hidden;"><p class="no-margin"><span class="py-2 w-100 left-mq-input" style="font-size: 200%; text-align: right;">{{ step.left_expr.latex|default_if_none:"" }}</span></p></div>
     </div>
     <div class="w-auto"><p class="no-margin"><span class="mq-equal-sign" style="font-size: 200%;">=</span></p></div>
-    <div class="d-flex align-items-center my-mathquill w-50 right-expr-border">
+    <div class="d-flex justify-content-center w-50" id="right-loading">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+    <div class="d-flex align-items-center my-mathquill w-50 right-expr-border d-none" style="display: none;">
       <div class="w-100 mq-expr-parent" style="overflow: hidden;"><p class="no-margin"><span class="py-2 w-100 right-mq-input" style="font-size:200%;">{{ step.right_expr.latex|default_if_none:"" }}</span></p></div>
       <div class="nav flex-nowrap">
         <a tabindex="0" class="btn btn-link text-muted p-1 right-help-button" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top" data-bs-title="title" data-bs-content="content">

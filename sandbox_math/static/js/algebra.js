@@ -9,7 +9,7 @@ function waitForElement(elementPath, callBack) {
       console.log('waiting...');
       waitForElement(elementPath, callBack);
     }
-  }, 500);
+  }, 250);
 }
 
 $(document).ready(function () {
@@ -35,10 +35,25 @@ $(document).ready(function () {
   if ($('#unique-problem-id').html().length) {
     //Load Existing Problem
     $('.algebra-step').each(function () {
-      InitializeNewStep($(this).attr('id'));
-      //This will populate the variable options menu
-      void ExpressionChanged($('.algebra-step:first-child .left-mq-input'));
+      let thisStep = $(this);
+      InitializeNewStep(thisStep.attr('id'));
+      for (let side of ['left', 'right']) {
+        waitForElement(
+          thisStep.find('.' + side + '-mq-input .mq-root-block'),
+          function () {
+            thisStep.find('#' + side + '-loading').addClass('d-none');
+            thisStep
+              .find('.my-mathquill.' + side + '-expr-border')
+              .removeClass('d-none');
+            thisStep
+              .find('.my-mathquill.' + side + '-expr-border')
+              .fadeIn('slow');
+          },
+        );
+      }
     });
+    //This will populate the variable options menu
+    void ExpressionChanged($('.algebra-step:first-child .left-mq-input'));
   } else {
     //Start New Problem
     $('#algebra').prepend(
