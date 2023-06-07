@@ -82,7 +82,7 @@ LOCAL_APPS = [
     # Your stuff: custom apps go here
     "sandbox_math.sandbox",
     "sandbox_math.algebra",
-    # "sandbox_math.calculator",
+    "sandbox_math.calculator",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

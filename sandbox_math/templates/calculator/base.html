@@ -1,0 +1,71 @@
+{% load calculator_extras %}
+
+<!-- Current Calculator -->
+<div id="calculatorBody" class="h-100">
+  <div class="bg-light h-100 rounded-5 mx-auto" id="calculator">
+    <div class="rounded-5 overflow-hidden h-100">
+{#      <div class="card-header w-100 border-0 px-4 pt-0 pb-1">#}
+{#        <h5>Calculator</h5>#}
+{#      </div>#}
+      <div id="calculatorDialog" class="card-body px-4 pb-0 pt-1" style="height: 10px;" data-simplebar>
+        <div class="mb-3 w-75 response">
+          <div class="d-flex align-items-end mb-2 response">
+            <div class="message-box-start text-dark">
+              <p class="no-margin">
+                Hello, I am your calculator. <br>Try me out!
+              </p>
+            </div>
+          </div>
+        </div>
+        {% for message in previous_user_messages %}
+          {% if message|show_message %}
+            <div class="ms-auto mb-3 w-75 calcMessage">
+              <div class="d-flex align-items-end">
+                <div class="message-box-end bg-primary text-white">
+                  <p class="no-margin">
+                    {% for content in message|get_message_content %}
+                      {% if content.content_type == "text" %}
+                        {{ content.content }}
+                      {% else %}
+                        <span class="calcMessageSpan" style="font-size: 125%;">
+                          {{ content.content }}
+                        </span>
+                      {% endif %}
+                    {% endfor %}
+                  </p>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+          <div class="mb-3 w-75 calcResponse">
+{#            {% include "calculator/calculator_response.html" with responses=message|get_responses %}#}
+          </div>
+        {% endfor %}
+      </div>
+      <div id="response-loading" class="mb w-75 d-none">
+        <div class="d-flex align-items-end mb-2 response">
+          <div class="message-box-start text-dark">
+            <p class="no-margin">
+{#              <span class="spinner-grow spinner-grow-sm me-2" role="status" aria-hidden="true"></span>#}
+{#              <span class="spinner-grow spinner-grow-sm me-2" role="status" aria-hidden="true"></span>#}
+{#              <span class="spinner-grow spinner-grow-sm me-2" role="status" aria-hidden="true"></span>#}
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer w-100 border-0 px-4 pt-1 pb-0">
+        <div class="position-relative">
+          <div id="calculatorInputBorder" class="d-flex align-items-center my-mathquill w-100">
+            <div class="w-100" style="overflow: hidden;"><p class="no-margin"><span id="calculatorInput" class="py-2 w-100" style="font-size: 200%;"></span></p></div>
+            <div class="nav flex-nowrap">
+              <button id="calculatorSubmit" class="btn btn-link p-1" type="button">
+                <i class="ai-send fs-xl"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div id="stopCheckPrompt" class="fs-xs text-muted text-center {% if not active_check_process %}d-none{% endif %}">Enter "stop" to stop the check rewrite process.</div>
+      </div>
+    </div>
+  </div>
+</div>

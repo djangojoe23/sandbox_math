@@ -4,10 +4,9 @@ from django.utils import timezone
 from django.views.generic.base import TemplateView, View
 
 from sandbox_math.algebra.models import Expression, Problem, Step
+from sandbox_math.calculator.models import UserMessage
 from sandbox_math.sandbox.models import Sandbox
 from sandbox_math.users.models import HelpClick, Mistake, Proceed
-
-# from sandbox_math.calculator.models import UserMessage
 
 
 # Create your views here.
@@ -31,6 +30,7 @@ class BaseView(UserPassesTestMixin, TemplateView):
         context["is_new_problem"] = True
         context["problem"] = Problem.objects.none()
         context["steps"] = Step.objects.none()
+        context["previous_user_messages"] = UserMessage.objects.none()
 
         try:
             saved_problem_id = self.kwargs["problem_id"]
@@ -44,6 +44,9 @@ class BaseView(UserPassesTestMixin, TemplateView):
             context["is_new_problem"] = False
             context["problem"] = Problem.objects.get(id=saved_problem_id)
             context["steps"] = Step.objects.filter(problem__id=saved_problem_id).order_by("created")
+            context["previous_user_messages"] = UserMessage.get_all_previous_for_problem(
+                Sandbox.ALGEBRA, saved_problem_id
+            )
 
         return context
 

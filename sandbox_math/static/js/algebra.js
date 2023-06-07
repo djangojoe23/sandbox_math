@@ -37,20 +37,6 @@ $(document).ready(function () {
     $('.algebra-step').each(function () {
       let thisStep = $(this);
       InitializeNewStep(thisStep.attr('id'));
-      for (let side of ['left', 'right']) {
-        waitForElement(
-          thisStep.find('.' + side + '-mq-input .mq-root-block'),
-          function () {
-            thisStep.find('#' + side + '-loading').addClass('d-none');
-            thisStep
-              .find('.my-mathquill.' + side + '-expr-border')
-              .removeClass('d-none');
-            thisStep
-              .find('.my-mathquill.' + side + '-expr-border')
-              .fadeIn('slow');
-          },
-        );
-      }
     });
     //This will populate the variable options menu
     void ExpressionChanged($('.algebra-step:first-child .left-mq-input'));
@@ -81,6 +67,8 @@ $(document).ready(function () {
     });
   }
 
+  InitializeCalculator();
+
   $('#newStepButton').click(function () {
     AttemptNewStep();
   });
@@ -93,6 +81,21 @@ function InitializeNewStep(stepID) {
       InitializeMathQuillInput($(this));
     },
   );
+  let thisStepObject = $('#' + stepID);
+  for (let side of ['left', 'right']) {
+    waitForElement(
+      thisStepObject.find('.' + side + '-mq-input .mq-root-block'),
+      function () {
+        thisStepObject.find('#' + side + '-loading').addClass('d-none');
+        thisStepObject
+          .find('.my-mathquill.' + side + '-expr-border')
+          .removeClass('d-none');
+        thisStepObject
+          .find('.my-mathquill.' + side + '-expr-border')
+          .fadeIn('slow');
+      },
+    );
+  }
 
   $('#' + stepID + ' .step-type-dropdown > div.dropdown-menu button').click(
     function () {
@@ -126,6 +129,8 @@ function InitializeNewStep(stepID) {
   const popoverList = [...popoverTriggerList].map(
     (popoverTriggerEl) => new bootstrap.Popover(popoverTriggerEl),
   );
+
+  SetCalculatorHeight();
 }
 
 function InitializeMathQuillInput(mqInputObject) {
