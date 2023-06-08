@@ -75,27 +75,41 @@ $(document).ready(function () {
 });
 
 function InitializeNewStep(stepID) {
+  let thisStepObject = $('#' + stepID);
   MQ.StaticMath($('#' + stepID + ' .mq-equal-sign')[0]);
   $('#' + stepID + ' .left-mq-input, #' + stepID + ' .right-mq-input').each(
     function () {
       InitializeMathQuillInput($(this));
+      //I had to duplicate this code because using a "side" variable did not work
+      if ($(this).hasClass('left-mq-input')) {
+        waitForElement(
+          thisStepObject.find('.left-mq-input .mq-root-block'),
+          function () {
+            thisStepObject.find('#left-loading').addClass('d-none');
+            thisStepObject
+              .find('.my-mathquill.left-expr-border')
+              .removeClass('d-none');
+            thisStepObject
+              .find('.my-mathquill.left-expr-border')
+              .fadeIn('slow');
+          },
+        );
+      } else if ($(this).hasClass('right-mq-input')) {
+        waitForElement(
+          thisStepObject.find('.right-mq-input .mq-root-block'),
+          function () {
+            thisStepObject.find('#right-loading').addClass('d-none');
+            thisStepObject
+              .find('.my-mathquill.right-expr-border')
+              .removeClass('d-none');
+            thisStepObject
+              .find('.my-mathquill.right-expr-border')
+              .fadeIn('slow');
+          },
+        );
+      }
     },
   );
-  let thisStepObject = $('#' + stepID);
-  for (let side of ['left', 'right']) {
-    waitForElement(
-      thisStepObject.find('.' + side + '-mq-input .mq-root-block'),
-      function () {
-        thisStepObject.find('#' + side + '-loading').addClass('d-none');
-        thisStepObject
-          .find('.my-mathquill.' + side + '-expr-border')
-          .removeClass('d-none');
-        thisStepObject
-          .find('.my-mathquill.' + side + '-expr-border')
-          .fadeIn('slow');
-      },
-    );
-  }
 
   $('#' + stepID + ' .step-type-dropdown > div.dropdown-menu button').click(
     function () {

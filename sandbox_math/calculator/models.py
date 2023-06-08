@@ -53,8 +53,8 @@ class Response(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     @classmethod
-    def save_new(cls, message, content, context):
-        r = Response(message=message, context=context)
+    def save_new(cls, user_message, content, context):
+        r = Response(user_message=user_message, context=context)
         r.save()
 
         for content_part in content.split("`"):

@@ -75,16 +75,16 @@ function SubmitUserMessage() {
   $('#calculatorDialog .simplebar-content').append(
     "<div class='ms-auto mb-3 w-75 user-message'>" +
       "<div class='d-flex align-items-end'>" +
-      "<div class='message-box-end bg-primary text-white'><p class='no-margin'><span class='user-message-span' style='font-size: 125%;'>" +
+      "<div class='message-box-end bg-primary text-white'><p class='no-margin'><span class='latex-message-span' style='font-size: 125%;'>" +
       userMessage +
       '</span></p></div></div></div>',
   );
 
   //make this message from the user a static mq field
   let lastMessageParent = $('#calculatorDialog .user-message').last();
-  MQ.StaticMath(lastMessageParent.find('.user-message-span')[0]);
+  MQ.StaticMath(lastMessageParent.find('.latex-message-span')[0]);
   lastMessageParent
-    .find('.user-message-span .mq-root-block')
+    .find('.latex-message-span .mq-root-block')
     .addClass('d-flex flex-wrap');
 
   let problemID = $('#unique-problem-id').html();
@@ -97,7 +97,100 @@ function SubmitUserMessage() {
   }
 }
 
-function GetResponse(userMessageLatex) {}
+function GetResponse(userMessageLatex) {
+  let responseParameters =
+    'sandbox=Algebra&problem_id=' + $('#unique-problem-id').html();
+  responseParameters += '&message=' + encodeURIComponent(userMessageLatex);
+  responseParameters +=
+    '&caller=' + encodeURIComponent(arguments.callee.caller.name);
+
+  $('#calculatorDialog .simplebar-content').append(
+    "<div class='mb-3 w-75 response'></div>",
+  );
+  $('#calculatorDialog .response')
+    .last()
+    .load('/calculator/get-response/?' + responseParameters, function () {
+      let lastResponseParent = $('#calculatorDialog .response').last();
+      let lastResponses = lastResponseParent.find('.d-flex.align-items-end');
+
+      // For each message in the response to the last user message (it might be split up into more than 1)
+      // show the message load animation and do not display the message
+      lastResponses.each(function () {
+        $(this)
+          .find('p.no-margin')
+          .each(function () {
+            if ($(this).hasClass('message-load-animation')) {
+              $(this).removeClass('d-none');
+            } else {
+              $(this).addClass('d-none');
+            }
+          });
+      });
+
+      //Now, since each response message for the last user message is hidden, this will make the messages appear
+      //and make the loading animation disappear every 1.2 seconds
+      let responseIndex = 0;
+      let appearInterval = setInterval(function () {
+        //code that makes responses appear
+        lastResponses
+          .eq(responseIndex)
+          .find('p.no-margin')
+          .each(function () {
+            if ($(this).hasClass('message-load-animation')) {
+              $(this).addClass('d-none');
+            } else {
+              $(this).removeClass('d-none');
+            }
+          });
+        responseIndex++;
+
+        lastResponseParent.find('.latex-message-span').each(function () {
+          MQ.StaticMath($(this)[0]);
+        });
+
+        lastResponseParent
+          .find('.latex-message-span .mq-root-block')
+          .addClass('d-flex flex-wrap');
+
+        let simplebarWrapper = $(
+          '#calculatorDialog .simplebar-content-wrapper',
+        );
+        simplebarWrapper.animate(
+          { scrollTop: simplebarWrapper.prop('scrollHeight') },
+          'slow',
+        );
+      }, 1200);
+
+      //Once the last response is shown...
+      let calcInputField = MQ.MathField($('#calculatorInput')[0]);
+      setTimeout(
+        function () {
+          $('#calculatorSubmit').prop('disabled', false);
+          if (calcInputField) {
+            calcInputField.config({
+              handlers: {
+                enter: function () {
+                  if (calcInputField.latex().length) {
+                    SubmitUserMessage();
+                    calcInputField.latex('');
+                  }
+                },
+              },
+            });
+          }
+
+          clearInterval(appearInterval);
+        },
+        lastResponses.length * 1200 + 100,
+      );
+
+      let simplebarWrapper = $('#calculatorDialog .simplebar-content-wrapper');
+      simplebarWrapper.animate(
+        { scrollTop: simplebarWrapper.prop('scrollHeight') },
+        'slow',
+      );
+    });
+}
 
 function SetCalculatorHeight() {
   let newHeight = $('#algebra').height() - 38;

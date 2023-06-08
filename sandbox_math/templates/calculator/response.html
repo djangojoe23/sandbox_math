@@ -1,10 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Title</title>
-</head>
-<body>
+{% load calculator_extras %}
 
-</body>
-</html>
+{% for r in responses %}
+  <div class="d-flex align-items-end {% if responses|length <= 1 %}mb-3{% endif %}">
+    <div class="d-none badge-step-id">{{ badge_step_id }}</div>
+    <div class="message-box-start text-dark {{ r.context }}">
+      <div class="d-none new-badge-count-{{ new_badge_count_side }} {{ new_badge_color }} {{ problem_solved }}">{{ new_badge_count }}</div>
+      <p class="no-margin message-load-animation d-none">
+          <span class="spinner-grow spinner-grow-sm me-2" role="status" aria-hidden="true"></span>
+          <span class="spinner-grow spinner-grow-sm me-2" role="status" aria-hidden="true"></span>
+          <span class="spinner-grow spinner-grow-sm me-2" role="status" aria-hidden="true"></span>
+      </p>
+      <p class="no-margin" >
+        {% for content in r|get_response_content %}
+          {% if content.content_type == "text" %}
+            {{ content.content|safe }}
+          {% else %}
+            <span class="latex-message-span" style="font-size: 125%;">
+              {{ content.content }}
+            </span>
+          {% endif %}
+        {% endfor %}
+      </p>
+    </div>
+  </div>
+  {% if responses|length > 1 %}
+    <div class="fs-xs text-muted text-center mb-1">{{ forloop.counter}}/{{ responses|length }}</div>
+  {% endif %}
+{% endfor %}
