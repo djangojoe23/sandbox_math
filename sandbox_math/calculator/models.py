@@ -1,8 +1,9 @@
 from django.db import models
-from sympy import SympifyError, latex, sympify
+from sympy import latex, simplify
 
 from sandbox_math.algebra.models import Expression  # Problem, Step
 from sandbox_math.sandbox.models import Sandbox
+from sandbox_math.users.models import Mistake
 
 
 # Create your models here.
@@ -74,27 +75,36 @@ class Response(models.Model):
         return r
 
     @classmethod
-    def get_context_of_last_response(cls, problem_id):
-        last_response = (
-            Response.objects.filter(message__calculator__problem_id=problem_id).order_by("-timestamp").first()
-        )
-
-        return last_response.context
+    def get_context_of_last_response(cls, new_user_message_obj):
+        last_response = Response.objects.filter(
+            user_message__sandbox=new_user_message_obj.sandbox,
+            user_message__problem_id=new_user_message_obj.problem_id,
+        ).order_by("-timestamp")
+        if not last_response:
+            return Response.NO_CONTEXT
+        else:
+            return last_response.first().context
 
     @classmethod
-    def create_no_context_response(cls, user_message_obj):
-        user_message_latex = Content.objects.get(user_message=user_message_obj).content
-        sympy_readable_user_message = Expression.parse_latex(user_message_latex)
+    def with_no_context(cls, user_message_obj):
+        is_numeric = True
         responses = []
+        user_message_latex = Content.objects.get(user_message=user_message_obj).content
+        if Expression.get_variables_in_latex_expression(user_message_latex):
+            is_numeric = False
+        else:
+            sympy_user_message = Expression.get_sympy_expression_from_latex(user_message_latex)
+            if sympy_user_message not in list(zip(*Mistake.MISTAKE_TYPES))[0]:
+                response = simplify(sympy_user_message)
+                responses.append(f"`/{latex(response)}`")
+            else:
+                is_numeric = False
 
-        try:
+        if not is_numeric:
             if user_message_latex == "stop":
                 responses.append("There's nothing to stop...")
             else:
-                response = sympify(sympy_readable_user_message)
-                responses.append(f"`/{latex(response)}`")
-        except (SympifyError, TypeError):
-            responses.append(f"I don't know how to calculate `/{sympy_readable_user_message}`.")
+                responses.append(f"I don't know how to calculate `/{user_message_latex}`.")
             responses.append("Try something else.")
 
         for r in responses:

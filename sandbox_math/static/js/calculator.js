@@ -1,4 +1,8 @@
 function InitializeCalculator() {
+  $('.latex-message-span').each(function () {
+    MQ.MathField($(this)[0]);
+  });
+
   let calculatorField = MQ.MathField($('#calculatorInput')[0]);
 
   $('#calculatorDialog .simplebar-content').addClass('px-2');
@@ -83,6 +87,7 @@ function SubmitUserMessage() {
   //make this message from the user a static mq field
   let lastMessageParent = $('#calculatorDialog .user-message').last();
   MQ.StaticMath(lastMessageParent.find('.latex-message-span')[0]);
+
   lastMessageParent
     .find('.latex-message-span .mq-root-block')
     .addClass('d-flex flex-wrap');
