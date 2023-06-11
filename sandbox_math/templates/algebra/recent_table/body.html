@@ -1,0 +1,20 @@
+{% for problem in recent_problems %}
+  <tr>
+    <td class="col-auto text-center align-middle">
+      <a class="btn btn-link p-0" role="button" href="{% url 'algebra:algebra' problem.id %}"><i class="ai-link"></i></a>
+    </td>
+    <td class="col-2 text-center align-middle" style="">{{ problem.created.date }}</td>
+    <td class="col-2 text-center align-middle" style="">{{ problem.last_viewed.date }}</td>
+    <td class="col-6 text-center">
+      <p class="no-margin"><span class="recentEquation" style="">
+        {% if not problem.left and not problem.right %}
+          Undefined
+        {% else %}
+          {{ problem.left }} = {{ problem.right }}
+        {% endif %}
+      </span></p>
+    </td>
+    <td class="col-1 text-center align-middle">{{ problem.step_count }}</td>
+    <td class="col-1 text-center align-middle">{% if not problem.solved %}Unsolved{% else %}Solved{% endif %}</td>
+  </tr>
+{% endfor %}

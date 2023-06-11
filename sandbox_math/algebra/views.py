@@ -256,16 +256,38 @@ class DeleteStepView(View):
 
 
 # Create your views here.
-class RecentListView(ListView):
+class RecentTableView(ListView):
     model = Problem
     context_object_name = "recent_problems"
     paginate_by = 10
 
     def get_template_names(self):
-        template = "student/recent_problems_base.html"
+        template = "algebra/recent_table/base.html"
         if self.request.GET.get("update_body"):
-            template = "student/recent_problems_body.html"
+            template = "student/recent_table/body.html"
         elif self.request.GET.get("update_pagination"):
-            template = "student/recent_problems_pagination.html"
+            template = "student/recent_table/pagination.html"
 
         return template
+
+    def get_paginate_by(self, queryset):
+        try:
+            paginate_by = int(self.request.GET.get("paginate_by", self.paginate_by))
+        except ValueError:
+            paginate_by = 0
+        if paginate_by % 10 != 0:
+            recent_qs = self.get_queryset()
+            if recent_qs.count() <= 50:
+                paginate_by = recent_qs.count()
+            else:
+                paginate_by = 50
+        return paginate_by
+
+    def get_queryset(self):
+        recent_filter = {
+            "status": self.request.GET.get("status"),
+            "order_by": self.request.GET.get("order_by"),
+            "equation": self.request.GET.get("equation"),
+        }
+        recent_qs = Problem.populate_recent_table(self.request.user.id, recent_filter)
+        return recent_qs

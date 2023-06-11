@@ -1,0 +1,68 @@
+<!-- Light table with striped rows -->
+<div class="table-responsive">
+  <table class="table table-bordered" id="recentTable">
+    <thead>
+      <tr>
+        <th class="col-auto text-center fs-sm align-middle">
+          Link
+        </th>
+        <th class="col-2 text-center fs-sm align-middle">
+          <div class="pb-2">Start Date</div>
+          <div class="btn-toolbar" role="toolbar" aria-label="Pagination">
+            <div class="btn-group mx-auto" role="group" aria-label="">
+              <button type="button" class="btn btn-outline-primary p-2 active" id="start-date-down"><i class="ai-arrow-down"></i></button>
+              <button type="button" class="btn btn-outline-primary p-2" id="start-date-up"><i class="ai-arrow-up"></i></button>
+            </div>
+          </div>
+        </th>
+        <th class="col-2 text-center fs-sm align-middle">
+          <div class="pb-2">Last Viewed</div>
+          <div class="btn-toolbar" role="toolbar" aria-label="n">
+            <div class="btn-group mx-auto" role="group" aria-label="Second group">
+              <button type="button" class="btn btn-outline-primary p-2" id="last-viewed-down"><i class="ai-arrow-down"></i></button>
+              <button type="button" class="btn btn-outline-primary p-2" id="last-viewed-up"><i class="ai-arrow-up"></i></button>
+            </div>
+          </div>
+        </th>
+        <th class="col-6 text-center fs-sm align-middle">
+          <div class="pb-2">Equation</div>
+          <div class="">
+            <div class="d-flex align-items-center my-mathquill w-75 mx-auto filter-input-border">
+              <div class="w-100 mq-expr-parent" style="overflow: hidden;"><p class="no-margin"><span id="equation-filter-input" class="py-2 w-100" style="font-size: 150%; text-align: left;"></span></p></div>
+            </div>
+          </div>
+        </th>
+        <th class="col-1 text-center fs-sm align-middle">
+          <div class="pb-2">Step Count</div>
+            <div class="btn-toolbar" role="toolbar" aria-label="">
+              <div class="btn-group mx-auto" role="group" aria-label="Second group">
+                <button type="button" class="btn btn-outline-primary p-2" id="step-count-down"><i class="ai-arrow-down"></i></button>
+                <button type="button" class="btn btn-outline-primary p-2" id="step-count-up"><i class="ai-arrow-up"></i></button>
+              </div>
+            </div>
+        </th>
+        <th class="col-1 fs-sm align-middle">
+          <div class="pb-2 text-center">Status</div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="unsolvedCheck" checked>
+            <label class="form-check-label fs-xs fw-normal" for="ex-check-1">Unsolved</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="solvedCheck">
+            <label class="form-check-label fs-xs fw-normal" for="ex-check-2">Solved</label>
+          </div>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {% include "algebra/recent_table/body.html" with recent_problems=recent_problems %}
+    </tbody>
+    <tfoot>
+
+    </tfoot>
+  </table>
+</div>
+
+<div id="pagination">
+  {% include "algebra/recent_table/pagination.html" with paginator=paginator show_options=show_options %}
+</div>

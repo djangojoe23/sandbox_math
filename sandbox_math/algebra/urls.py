@@ -5,6 +5,7 @@ from sandbox_math.algebra.views import (
     BaseView,
     DeleteStepView,
     NewStepView,
+    RecentTableView,
     SaveNewView,
     StartNewView,
     UpdateExpressionView,
@@ -26,4 +27,5 @@ urlpatterns = [
     path("delete-step/", DeleteStepView.as_view(), name="delete-step", ),  # fmt: skip
     path("attempt-new-step/", AttemptNewStepView.as_view(), name="attempt-new-step", ),  # fmt: skip
     path("new-step/", NewStepView.as_view(), name="new-step", ),  # fmt: skip
+    path("recent-table/", RecentTableView.as_view(), name="recent-table", ),  # fmt: skip
 ]

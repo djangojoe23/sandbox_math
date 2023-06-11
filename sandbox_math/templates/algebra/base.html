@@ -10,6 +10,7 @@
 {% block javascript %}
   {{ block.super }}
     <script defer src="{% static 'js/algebra.js' %}"></script>
+    <script defer src="{% static 'js/algebra-recent-table.js' %}"></script>
     <script defer src="{% static 'js/calculator.js' %}"></script>
     <script defer src="{% static 'js/mathquill-0.10.1/mathquill-basic.js' %}"></script>
 {% endblock javascript %}
@@ -101,7 +102,7 @@
                   </div>
                 </div>
                 <div class="tab-pane fade" id="recent" role="tabpanel">
-{#                  {% include "student/recent_problems.html" %}#}
+                  {% include "algebra/recent_table/base.html" %}
                 </div>
                 <div class="tab-pane fade" id="examples" role="tabpanel">
 {#                  {% include "algebra/examples.html" %}#}
