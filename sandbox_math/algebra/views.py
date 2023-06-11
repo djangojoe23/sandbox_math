@@ -2,6 +2,7 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.generic.base import TemplateView, View
+from django.views.generic.list import ListView
 
 from sandbox_math.algebra.models import Expression, Problem, Step
 from sandbox_math.calculator.models import UserMessage
@@ -252,3 +253,19 @@ class DeleteStepView(View):
         }
 
         return JsonResponse(feedback)
+
+
+# Create your views here.
+class RecentListView(ListView):
+    model = Problem
+    context_object_name = "recent_problems"
+    paginate_by = 10
+
+    def get_template_names(self):
+        template = "student/recent_problems_base.html"
+        if self.request.GET.get("update_body"):
+            template = "student/recent_problems_body.html"
+        elif self.request.GET.get("update_pagination"):
+            template = "student/recent_problems_pagination.html"
+
+        return template

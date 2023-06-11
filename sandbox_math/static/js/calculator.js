@@ -88,26 +88,23 @@ function SubmitUserMessage() {
   let lastMessageParent = $('#calculatorDialog .user-message').last();
   MQ.StaticMath(lastMessageParent.find('.latex-message-span')[0]);
 
-  lastMessageParent
-    .find('.latex-message-span .mq-root-block')
-    .addClass('d-flex flex-wrap');
+  //lastMessageParent.find('.latex-message-span .mq-root-block').addClass('d-flex flex-wrap');
 
   let problemID = $('#unique-problem-id').html();
   if (!problemID) {
     SaveNewProblem().then(function () {
-      GetResponse(userMessage);
+      GetResponse(userMessage, 'SubmitUserMessage');
     });
   } else {
-    GetResponse(userMessage);
+    GetResponse(userMessage, 'SubmitUserMessage');
   }
 }
 
-function GetResponse(userMessageLatex) {
+function GetResponse(userMessageLatex, callerFunctionName) {
   let responseParameters =
     'sandbox=Algebra&problem_id=' + $('#unique-problem-id').html();
   responseParameters += '&message=' + encodeURIComponent(userMessageLatex);
-  responseParameters +=
-    '&caller=' + encodeURIComponent(arguments.callee.caller.name);
+  responseParameters += '&caller=' + encodeURIComponent(callerFunctionName);
 
   $('#calculatorDialog .simplebar-content').append(
     "<div class='mb-3 w-75 response'></div>",
@@ -153,9 +150,7 @@ function GetResponse(userMessageLatex) {
           MQ.StaticMath($(this)[0]);
         });
 
-        lastResponseParent
-          .find('.latex-message-span .mq-root-block')
-          .addClass('d-flex flex-wrap');
+        //lastResponseParent.find('.latex-message-span .mq-root-block').addClass('d-flex flex-wrap');
 
         let simplebarWrapper = $(
           '#calculatorDialog .simplebar-content-wrapper',
