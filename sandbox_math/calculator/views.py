@@ -1,5 +1,6 @@
 from django.views.generic.base import TemplateView
 
+from sandbox_math.algebra.models import CheckRewrite
 from sandbox_math.calculator.models import Response, UserMessage
 from sandbox_math.sandbox.models import Sandbox
 
@@ -26,7 +27,21 @@ class GetResponseView(TemplateView):
             # user is submitting a message to continue a check rewrite or check solution
             if current_context == Response.NO_CONTEXT:
                 Response.with_no_context(user_message_obj)
+        elif caller == "InitializeNewStep":
+            # User must be starting a new check rewrite
+            step_id = int(user_message.split("-")[0][4:])
+            side = user_message.split("-")[4]
+            if current_context == Response.NO_CONTEXT:
+                CheckRewrite.create_start_response(step_id, side, user_message_obj)
+            else:
+                # TODO is it the check rewrite they are already doing?
+                pass
+        elif caller == "StepTypeChanged":
+            # User must be stopping a check rewrite
+            pass
 
         context["responses"] = Response.objects.filter(user_message=user_message_obj).order_by("id")
+
+        # change badge count or color here if a check rewrite process ended successfully
 
         return context

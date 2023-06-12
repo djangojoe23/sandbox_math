@@ -1,3 +1,4 @@
+{% load algebra_extras %}
 
 <div class="step-number">
   <div class="step-number-inner">{{ step_num }}</div>
@@ -85,6 +86,21 @@
             <div class="dropdown-menu my-1">
             </div>
           </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="d-flex flex-row mt-2 justify-content-evenly check-rewrite-buttons {% if step.step_type != 'rewrite' %}d-none{% endif %}">
+      <div>
+        <button type="button" class="btn btn-outline-secondary btn-sm p-1 ps-2 check-rewrite-left">
+          Check Rewrite
+          <span class="badge bg-faded-{{ step|get_rewrite_check_badge_color:"left" }} text-{{ step|get_rewrite_check_badge_color:"left" }} ms-2">{{ step|get_rewrite_check_count:"left" }}</span>
+        </button>
+      </div>
+      <div>
+        <button type="button" class="btn btn-outline-secondary btn-sm p-1 ps-2 check-rewrite-right">
+          Check Rewrite
+          <span class="badge bg-faded-{{ step|get_rewrite_check_badge_color:"right" }} text-{{ step|get_rewrite_check_badge_color:"right" }} ms-2">{{ step|get_rewrite_check_count:"right" }}</span>
+        </button>
       </div>
     </div>
   {% endif %}

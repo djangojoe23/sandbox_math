@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.views.generic.base import TemplateView, View
 from django.views.generic.list import ListView
 
-from sandbox_math.algebra.models import Expression, Problem, Step
+from sandbox_math.algebra.models import CheckRewrite, Expression, Problem, Step
 from sandbox_math.calculator.models import UserMessage
 from sandbox_math.sandbox.models import Sandbox
 from sandbox_math.users.models import HelpClick, Mistake, Proceed
@@ -93,11 +93,22 @@ class UpdateStepTypeView(View):
         else:
             response = JsonResponse({"error": "there was an error updating the step type"})
 
+        stop_check_rewrite = False
+        active_processes = CheckRewrite.objects.filter(problem=step.problem, end_time__isnull=True)
+        # check if there is an active check process
+        if active_processes.count() == 1:
+            active_process = active_processes.first()
+            if active_process.expr1 in [step.left_expr, step.right_expr]:
+                # the step type was changed for the step that rewrite button that was clicked
+                # need to cancel the rewrite process
+                stop_check_rewrite = True
+
         if not response:
             step.save()
 
             feedback = {
                 "mistakes": Problem.get_all_steps_mistakes(step.problem),
+                "stop-check-rewrite": stop_check_rewrite,
             }
 
             response = JsonResponse(feedback)
@@ -264,9 +275,9 @@ class RecentTableView(ListView):
     def get_template_names(self):
         template = "algebra/recent_table/base.html"
         if self.request.GET.get("update_body"):
-            template = "student/recent_table/body.html"
+            template = "algebra/recent_table/body.html"
         elif self.request.GET.get("update_pagination"):
-            template = "student/recent_table/pagination.html"
+            template = "algebra/recent_table/pagination.html"
 
         return template
 

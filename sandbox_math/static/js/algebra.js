@@ -68,6 +68,9 @@ $(document).ready(function () {
   }
 
   InitializeCalculator();
+  $('.tab-pane#recent').load('/algebra/recent-table/', function () {
+    InitializeTable();
+  });
 
   $('#newStepButton').click(function () {
     AttemptNewStep();
@@ -76,6 +79,17 @@ $(document).ready(function () {
 
 function InitializeNewStep(stepID) {
   let thisStepObject = $('#' + stepID);
+
+  $(
+    '#' + stepID + ' .check-rewrite-left, #' + stepID + ' .check-rewrite-right',
+  ).click(function () {
+    let side = 'left';
+    if ($(this).hasClass('check-rewrite-right')) {
+      side = 'right';
+    }
+    GetResponse(stepID + '-start-check-rewrite-' + side, 'InitializeNewStep');
+  });
+
   MQ.StaticMath($('#' + stepID + ' .mq-equal-sign')[0]);
   $('#' + stepID + ' .left-mq-input, #' + stepID + ' .right-mq-input').each(
     function () {
@@ -280,16 +294,16 @@ async function StepTypeChanged(menuButtonObject) {
   let selectedHTML = menuButtonObject.html();
 
   let deleteStepButton = $('#' + stepID + ' .delete-step');
-  //let rewriteButtons = $("#" + stepID + " .check-rewrite-buttons")
+  let rewriteButtons = $('#' + stepID + ' .check-rewrite-buttons');
   if (selectedHTML.includes('Delete')) {
     deleteStepButton.css('visibility', '');
-    //rewriteButtons.addClass("d-none")
+    rewriteButtons.addClass('d-none');
   } else if (selectedHTML.includes('Rewrite')) {
-    //rewriteButtons.removeClass("d-none")
+    rewriteButtons.removeClass('d-none');
     deleteStepButton.css('visibility', 'hidden');
   } else {
     deleteStepButton.css('visibility', 'hidden');
-    //rewriteButtons.addClass("d-none")
+    rewriteButtons.addClass('d-none');
   }
 
   let toggleButton = $(
@@ -316,18 +330,17 @@ async function StepTypeChanged(menuButtonObject) {
           $('#' + stepID + ' .step-number-inner').html(),
         );
         if (stepNumber === 1) {
-          //TODO tell the server to forget the variable selected if it isn't present in the equation
           let varToggle = $('#variableDropdown .dropdown-toggle');
           if (selectedHTML.includes('Define')) {
             if ($('#variableDropdown > div.dropdown-menu button').length > 0) {
-              // varToggle.prop("disabled", false)
               varToggle.html(response['selected_variable']);
             }
           } else {
-            // varToggle.prop("disabled", true)
             varToggle.html('');
-            // i don't tell the server to forget the variable they had selected here
           }
+        }
+        if (response['stop_check_rewrite']) {
+          GetResponse('stop-check-rewrite', 'StepTypeChanged');
         }
         ToggleNewAndCheckButtons(false);
       })

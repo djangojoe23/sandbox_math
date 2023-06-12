@@ -1,7 +1,7 @@
+from django.apps import apps
 from django.db import models
 from sympy import latex, simplify
 
-from sandbox_math.algebra.models import Expression  # Problem, Step
 from sandbox_math.sandbox.models import Sandbox
 from sandbox_math.users.models import Mistake
 
@@ -87,13 +87,14 @@ class Response(models.Model):
 
     @classmethod
     def with_no_context(cls, user_message_obj):
+        expression_model = apps.get_model("algebra", "Expression")
         is_numeric = True
         responses = []
         user_message_latex = Content.objects.get(user_message=user_message_obj).content
-        if Expression.get_variables_in_latex_expression(user_message_latex):
+        if expression_model.get_variables_in_latex_expression(user_message_latex):
             is_numeric = False
         else:
-            sympy_user_message = Expression.get_sympy_expression_from_latex(user_message_latex)
+            sympy_user_message = expression_model.get_sympy_expression_from_latex(user_message_latex)
             if sympy_user_message not in list(zip(*Mistake.MISTAKE_TYPES))[0]:
                 response = simplify(sympy_user_message)
                 responses.append(f"`/{latex(response)}`")

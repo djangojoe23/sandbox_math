@@ -1,6 +1,6 @@
 from django import template
 
-from sandbox_math.algebra.models import Step
+from sandbox_math.algebra.models import CheckRewrite, Step
 from sandbox_math.users.models import Mistake
 
 register = template.Library()
@@ -23,22 +23,22 @@ def get_step_mistakes(step):
     return mistakes_dict
 
 
-# @register.filter(name="get_check_count")
-# def get_check_count(step, side):
-#     if step:
-#         completed_checks = CheckRewrite.get_matching_completed_checks(step, side)
-#     else:
-#         completed_checks = CheckRewrite.objects.none()
-#
-#     return completed_checks.count()
-#
-#
-# @register.filter(name="get_badge_color")
-# def get_badge_color(step, side):
-#     if step:
-#         completed_checks = CheckRewrite.get_matching_completed_checks(step, side)
-#         for c in completed_checks:
-#             if not c.are_equivalent:
-#                 return "danger"
-#
-#     return "info"
+@register.filter(name="get_rewrite_check_count")
+def get_rewrite_check_count(step, side):
+    if step:
+        completed_checks = CheckRewrite.get_matching_completed_checks(None, step, side)
+    else:
+        completed_checks = CheckRewrite.objects.none()
+
+    return completed_checks.count()
+
+
+@register.filter(name="get_rewrite_check_badge_color")
+def get_rewrite_check_badge_color(step, side):
+    if step:
+        completed_checks = CheckRewrite.get_matching_completed_checks(None, step, side)
+        for c in completed_checks:
+            if not c.are_equivalent:
+                return "danger"
+
+    return "info"

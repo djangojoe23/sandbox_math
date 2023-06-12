@@ -1,4 +1,5 @@
 # from decimal import Decimal
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 
 # from django.core.exceptions import ObjectDoesNotExist
@@ -9,6 +10,8 @@ from sympy.core import symbol
 from sympy.parsing.sympy_parser import implicit_multiplication_application, parse_expr, standard_transformations
 
 from config.settings.base import AUTH_USER_MODEL
+from sandbox_math.calculator.models import Content, Response
+from sandbox_math.sandbox.models import CheckAlgebra
 from sandbox_math.users.models import Mistake, User
 
 
@@ -36,12 +39,9 @@ class Problem(models.Model):
             problem.variable = None
             problem.save()
 
-    """
-    This method is called by the RecentProblemsListView in algebra/views
-    It returns a queryset with columns:
-    link, start date, last viewed, equation, step count, solved/unsolved status
-    """
-
+    # This method is called by the RecentProblemsListView in algebra/views
+    # It returns a queryset with columns:
+    # link, start date, last viewed, equation, step count, solved/unsolved status
     @classmethod
     def populate_recent_table(cls, student_id, table_filter):
         step_qs = Step.objects.filter(problem=OuterRef("pk")).order_by("created")
@@ -617,3 +617,191 @@ class Step(models.Model):
                     mistakes[1] = Mistake.NO_STEP_TYPE
 
         return mistakes
+
+
+class CheckRewrite(CheckAlgebra):
+    are_equivalent = models.BooleanField(default=False, null=False)
+
+    @classmethod
+    def create_start_response(cls, step_id, side, user_message_obj):
+        step = Step.objects.get(id=step_id)
+        current_step_mistakes = Step.get_mistakes(step)
+        responses = []
+        response_context = Response.NO_CONTEXT
+
+        all_vars_in_expressions = Expression.get_variables_in_latex_expression(getattr(step, f"{side}_expr").latex)
+        all_vars_in_expressions += Expression.get_variables_in_latex_expression(
+            getattr(Step.get_prev(step), f"{side}_expr").latex
+        )
+
+        all_vars_to_substitute = list(set(all_vars_in_expressions))
+
+        if not all_vars_to_substitute:
+            if (
+                Mistake.BLANK_EXPR in current_step_mistakes
+                or Mistake.NON_MATH in current_step_mistakes
+                or Mistake.UNKNOWN_SYM in current_step_mistakes
+                or Mistake.GREY_BOX in current_step_mistakes
+            ):
+                responses.append(
+                    "You have an issue with one of the expressions you are trying to check. " "Please fix that first."
+                )
+            else:
+                responses.append("There are no variables in the expressions you are trying to check.")
+                responses.append(
+                    f"Try entering `/{getattr(step, f'{side}_expr').latex}` and"
+                    f" `/{getattr(Step.get_prev(step), f'{side}_expr').latex}` here in the calculator "
+                    f"to see if these two expressions are equivalent."
+                )
+        else:
+            # start new check process
+            vars_to_sub_dict = {}
+            for v in all_vars_to_substitute:
+                vars_to_sub_dict[v] = None
+
+            new_check = CheckRewrite.save_new(step.problem, vars_to_sub_dict, step, side)
+            if (
+                Mistake.BLANK_EXPR in current_step_mistakes
+                or Mistake.NON_MATH in current_step_mistakes
+                or Mistake.UNKNOWN_SYM in current_step_mistakes
+                or Mistake.GREY_BOX in current_step_mistakes
+            ):
+                responses.append(
+                    "You have an issue with one of the expressions you are trying to check. " "Please fix that first."
+                )
+
+                new_mistake = Mistake.save_new(new_check, Mistake.INVALID_EXPR)
+                new_mistake.save()
+                new_check.end_time = timezone.now()
+                new_check.save()
+            else:
+                if CheckRewrite.known_incorrect_rewrite(new_check):
+                    responses.append("You've already checked these expressions and know they are not equivalent.")
+                    responses.append("Change the expressions so they are equivalent instead of checking them again.")
+                    new_mistake = Mistake(new_check, Mistake.ALREADY_INCORRECT)
+                    new_mistake.save()
+                    new_check.end_time = timezone.now()
+                    new_check.save()
+                else:
+                    responses.append(
+                        f"Let's see if we can rewrite `/{new_check.expr2_latex}` as "
+                        f"`/{new_check.expr1_latex}` by checking if they are equal."
+                    )
+                    responses.append("We will do this by substituting in values for any variables.")
+                    response_context = Response.CHOOSE_REWRITE_VALUES
+                    responses.extend(CheckRewrite.create_assign_value_response(new_check, user_message_obj))
+
+        for r in responses:
+            Response.save_new(user_message_obj, r, response_context)
+
+    @classmethod
+    def create_assign_value_response(cls, check_process, user_message_obj):
+        responses = []
+
+        message_latex = Content.objects.get(user_message=user_message_obj).content
+
+        unassigned_vars = CheckRewrite.get_unassigned_variables(check_process)
+        response_context = Response.CHOOSE_REWRITE_VALUES
+
+        # This for loop takes a response from the user after they pick a specific value for a variable
+        # and attempts to set the value of the variable to the number they chose\
+        if "start-check-rewrite" not in message_latex:
+            for m in message_latex.split(","):
+                if m.count("=") == 1:
+                    lhs = m.split("=")[0].replace("\\", "").strip()
+                    rhs = m.split("=")[1].replace("\\", "").strip()
+                    if lhs in check_process.substitution_values or rhs in check_process.substitution_values:
+                        if lhs in check_process.substitution_values:
+                            responses.extend(CheckRewrite.save_substitution_value(check_process, lhs, rhs))
+                        else:
+                            responses.extend(CheckRewrite.save_substitution_value(check_process, rhs, lhs))
+
+                        if not responses[-1].startswith("Ok"):
+                            break
+                    else:
+                        responses.append(f"I'm not seeing a relevant variable in the equation `/{m}`. Try again.")
+                        break
+                elif m.count("=") == 0:
+                    if len(unassigned_vars) == 1:
+                        responses.extend(CheckRewrite.save_substitution_value(check_process, unassigned_vars[0], m))
+                        if not responses[-1].startswith("Ok"):
+                            break
+                    else:
+                        responses.append(
+                            "Use an equal sign (`/=`) between the variable and the number you " "are assigning it."
+                        )
+                        responses.append(
+                            "To define more than one variable at once, separate your equations " "with commas (,)"
+                        )
+                        break
+                else:
+                    responses.append("I'm having a hard time understanding this.")
+                    responses.append("To define more than one variable at once, separate equations with commas (,)")
+                    break
+
+        # Get the unassigned variables
+        unassigned_vars = CheckRewrite.get_unassigned_variables(check_process)
+
+        # If there are more, ask the user to pick values for them, too
+        if len(unassigned_vars) == 1:
+            responses.append(f"What number do you want to substitute in for `/{unassigned_vars[0]}`?")
+        elif len(unassigned_vars) == 2:
+            responses.append(
+                "What numbers do you want to substitute in for `/{}`?".format(r"\ and\ ".join(unassigned_vars))
+            )
+        elif len(unassigned_vars) > 2:
+            responses.append("Too many variables! Not possible!")
+        else:
+            # if all values are assigned, then start substitute values response
+            if len(check_process.sub_values) == 1:
+                variable = list(check_process.sub_values.keys())[0]
+                response_context = Response.CHECK_REWRITE
+                responses.append(
+                    f"Great, now substitute `/{check_process.sub_values[variable]}` in "
+                    f"for `/{variable}` in the expression `/{check_process.previous_latex}`."
+                )
+            elif len(check_process.sub_values) == 2:
+                r_list = []
+                for v in check_process.sub_values:
+                    r_list.append(f"{v}={check_process.sub_values[v]}")
+                response_context = Response.CHECK_REWRITE
+                responses.append(
+                    "Great! You have chosen the following values for the variables "
+                    "in these expressions:`/{}`".format(",\\ ".join(r_list))
+                )
+                responses.append(
+                    f"Now, substitute those values in for variables in "
+                    f"the expression `/{check_process.previous_latex}`."
+                )
+            else:
+                responses.append("Too many variables! Not possible!")
+
+        if "start-check-rewrite" in message_latex:
+            return responses
+        else:
+            for r in responses:
+                Response.save_new(user_message_obj, r, response_context)
+
+    # Before this method is called, a brand new checkrewrite object will be created
+    # This method will check that new checkrewrite process to see if it has already been done and
+    # proven to be a bad rewrite
+    @classmethod
+    def known_incorrect_rewrite(cls, check_process):
+        try:
+            step = check_process.expr1.left_side
+            side = "left"
+        except ObjectDoesNotExist:
+            step = check_process.expr1.right_side
+            side = "right"
+
+        completed_rewrite_checks = CheckRewrite.get_matching_completed_checks(None, step, side)
+        for c in completed_rewrite_checks:
+            if not c.are_equivalent:
+                return True
+
+        return False
+
+
+class CheckSolution(CheckAlgebra):
+    attempt = models.CharField(max_length=100, blank=True, null=True)
+    problem_solved = models.BooleanField(default=False, null=False)
