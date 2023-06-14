@@ -18,7 +18,11 @@ class UserMessage(models.Model):
         new_message.save()
 
         # Messages from users are always assumed to be in latex
-        message_content = Content(user_message=new_message, content_type=Content.LATEX, content=message_latex)
+        content_type = Content.LATEX
+        hidden_messages = ["start-check-rewrite", "stop-check-rewrite", "start-check-solution", "stop-check-solution"]
+        if any(msg in message_latex for msg in hidden_messages):
+            content_type = Content.HIDDEN
+        message_content = Content(user_message=new_message, content_type=content_type, content=message_latex)
         message_content.save()
 
         return new_message
@@ -115,10 +119,8 @@ class Response(models.Model):
 class Content(models.Model):
     LATEX = "latex"
     TEXT = "text"
-    CONTENT_TYPES = [
-        (LATEX, "LaTex"),
-        (TEXT, "Text"),
-    ]
+    HIDDEN = "hidden"
+    CONTENT_TYPES = [(LATEX, "LaTex"), (TEXT, "Text"), (HIDDEN, "Hidden")]
 
     response_message = models.ForeignKey(
         Response,
@@ -134,5 +136,5 @@ class Content(models.Model):
         default=None,
         null=True,
     )
-    content_type = models.CharField(max_length=5, choices=CONTENT_TYPES, default=TEXT)
+    content_type = models.CharField(max_length=6, choices=CONTENT_TYPES, default=TEXT)
     content = models.CharField(max_length=250, null=True, blank=True)

@@ -18,25 +18,23 @@
           </div>
         </div>
         {% for message in previous_user_messages %}
-          {% if message|show_message %}
-            <div class="ms-auto mb-3 w-75 user-message">
+          {% for content in message|get_message_content %}
+            <div class="ms-auto mb-3 w-75 user-message {% if content.content_type == "hidden" %}d-none{% endif %}">
               <div class="d-flex align-items-end">
                 <div class="message-box-end bg-primary text-white">
                   <p class="no-margin">
-                    {% for content in message|get_message_content %}
-                      {% if content.content_type == "text" %}
+                    {% if content.content_type == "latex" %}
+                      <span class="latex-message-span" style="font-size: 125%;">
                         {{ content.content }}
-                      {% else %}
-                        <span class="latex-message-span" style="font-size: 125%;">
-                          {{ content.content }}
-                        </span>
-                      {% endif %}
-                    {% endfor %}
+                      </span>
+                    {% else %}
+                      {{ content.content }}
+                    {% endif %}
                   </p>
                 </div>
               </div>
             </div>
-          {% endif %}
+          {% endfor %}
           <div class="mb-3 w-75 response">
 {#            {% include "calculator/calculator_response.html" with responses=message|get_responses %}#}
           </div>
