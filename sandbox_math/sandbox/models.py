@@ -234,10 +234,13 @@ class CheckAlgebra(models.Model):
         return responses
 
     @classmethod
-    def create_stop_response(cls, check_process, user_message_obj, reason_for_stop):
+    def create_stop_response(cls, check_process_class_name, user_message_obj, reason_for_stop):
         response_model = apps.get_model("calculator", "Response")
-        check_process.end_time = timezone.now()
-        check_process.save()
+        check_model = apps.get_model("algebra", check_process_class_name)
+        active_checks = check_model.objects.filter(problem__id=user_message_obj.problem_id, end_time__isnull=True)
+        for check_process in active_checks:
+            check_process.end_time = timezone.now()
+            check_process.save()
 
         response = "Stopping the check process."
 

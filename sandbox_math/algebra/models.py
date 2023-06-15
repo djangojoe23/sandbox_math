@@ -619,8 +619,10 @@ class Step(models.Model):
         return mistakes
 
 
+# A check rewrite process is considered completed if the are_equivalent is not null
+# if the are_equivalent field is null, then the user never even completed that process
 class CheckRewrite(CheckAlgebra):
-    are_equivalent = models.BooleanField(default=False, null=False)
+    are_equivalent = models.BooleanField(default=None, null=True)
 
     @classmethod
     def create_start_response(cls, step_id, side, user_message_obj):
@@ -678,8 +680,7 @@ class CheckRewrite(CheckAlgebra):
                 if CheckRewrite.known_incorrect_rewrite(new_check):
                     responses.append("You've already checked these expressions and know they are not equivalent.")
                     responses.append("Change the expressions so they are equivalent instead of checking them again.")
-                    new_mistake = Mistake(new_check, Mistake.ALREADY_INCORRECT)
-                    new_mistake.save()
+                    Mistake.save_new(new_check, Mistake.ALREADY_INCORRECT)
                     new_check.end_time = timezone.now()
                     new_check.save()
                 else:
@@ -689,16 +690,18 @@ class CheckRewrite(CheckAlgebra):
                     )
                     responses.append("We will do this by substituting in values for any variables.")
                     response_context = Response.CHOOSE_REWRITE_VALUES
-                    responses.extend(CheckRewrite.create_assign_value_response(new_check, user_message_obj))
+                    responses.extend(CheckRewrite.create_assign_value_response(user_message_obj))
 
         for r in responses:
             Response.save_new(user_message_obj, r, response_context)
 
     @classmethod
-    def create_assign_value_response(cls, check_process, user_message_obj):
+    def create_assign_value_response(cls, user_message_obj):
         responses = []
 
         message_latex = Content.objects.get(user_message=user_message_obj).content
+
+        check_process = CheckRewrite.objects.get(problem__id=user_message_obj.problem_id, end_time__isnull=True)
 
         unassigned_vars = CheckRewrite.get_unassigned_variables(check_process)
         response_context = Response.CHOOSE_REWRITE_VALUES
@@ -796,10 +799,77 @@ class CheckRewrite(CheckAlgebra):
 
         completed_rewrite_checks = CheckRewrite.get_matching_completed_checks(None, step, side)
         for c in completed_rewrite_checks:
-            if not c.are_equivalent:
+            if c.are_equivalent is False:
                 return True
 
         return False
+
+    # This method takes a check_rewrite, step_id, and a side to determine if it is actively involved in a
+    # check rewrite process
+    @classmethod
+    def is_currently_checking(cls, step_id, side):
+        step = Step.objects.get(id=step_id)
+        current_check_process = CheckRewrite.objects.filter(problem=step.problem, end_time__isnull=True)
+
+        if current_check_process.count() == 0:
+            return False
+        elif current_check_process.count() > 1:
+            print(
+                "is_currently_checking in algebra/models CheckRewrite thinks there is more than 1 process "
+                "without an end time"
+            )
+            return False
+        else:
+            step_expr = getattr(step, f"{side}_expr")
+            prev_step_expr = getattr(Step.get_prev(step), f"{side}_expr")
+
+            if (
+                current_check_process.first().expr1 == step_expr
+                and current_check_process.first().expr1_latex == step_expr.latex
+            ):
+                if (
+                    current_check_process.first().expr2 == prev_step_expr
+                    and current_check_process.first().expr2_latex == prev_step_expr.latex
+                ):
+                    return True
+
+            return False
+
+    # this method determines if the values being chosen for variables in a check rewrite are new
+    # meaning they are not values chosen in a previously completed check with these 2 expressions
+    # it is used right before the last variable is assigned a value inside the create_assign_value_response method
+    @classmethod
+    def is_checking_new_values(cls, check_process, last_variable, last_value):
+        pass
+        # if check_process.expr1.left_side:
+        #     matching_checks = CheckRewrite.get_matching_completed_checks(None, check_process.expr1.left_side, "left")
+        # else:
+        #     matching_checks = CheckRewrite.get_matching_completed_checks(
+        #     None, check_process.expr1.right_side, "right")
+        # matching_completed_checks = matching_checks.filter(are_equivalent=True)
+        # unassigned_variables = CheckRewrite.get_unassigned_variables(check_process)
+        #
+        # if matching_completed_checks.count() > 0 and len(unassigned_variables) == 1:
+        #     for prev_check in matching_completed_checks:
+        #         if prev_check.substitution_values.keys() == check_process.sub_values.keys():
+        #             same_value_for_variable_count = 0
+        #             for variable in prev_check.substitution_values:
+        #                 if prev_check.substitution_values[variable] and check_process.substitution_values[variable]:
+        #                     if (
+        #                         Decimal(prev_check.substitution_values[variable]) ==
+        #                         Decimal(check_process.substitution_values[variable])):
+        #                         same_value_for_variable_count += 1
+        #
+        #             if (same_value_for_variable_count == len(check_process.substitution_values) - 1 and not
+        #             check_process.substitution_values[last_variable]):
+        #                 if Decimal(prev_check.sub_values[last_variable]) == Decimal(last_value):
+        #                     return False
+        #             elif same_value_for_variable_count == len(check_process.substitution_values):
+        #                 print("i'm not sure how i got here...algebra/models.py checkrewrite
+        #                 is checking new values...")
+        #                 return False
+        #
+        # return True
 
 
 class CheckSolution(CheckAlgebra):

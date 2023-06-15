@@ -1,6 +1,7 @@
+from django.utils import timezone
 from django.views.generic.base import TemplateView
 
-from sandbox_math.algebra.models import CheckRewrite
+from sandbox_math.algebra.models import CheckRewrite, Step
 from sandbox_math.calculator.models import Response, UserMessage
 from sandbox_math.sandbox.models import Sandbox
 
@@ -23,19 +24,44 @@ class GetResponseView(TemplateView):
 
         current_context = Response.get_context_of_last_response(user_message_obj)
         if caller == "SubmitUserMessage":
-            # User is submitting a message with no context (looking for an arithmetic response) OR
-            # user is submitting a message to continue a check rewrite or check solution
             if current_context == Response.NO_CONTEXT:
+                # User is submitting a message with no context (looking for an arithmetic response)
                 Response.with_no_context(user_message_obj)
+            elif current_context == Response.CHOOSE_REWRITE_VALUES:
+                if user_message == "stop":
+                    CheckRewrite.create_stop_response("CheckRewrite", user_message_obj, None)
+                else:
+                    # User is submitting a message to continue a check rewrite
+                    CheckRewrite.create_assign_value_response(user_message_obj)
         elif caller == "InitializeNewStep":
             # User must be starting a new check rewrite
             step_id = int(user_message.split("-")[0][4:])
             side = user_message.split("-")[4]
             if current_context == Response.NO_CONTEXT:
                 CheckRewrite.create_start_response(step_id, side, user_message_obj)
-            else:
-                # TODO is it the check rewrite they are already doing?
-                pass
+            else:  # There is already a check rewrite process going
+                if CheckRewrite.is_currently_checking(step_id, side):
+                    # The user is trying to start the same check rewrite they currently have going
+                    Response.save_new(
+                        user_message_obj,
+                        "You're already checking this rewrite! Respond to the last message to continue.",
+                        current_context,
+                    )
+                else:
+                    # The user is trying to start a different check rewrite than the one they currently have going
+                    Response.save_new(
+                        user_message_obj,
+                        "Canceling the current check rewrite process and starting a new one.",
+                        Response.NO_CONTEXT,
+                    )
+                    step = Step.objects.get(id=step_id)
+                    currently_active_check = CheckRewrite.objects.filter(
+                        problem=step.problem, end_time__isnull=True
+                    ).first()
+                    if currently_active_check:
+                        currently_active_check.end_time = timezone.now()
+                        currently_active_check.save()
+                    CheckRewrite.create_start_response(step_id, side, user_message_obj)
         elif caller == "StepTypeChanged":
             # User must be stopping a check rewrite
             pass
