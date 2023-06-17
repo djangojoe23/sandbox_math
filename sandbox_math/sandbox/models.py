@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.apps import apps
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
@@ -84,6 +86,96 @@ class CheckAlgebra(models.Model):
 
         return new_check
 
+    # This method takes a check_rewrite, step_id, and a side to determine if it is actively involved in a
+    # check rewrite process
+    @classmethod
+    def is_currently_checking(cls, step_id, side):
+        step_model = apps.get_model("algebra", "Step")
+        step = step_model.objects.get(id=step_id)
+        if step_model.is_first(step):
+            model_name = "CheckSolution"
+        else:
+            model_name = "CheckRewrite"
+        check_model = apps.get_model("algebra", model_name)
+
+        current_check_process = check_model.objects.filter(problem=step.problem, end_time__isnull=True)
+
+        if current_check_process.count() == 0:
+            return False
+        elif current_check_process.count() > 1:
+            print(
+                "is_currently_checking in algebra/models CheckRewrite thinks there is more than 1 process "
+                "without an end time"
+            )
+            return False
+        else:
+            step_expr = getattr(step, f"{side}_expr")
+            if (
+                current_check_process.first().expr1 == step_expr
+                and current_check_process.first().expr1_latex == step_expr.latex
+            ):
+                if model_name == "CheckRewrite":
+                    prev_step_expr = getattr(step_model.get_prev(step), f"{side}_expr")
+                    if (
+                        current_check_process.first().expr2 == prev_step_expr
+                        and current_check_process.first().expr2_latex == prev_step_expr.latex
+                    ):
+                        return True
+                else:
+                    other_side = "right"
+                    if side == "right":
+                        other_side = "left"
+                    other_side_expr = getattr(step, f"{other_side}_expr")
+                    if (
+                        current_check_process.first().expr2 == other_side_expr
+                        and current_check_process.first().expr2_latex == other_side_expr.latex
+                    ):
+                        return True
+
+            return False
+
+    # This method determines if the values being chosen for variables in a check rewrite or a check solution are new
+    # meaning they are not values chosen in a previously completed check with these 2 expressions
+    @classmethod
+    def is_checking_new_values(cls, check_process):
+        # Get all matching completed checks
+        if check_process.__class__.__name__ == "CheckRewrite":
+            check_model = apps.get_model("algebra", "CheckRewrite")
+            if check_process.expr1.left_side_step:
+                matching_checks = check_model.get_matching_completed_checks(
+                    None, check_process.expr1.left_side_step, "left"
+                )
+            else:
+                matching_checks = check_model.get_matching_completed_checks(
+                    None, check_process.expr1.right_side_step, "right"
+                )
+            matching_completed_checks = matching_checks.filter(are_equivalent=True)
+            unassigned_variables = check_model.get_unassigned_variables(check_process)
+        elif check_process.__class__.__name__ == "CheckSolution":
+            check_model = apps.get_model("algebra", "CheckSolution")
+            matching_completed_checks = check_model.get_matching_completed_checks(check_process, None, None)
+            unassigned_variables = check_model.get_unassigned_variables(check_process)
+        else:
+            matching_completed_checks = Sandbox.objects.none()
+            unassigned_variables = []
+
+        # For there to be a duplicated check, there must be previously completed checks and
+        # there must not be any unassigned variables left to define
+        if matching_completed_checks.count() > 0 and len(unassigned_variables) == 0:
+            for prev_check in matching_completed_checks:
+                if prev_check.substitution_values.keys() == check_process.substitution_values.keys():
+                    same_value_for_variable_count = 0
+                    for variable in prev_check.substitution_values:
+                        if prev_check.substitution_values[variable] and check_process.substitution_values[variable]:
+                            if Decimal(prev_check.substitution_values[variable]) == Decimal(
+                                check_process.substitution_values[variable]
+                            ):
+                                same_value_for_variable_count += 1
+
+                    if same_value_for_variable_count == len(check_process.substitution_values):
+                        return False
+        return True
+
     # This method returns a querylist of all the same checks the user has already done within a problem
     # This does not also match the values used for variables during the check...just the expressions
     # To find matching solution checks, pass this a solution_check, but leave side and step null
@@ -164,12 +256,15 @@ class CheckAlgebra(models.Model):
                             mistake_model.save_new(check_process, mistake_model.CHOOSE_VALUE)
                             responses.append(f"Try a smaller and simpler number for `/{variable}`...like `/3`.")
                         else:
+                            check_process.substitution_values[variable] = suggested_value_str
+                            check_process.save()
+
                             if check_model.is_checking_new_values(check_process):
-                                check_process.substitution_values[variable] = suggested_value_str
-                                check_process.save()
                                 responses.append(f"Ok, `/{variable}={suggested_value_str}`")
                             else:
                                 mistake_model.save_new(check_process, mistake_model.CHOOSE_VALUE)
+                                check_process.substitution_values[variable] = None
+                                check_process.save()
 
                                 if len(check_process.substitution_values) == 1:
                                     if check_process.__class__.__name__ == "CheckRewrite":

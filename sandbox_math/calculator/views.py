@@ -33,6 +33,8 @@ class GetResponseView(TemplateView):
                 else:
                     # User is submitting a message to continue a check rewrite
                     CheckRewrite.create_assign_value_response(user_message_obj)
+            elif current_context == Response.CHECK_REWRITE:
+                CheckRewrite.create_substitute_values_response(user_message_obj)
         elif caller == "InitializeNewStep":
             # User must be starting a new check rewrite
             step_id = int(user_message.split("-")[0][4:])
