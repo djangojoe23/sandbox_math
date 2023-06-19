@@ -1,6 +1,6 @@
 from django import template
 
-from sandbox_math.calculator.models import Content
+from sandbox_math.calculator.models import Content, Response
 
 register = template.Library()
 
@@ -8,6 +8,11 @@ register = template.Library()
 @register.filter(name="get_message_content")
 def get_message_content(message_obj):
     return Content.objects.filter(user_message=message_obj).order_by("id")
+
+
+@register.filter(name="get_responses")
+def get_responses(message_obj):
+    return Response.objects.filter(user_message=message_obj).order_by("id")
 
 
 @register.filter(name="get_response_content")

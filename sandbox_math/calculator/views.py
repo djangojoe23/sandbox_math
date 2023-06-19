@@ -35,6 +35,29 @@ class GetResponseView(TemplateView):
                     CheckRewrite.create_assign_value_response(user_message_obj)
             elif current_context == Response.CHECK_REWRITE:
                 CheckRewrite.create_substitute_values_response(user_message_obj)
+
+                # change badge count or color here if a check rewrite process ended successfully
+                if Response.get_context_of_last_response(user_message_obj) == Response.NO_CONTEXT:
+                    just_finished_check = (
+                        CheckRewrite.objects.filter(problem__id=problem_id, end_time__isnull=False)
+                        .order_by("-end_time")
+                        .first()
+                    )
+                    if hasattr(just_finished_check.expr1, "left_side_step"):
+                        side = "left"
+                    else:
+                        side = "right"
+
+                    other_matching_finished_processes = CheckRewrite.get_matching_completed_checks(
+                        "CheckRewrite", getattr(just_finished_check.expr1, f"{side}_side_step"), side
+                    )
+                    context["badge_step_id"] = getattr(just_finished_check.expr1, f"{side}_side_step").id
+                    context["new_badge_count"] = other_matching_finished_processes.count()
+                    context["new_badge_color"] = "info"
+                    for p in other_matching_finished_processes:
+                        if not p.are_equivalent:
+                            context["new_badge_color"] = "danger"
+                    context["new_badge_count_side"] = side
         elif caller == "InitializeNewStep":
             # User must be starting a new check rewrite
             step_id = int(user_message.split("-")[0][4:])
@@ -57,19 +80,14 @@ class GetResponseView(TemplateView):
                         Response.NO_CONTEXT,
                     )
                     step = Step.objects.get(id=step_id)
-                    currently_active_check = CheckRewrite.objects.filter(
-                        problem=step.problem, end_time__isnull=True
-                    ).first()
+                    currently_active_check = CheckRewrite.objects.get(problem=step.problem, end_time__isnull=True)
                     if currently_active_check:
                         currently_active_check.end_time = timezone.now()
                         currently_active_check.save()
                     CheckRewrite.create_start_response(step_id, side, user_message_obj)
-        elif caller == "StepTypeChanged":
-            # User must be stopping a check rewrite
-            pass
+        elif caller in ["StepTypeChanged", "ExpressionChanged", "DeleteStep"]:
+            CheckRewrite.create_stop_response("CheckRewrite", user_message_obj, caller)
 
         context["responses"] = Response.objects.filter(user_message=user_message_obj).order_by("id")
-
-        # change badge count or color here if a check rewrite process ended successfully
 
         return context

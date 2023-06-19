@@ -36,7 +36,7 @@
             </div>
           {% endfor %}
           <div class="mb-3 w-75 response">
-{#            {% include "calculator/calculator_response.html" with responses=message|get_responses %}#}
+            {% include "calculator/response.html" with responses=message|get_responses %}
           </div>
         {% endfor %}
       </div>

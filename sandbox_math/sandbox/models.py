@@ -86,54 +86,6 @@ class CheckAlgebra(models.Model):
 
         return new_check
 
-    # This method takes a check_rewrite, step_id, and a side to determine if it is actively involved in a
-    # check rewrite process
-    @classmethod
-    def is_currently_checking(cls, step_id, side):
-        step_model = apps.get_model("algebra", "Step")
-        step = step_model.objects.get(id=step_id)
-        if step_model.is_first(step):
-            model_name = "CheckSolution"
-        else:
-            model_name = "CheckRewrite"
-        check_model = apps.get_model("algebra", model_name)
-
-        current_check_process = check_model.objects.filter(problem=step.problem, end_time__isnull=True)
-
-        if current_check_process.count() == 0:
-            return False
-        elif current_check_process.count() > 1:
-            print(
-                "is_currently_checking in algebra/models CheckRewrite thinks there is more than 1 process "
-                "without an end time"
-            )
-            return False
-        else:
-            step_expr = getattr(step, f"{side}_expr")
-            if (
-                current_check_process.first().expr1 == step_expr
-                and current_check_process.first().expr1_latex == step_expr.latex
-            ):
-                if model_name == "CheckRewrite":
-                    prev_step_expr = getattr(step_model.get_prev(step), f"{side}_expr")
-                    if (
-                        current_check_process.first().expr2 == prev_step_expr
-                        and current_check_process.first().expr2_latex == prev_step_expr.latex
-                    ):
-                        return True
-                else:
-                    other_side = "right"
-                    if side == "right":
-                        other_side = "left"
-                    other_side_expr = getattr(step, f"{other_side}_expr")
-                    if (
-                        current_check_process.first().expr2 == other_side_expr
-                        and current_check_process.first().expr2_latex == other_side_expr.latex
-                    ):
-                        return True
-
-            return False
-
     # This method determines if the values being chosen for variables in a check rewrite or a check solution are new
     # meaning they are not values chosen in a previously completed check with these 2 expressions
     @classmethod
@@ -141,7 +93,8 @@ class CheckAlgebra(models.Model):
         # Get all matching completed checks
         if check_process.__class__.__name__ == "CheckRewrite":
             check_model = apps.get_model("algebra", "CheckRewrite")
-            if check_process.expr1.left_side_step:
+
+            if hasattr(check_process.expr1, "left_side_step"):
                 matching_checks = check_model.get_matching_completed_checks(
                     None, check_process.expr1.left_side_step, "left"
                 )
@@ -191,6 +144,7 @@ class CheckAlgebra(models.Model):
                     problem=step.problem,
                     expr1_latex=getattr(step, f"{side}_expr").latex,
                     expr2_latex=getattr(step_model.get_prev(step), f"{side}_expr").latex,
+                    are_equivalent__isnull=False,
                     end_time__isnull=False,
                 )
             else:
@@ -339,13 +293,13 @@ class CheckAlgebra(models.Model):
 
         response = "Stopping the check process."
 
-        if reason_for_stop == "delete":
+        if reason_for_stop == "DeleteStep":
             response += " One of the expressions you were checking was deleted."
-        elif reason_for_stop == "step":
+        elif reason_for_stop == "StepTypeChanged":
             response += " The rewrite you were checking is no longer a rewrite step."
         elif reason_for_stop == "var":
             response += " The variable you are solving for has changed."
-        elif reason_for_stop == "expr":
+        elif reason_for_stop == "ExpressionChanged":
             response += " One of the expressions you are checking was changed."
         elif reason_for_stop == "answ":
             response += " You changed the answer you are checking."

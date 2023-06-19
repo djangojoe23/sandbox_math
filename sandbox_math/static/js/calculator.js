@@ -165,6 +165,27 @@ function GetResponse(userMessageLatex, callerFunctionName) {
       let calcInputField = MQ.MathField($('#calculatorInput')[0]);
       setTimeout(
         function () {
+          let stepID = lastResponseParent.find('.badge-step-id').html();
+          let side = 'right';
+          let badgeObj = $(
+            '#step' + stepID + ' button.check-rewrite-right .badge',
+          );
+          if (lastResponseParent.find('.new-badge-count-left').length) {
+            badgeObj = $(
+              '#step' + stepID + ' button.check-rewrite-left .badge',
+            );
+            side = 'left';
+          }
+          badgeObj.html(
+            $(lastResponseParent)
+              .find('.new-badge-count-' + side)
+              .html(),
+          );
+          if (lastResponseParent.find('.danger').length) {
+            badgeObj.removeClass('bg-faded-info text-info');
+            badgeObj.addClass('bg-faded-danger text-danger');
+          }
+
           $('#calculatorSubmit').prop('disabled', false);
           if (calcInputField) {
             calcInputField.config({

@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.views.generic.base import TemplateView, View
 from django.views.generic.list import ListView
 
-from sandbox_math.algebra.models import CheckRewrite, Expression, Problem, Step
+from sandbox_math.algebra.models import CheckRewrite, CheckSolution, Expression, Problem, Step
 from sandbox_math.calculator.models import UserMessage
 from sandbox_math.sandbox.models import Sandbox
 from sandbox_math.users.models import HelpClick, Mistake, Proceed
@@ -108,7 +108,7 @@ class UpdateStepTypeView(View):
 
             feedback = {
                 "mistakes": Problem.get_all_steps_mistakes(step.problem),
-                "stop-check-rewrite": stop_check_rewrite,
+                "stop_check_rewrite": stop_check_rewrite,
             }
 
             response = JsonResponse(feedback)
@@ -122,25 +122,66 @@ class UpdateExpressionView(View):
         response = None
         step = Step.objects.get(id=int(request.POST["step-id"]))
 
+        side = None
         if "left" in request.POST["side"]:
+            side = "left"
             step.left_expr.latex = request.POST["expression"]
             step.left_expr.save()
         elif "right" in request.POST["side"]:
+            side = "right"
             step.right_expr.latex = request.POST["expression"]
             step.right_expr.save()
         else:
             response = JsonResponse({"error": "there was an error updating the expression"})
 
+        stop_check = None  # could be stopping a check rewrite or a check solution
         if not response:
-            first_step = Step.objects.filter(problem=step.problem).order_by("created").first()
+            all_steps = Step.objects.filter(problem=step.problem).order_by("created")
 
-            left_var_options = Expression.get_variables_in_latex_expression(first_step.left_expr.latex)
-            right_var_options = Expression.get_variables_in_latex_expression(first_step.right_expr.latex)
+            left_var_options = Expression.get_variables_in_latex_expression(all_steps.first().left_expr.latex)
+            right_var_options = Expression.get_variables_in_latex_expression(all_steps.first().right_expr.latex)
             variable_options = set(left_var_options + right_var_options)
 
+            if CheckRewrite.is_currently_checking(step.id, side):
+                active_process = CheckRewrite.objects.get(problem=step.problem, end_time__isnull=True)
+                if active_process.expr1 == getattr(step, f"{side}_expr"):
+                    # step with expression changed is the rewrite step
+                    if active_process.expr1_latex != getattr(step, f"{side}_expr").latex:
+                        stop_check = "rewrite"
+                else:
+                    # step with the expression changed is the previous step
+                    if active_process.expr2_latex != getattr(step, f"{side}_expr").latex:
+                        stop_check = "rewrite"
+            elif CheckSolution.is_currently_checking(step.id, side):
+                stop_check = "solution"
+            elif all_steps.last() == step:
+                if CheckSolution.objects.filter(problem=step.problem, end_time__isnull=True).count() > 0:
+                    stop_check = "solution"
+
+            # Editing an expression could have an effect on it's badge count, the previous step's badge count, or the
+            # next one's
+            badge_updates = {}
+            for e in range(0, 3):
+                step_to_match = step
+                if e == 0:
+                    step_to_match = Step.get_prev(step)
+                elif e == 1:
+                    step_to_match = Step.get_next(step)
+
+                if step_to_match:
+                    completed_checks = CheckRewrite.get_matching_completed_checks("CheckRewrite", step_to_match, side)
+                    badge_updates[step_to_match.id] = {
+                        "count": completed_checks.count(),
+                        "color": "info",
+                    }
+                    for p in completed_checks:
+                        if not p.are_equivalent:
+                            badge_updates[step_to_match.id]["color"] = "danger"
             feedback = {
                 "variable_options": sorted(list(variable_options)),
                 "mistakes": Problem.get_all_steps_mistakes(step.problem),
+                "stop_check": stop_check,
+                "badge_updates": badge_updates,
             }
 
             response = JsonResponse(feedback)
@@ -255,13 +296,15 @@ class DeleteStepView(View):
     def post(cls, request):
         step = Step.objects.get(id=request.POST["step-id"])
 
+        stop_check = None
+        if CheckRewrite.is_currently_checking(step.id, "left") or CheckRewrite.is_currently_checking(step.id, "right"):
+            stop_check = "rewrite"
+
         step.left_expr.delete()
         step.right_expr.delete()
         step.delete()
 
-        feedback = {
-            "mistakes": Problem.get_all_steps_mistakes(step.problem),
-        }
+        feedback = {"mistakes": Problem.get_all_steps_mistakes(step.problem), "stop_check": stop_check}
 
         return JsonResponse(feedback)
 

@@ -397,6 +397,33 @@ async function ExpressionChanged(expressionObject) {
         });
       }
 
+      if (
+        response['stop_check'] === 'rewrite' ||
+        response['stop_check'] === 'solution'
+      ) {
+        GetResponse(
+          'stop-check-' + response['stop_check'],
+          'ExpressionChanged',
+        );
+      }
+
+      let side = 'left';
+      if (expressionObject.attr('class').includes('right')) {
+        side = 'right';
+      }
+      for (const [key, value] of Object.entries(response['badge_updates'])) {
+        let badge = $(
+          '#step' + key + ' button.check-rewrite-' + side + ' .badge',
+        );
+        badge.html(value['count']);
+        if (value['color'] === 'info') {
+          badge.removeClass('bg-faded-danger text-danger');
+          badge.addClass('bg-faded-info text-info');
+        } else {
+          badge.removeClass('bg-faded-info text-info');
+          badge.addClass('bg-faded-danger text-danger');
+        }
+      }
       ToggleNewAndCheckButtons(false);
 
       SetCalculatorHeight();
@@ -518,6 +545,12 @@ async function DeleteStep(stepID) {
 
       UpdateAllExpressionHelp(response['mistakes']);
 
+      if (
+        response['stop_check'] === 'rewrite' ||
+        response['stop_check'] === 'solution'
+      ) {
+        GetResponse('stop-check-' + response['stop_check'], 'DeleteStep');
+      }
       ToggleNewAndCheckButtons(false);
 
       SetCalculatorHeight();

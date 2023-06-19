@@ -627,10 +627,32 @@ class Step(models.Model):
 class CheckRewrite(CheckAlgebra):
     are_equivalent = models.BooleanField(default=None, null=True)
 
+    # This method takes a step_id, and a side to determine if it is actively involved in a
+    # check rewrite or a check solution
+    @classmethod
+    def is_currently_checking(cls, step_id, side):
+        step = Step.objects.get(id=step_id)
+        current_check_process = CheckRewrite.objects.filter(problem=step.problem, end_time__isnull=True)
+
+        if current_check_process.count() == 0:
+            return False
+        elif current_check_process.count() > 1:
+            print(
+                "is_currently_checking in algebra/models CheckRewrite thinks there is more than 1 process "
+                "without an end time"
+            )
+            return False
+        else:
+            step_expr = getattr(step, f"{side}_expr")
+            if step_expr in [current_check_process.first().expr1, current_check_process.first().expr2]:
+                return True
+
+            return False
+
     @classmethod
     def create_start_response(cls, step_id, side, user_message_obj):
         step = Step.objects.get(id=step_id)
-        current_step_mistakes = Step.get_mistakes(step)
+        expr_mistakes = [Step.get_mistakes(step)[len(side) - 4], Step.get_mistakes(Step.get_prev(step))[len(side) - 4]]
         responses = []
         response_context = Response.NO_CONTEXT
 
@@ -640,13 +662,12 @@ class CheckRewrite(CheckAlgebra):
         )
 
         all_vars_to_substitute = list(set(all_vars_in_expressions))
-
         if not all_vars_to_substitute:
             if (
-                Mistake.BLANK_EXPR in current_step_mistakes
-                or Mistake.NON_MATH in current_step_mistakes
-                or Mistake.UNKNOWN_SYM in current_step_mistakes
-                or Mistake.GREY_BOX in current_step_mistakes
+                Mistake.BLANK_EXPR in expr_mistakes
+                or Mistake.NON_MATH in expr_mistakes
+                or Mistake.UNKNOWN_SYM in expr_mistakes
+                or Mistake.GREY_BOX in expr_mistakes
             ):
                 responses.append(
                     "You have an issue with one of the expressions you are trying to check. " "Please fix that first."
@@ -666,10 +687,10 @@ class CheckRewrite(CheckAlgebra):
 
             new_check = CheckRewrite.save_new(step.problem, vars_to_sub_dict, step, side)
             if (
-                Mistake.BLANK_EXPR in current_step_mistakes
-                or Mistake.NON_MATH in current_step_mistakes
-                or Mistake.UNKNOWN_SYM in current_step_mistakes
-                or Mistake.GREY_BOX in current_step_mistakes
+                Mistake.BLANK_EXPR in expr_mistakes
+                or Mistake.NON_MATH in expr_mistakes
+                or Mistake.UNKNOWN_SYM in expr_mistakes
+                or Mistake.GREY_BOX in expr_mistakes
             ):
                 responses.append(
                     "You have an issue with one of the expressions you are trying to check. " "Please fix that first."
@@ -918,3 +939,7 @@ class CheckRewrite(CheckAlgebra):
 class CheckSolution(CheckAlgebra):
     attempt = models.CharField(max_length=100, blank=True, null=True)
     problem_solved = models.BooleanField(default=False, null=False)
+
+    @classmethod
+    def is_currently_checking(cls, step_id, side):
+        return False
