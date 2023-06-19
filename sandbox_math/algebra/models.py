@@ -224,9 +224,9 @@ class Problem(models.Model):
                     other_side_prev_latex = prev_step.left_expr.latex
 
                 latex_this_in_other_side = (
-                    f"{other_side_latex[:prev_latex_index[(s+1)%2]]}"
+                    f"{other_side_latex[:prev_latex_index[(s + 1) % 2]]}"
                     f"\\left({prev_latex}\\right)"
-                    f"{other_side_latex[prev_latex_index[(s+1)%2] + len(other_side_prev_latex):]}"
+                    f"{other_side_latex[prev_latex_index[(s + 1) % 2] + len(other_side_prev_latex):]}"
                 )
                 sympy_this_in_other_side = Expression.get_sympy_expression_from_latex(latex_this_in_other_side)
                 if sympy_this_in_other_side not in list(zip(*Mistake.MISTAKE_TYPES))[0]:
@@ -679,13 +679,14 @@ class CheckRewrite(CheckAlgebra):
                     f" `/{getattr(Step.get_prev(step), f'{side}_expr').latex}` here in the calculator "
                     f"to see if these two expressions are equivalent."
                 )
-        else:
+        elif len(all_vars_to_substitute) < 3 and step.problem.variable in all_vars_to_substitute:
             # start new check process
-            vars_to_sub_dict = {}
+            other_var = None
             for v in all_vars_to_substitute:
-                vars_to_sub_dict[v] = None
+                if v != step.problem.variable:
+                    other_var = v
 
-            new_check = CheckRewrite.save_new(step.problem, vars_to_sub_dict, step, side)
+            new_check = CheckRewrite.save_new(other_var, step, side)
             if (
                 Mistake.BLANK_EXPR in expr_mistakes
                 or Mistake.NON_MATH in expr_mistakes
@@ -693,7 +694,7 @@ class CheckRewrite(CheckAlgebra):
                 or Mistake.GREY_BOX in expr_mistakes
             ):
                 responses.append(
-                    "You have an issue with one of the expressions you are trying to check. " "Please fix that first."
+                    "You have an issue with one of the expressions you are trying to check. Please fix that first."
                 )
 
                 new_mistake = Mistake.save_new(new_check, Mistake.INVALID_EXPR)
@@ -701,7 +702,7 @@ class CheckRewrite(CheckAlgebra):
                 new_check.end_time = timezone.now()
                 new_check.save()
             else:
-                if CheckRewrite.known_incorrect_rewrite(new_check):
+                if CheckRewrite.known_incorrect(new_check):
                     responses.append("You've already checked these expressions and know they are not equivalent.")
                     responses.append("Change the expressions so they are equivalent instead of checking them again.")
                     Mistake.save_new(new_check, Mistake.ALREADY_INCORRECT)
@@ -725,83 +726,45 @@ class CheckRewrite(CheckAlgebra):
 
         message_latex = Content.objects.get(user_message=user_message_obj).content
 
-        check_process = CheckRewrite.objects.get(problem__id=user_message_obj.problem_id, end_time__isnull=True)
+        check_process = CheckRewrite.objects.get(problem_id=user_message_obj.problem_id, end_time__isnull=True)
 
-        unassigned_vars = CheckRewrite.get_unassigned_variables(check_process)
         response_context = Response.CHOOSE_REWRITE_VALUES
 
         # This for loop takes a response from the user after they pick a specific value for a variable
         # and attempts to set the value of the variable to the number they chose\
         if "start-check-rewrite" not in message_latex:
-            for m in message_latex.split(","):
-                if m.count("=") == 1:
-                    lhs = m.split("=")[0].replace("\\", "").strip()
-                    rhs = m.split("=")[1].replace("\\", "").strip()
-                    if lhs in check_process.substitution_values or rhs in check_process.substitution_values:
-                        if lhs in check_process.substitution_values:
-                            responses.extend(CheckRewrite.save_substitution_value(check_process, lhs, rhs))
-                        else:
-                            responses.extend(CheckRewrite.save_substitution_value(check_process, rhs, lhs))
-
-                        if not responses[-1].startswith("Ok"):
-                            break
-                    else:
-                        responses.append(f"I'm not seeing a relevant variable in the equation `/{m}`. Try again.")
-                        break
-                elif m.count("=") == 0:
-                    if len(unassigned_vars) == 1:
-                        responses.extend(CheckRewrite.save_substitution_value(check_process, unassigned_vars[0], m))
-                        if not responses[-1].startswith("Ok"):
-                            break
-                    else:
-                        responses.append(
-                            "Use an equal sign (`/=`) between the variable and the number you " "are assigning it."
-                        )
-                        responses.append(
-                            "To define more than one variable at once, separate your equations " "with commas (,)"
-                        )
-                        break
-                else:
-                    responses.append("I'm having a hard time understanding this.")
-                    responses.append("To define more than one variable at once, separate equations with commas (,)")
-                    break
-
-        # Get the unassigned variables
-        unassigned_vars = CheckRewrite.get_unassigned_variables(check_process)
+            if not check_process.solving_for_value:
+                responses.extend(
+                    CheckRewrite.save_substitution_value(check_process, check_process.solving_for, message_latex)
+                )
+            elif check_process.other_var and not check_process.other_var_value:
+                responses.extend(
+                    CheckRewrite.save_substitution_value(check_process, check_process.other_var, message_latex)
+                )
 
         # If there are more, ask the user to pick values for them, too
-        if len(unassigned_vars) == 1:
-            responses.append(f"What number do you want to substitute in for `/{unassigned_vars[0]}`?")
-        elif len(unassigned_vars) == 2:
-            responses.append(
-                "What numbers do you want to substitute in for `/{}`?".format(r"\ and\ ".join(unassigned_vars))
-            )
-        elif len(unassigned_vars) > 2:
-            responses.append("Too many variables! Not possible!")
+        if not check_process.solving_for_value:
+            responses.append(f"What number do you want to substitute in for `/{check_process.solving_for}`?")
+        elif check_process.other_var and not check_process.other_var_value:
+            responses.append(f"What number do you want to substitute in for `/{check_process.other_var}`?")
         else:
             # if all values are assigned, then start substitute values response
-            if len(check_process.substitution_values) == 1:
-                variable = list(check_process.substitution_values.keys())[0]
+            if not check_process.other_var:
                 response_context = Response.CHECK_REWRITE
                 responses.append(
-                    f"Great, now substitute `/{check_process.substitution_values[variable]}` in "
-                    f"for `/{variable}` in the expression `/{check_process.expr1_latex}`."
-                )
-            elif len(check_process.substitution_values) == 2:
-                r_list = []
-                for v in check_process.substitution_values:
-                    r_list.append(f"{v}={check_process.substitution_values[v]}")
-                response_context = Response.CHECK_REWRITE
-                responses.append(
-                    "Great! You have chosen the following values for the variables "
-                    "in these expressions:`/{}`".format(",\\ ".join(r_list))
-                )
-                responses.append(
-                    f"Now, substitute those values in for variables in "
-                    f"the expression `/{check_process.expr1_latex}`."
+                    f"Great, now substitute `/{check_process.solving_for_value}` in "
+                    f"for `/{check_process.solving_for}` in the expression `/{check_process.expr1_latex}`."
                 )
             else:
-                responses.append("Too many variables! Not possible!")
+                response_context = Response.CHECK_REWRITE
+                responses.append(
+                    f"Great! You have chosen `/{check_process.solving_for}={check_process.solving_for_value}` and "
+                    f"`/{check_process.other_var}={check_process.other_var_value}.`"
+                )
+                responses.append(
+                    f"Now, substitute those values in for those variables in "
+                    f"the expression `/{check_process.expr1_latex}`."
+                )
 
         if "start-check-rewrite" in message_latex:
             return responses
@@ -811,18 +774,21 @@ class CheckRewrite(CheckAlgebra):
 
     @classmethod
     def create_substitute_values_response(cls, user_message_obj):
-        check_process = CheckRewrite.objects.get(problem__id=user_message_obj.problem_id, end_time__isnull=True)
+        check_process = CheckRewrite.objects.get(problem_id=user_message_obj.problem_id, end_time__isnull=True)
         message_latex = Content.objects.get(user_message=user_message_obj).content
 
         responses = []
         response_context = Response.CHECK_REWRITE
 
-        var_val_list = []
+        var_val_string = f"`/{check_process.solving_for}={check_process.solving_for_value}`"
+        if check_process.other_var:
+            var_val_string += f"and `/{check_process.other_var}={check_process.other_var_value}`"
         var_val_tuple_list = []
-
-        for v in check_process.substitution_values:
-            var_val_list.append(f"{v}={check_process.substitution_values[v]}")
-            var_val_tuple_list.append((v, UnevaluatedExpr(Decimal(check_process.substitution_values[v]))))
+        for v in ["solving_for", "other_var"]:
+            if getattr(check_process, v):
+                var_val_tuple_list.append(
+                    (getattr(check_process, v), UnevaluatedExpr(Decimal(getattr(check_process, f"{v}_value"))))
+                )
 
         # Store the latex expressions in here first, then replace them with the sympy expressions in the for loop
         sympy_exprs = {
@@ -852,13 +818,10 @@ class CheckRewrite(CheckAlgebra):
                 if simplify(sympy_exprs["usr_msg"] - sympy_exprs["rewrite"]) == 0:
                     check_process.did_expr1_subst = True
                     check_process.save()
+                    simplify_user_msg = latex(simplify(sympy_exprs["usr_msg"]))
                     responses.append(
-                        "Great, that is equal to `/{}`. Now, substitute `/{}` in the expression "
-                        "`/{}`".format(
-                            latex(simplify(sympy_exprs["usr_msg"])),
-                            ",\\ ".join(var_val_list),
-                            check_process.expr2_latex,
-                        )
+                        f"Great, that is equal to `/{simplify_user_msg}`. Now, substitute `/{var_val_string}` in the "
+                        f"expression `/{check_process.expr2_latex}`"
                     )
                 else:
                     Mistake.save_new(check_process, Mistake.SUB_EXPR1)
@@ -877,15 +840,15 @@ class CheckRewrite(CheckAlgebra):
                             f"It looks like `/{check_process.expr1_latex}` can probably be "
                             f"rewritten as `/{check_process.expr2_latex}`."
                         )
-                        if len(check_process.substitution_values) == 1:
+                        if not check_process.other_var:
                             responses.append(
                                 f"Click the check rewrite button again to check it again with a different "
-                                f"value for `/{var_val_tuple_list[0][0]}`."
+                                f"value for `/{check_process.solving_for}`."
                             )
                         else:
                             responses.append(
                                 "Click the check rewrite button again to check it again with different "
-                                "values for `/{}`.".format(",\\".join(list(zip(*var_val_tuple_list))[0]))
+                                f"values for `/{check_process.solving_for}` and `/{check_process.other_var}`."
                             )
                         check_process.are_equivalent = True
                         check_process.save()
@@ -920,7 +883,7 @@ class CheckRewrite(CheckAlgebra):
     # This method will check that new checkrewrite process to see if it has already been done and
     # proven to be a bad rewrite
     @classmethod
-    def known_incorrect_rewrite(cls, check_process):
+    def known_incorrect(cls, check_process):
         try:
             step = check_process.expr1.left_side_step
             side = "left"
@@ -942,4 +905,256 @@ class CheckSolution(CheckAlgebra):
 
     @classmethod
     def is_currently_checking(cls, step_id, side):
+        return False
+
+    @classmethod
+    def create_start_response(cls, user_message_obj):
+        equation_step = Step.objects.filter(problem_id=user_message_obj.problem_id).order_by("created").first()
+        equation_mistakes = Step.get_mistakes(equation_step)
+
+        responses = []
+        response_context = Response.NO_CONTEXT
+
+        all_vars_in_equation = Expression.get_variables_in_latex_expression(
+            equation_step.left_expr.latex
+        ) + Expression.get_variables_in_latex_expression(equation_step.right_expr.latex)
+        all_vars_to_substitute = list(set(all_vars_in_equation))
+        if not all_vars_to_substitute:
+            if (
+                Mistake.BLANK_EXPR in equation_mistakes
+                or Mistake.NON_MATH in equation_mistakes
+                or Mistake.UNKNOWN_SYM in equation_mistakes
+                or Mistake.GREY_BOX in equation_mistakes
+            ):
+                responses.append(
+                    "You have an issue with your equation. Please fix that before checking your solution."
+                )
+            else:
+                responses.append(
+                    "There are no variables in the equation. There needs to be a variable to solve for "
+                    "before you check a solution."
+                )
+        elif len(all_vars_to_substitute) < 3 and equation_step.problem.variable in all_vars_to_substitute:
+            # start new check process
+            other_var = None
+            for v in all_vars_to_substitute:
+                if v != equation_step.problem.variable:
+                    other_var = v
+
+            check_process = CheckSolution.save_new(other_var, equation_step, None)
+
+            if (
+                Mistake.BLANK_EXPR in equation_mistakes
+                or Mistake.NON_MATH in equation_mistakes
+                or Mistake.UNKNOWN_SYM in equation_mistakes
+                or Mistake.GREY_BOX in equation_mistakes
+            ):
+                responses.append(
+                    "You have an issue with your equation. Please fix that before checking your equation."
+                )
+
+                new_mistake = Mistake.save_new(check_process, Mistake.INVALID_EXPR)
+                new_mistake.save()
+                check_process.end_time = timezone.now()
+                check_process.save()
+            else:
+                if CheckSolution.known_incorrect(check_process):
+                    responses.append(
+                        f"You've already checked /`{check_process.solving_for}={check_process.answer}` and know "
+                        f"it does not make your equation true."
+                    )
+                    responses.append("Please find and fix all your mistakes before checking another answer.")
+                    Mistake.save_new(check_process, Mistake.ALREADY_INCORRECT)
+                    check_process.end_time = timezone.now()
+                    check_process.save()
+                else:
+                    responses.append(
+                        f"Let's figure out if `/{check_process.expr1_latex}` is equivalent to "
+                        f"`/{check_process.expr2_latex}` when `/{check_process.solving_for}={check_process.answer}`."
+                    )
+                    responses.append(
+                        f"To do this, we will substitute `/{check_process.answer}` in for "
+                        f"`/{check_process.solving_for}` in both sides of the starting equation."
+                    )
+                    if not other_var:
+                        check_process.substitution_values[check_process.solving_for] = check_process.answer
+                        check_process.save()
+                        responses.append(
+                            f"Substitute `/{check_process.solving_for}={check_process.answer}` in the left side "
+                            f"of the starting equation `/({check_process.expr1_latex})`"
+                        )
+                        response_context = Response.CHECK_SOLUTION
+                    else:
+                        responses.append(
+                            "Since there is more than one variable in our starting equation, we first have to pick "
+                            f"a value for `/{other_var}`."
+                        )
+                        response_context = Response.CHOOSE_SOLUTION_VALUES
+                        responses.extend(CheckSolution.create_assign_value_response(user_message_obj))
+        else:
+            print("the variable you are solving for is not in the equation or too many variables in your equation")
+        for r in responses:
+            Response.save_new(user_message_obj, r, response_context)
+
+    @classmethod
+    def create_assign_value_response(cls, user_message_obj):
+        responses = []
+
+        message_latex = Content.objects.get(user_message=user_message_obj).content
+
+        check_process = CheckSolution.objects.get(problem_id=user_message_obj.problem_id, end_time__isnull=True)
+
+        response_context = Response.CHOOSE_SOLUTION_VALUES
+
+        # Interpret the user message to see if it is a valid value to substitute for variable
+        if message_latex == "start-check-solution":
+            pass
+        # elif not unassigned_vars:
+        #     # calculate value of solving_for value based on other var values
+        #     var_val_tuple_list = []
+        #     for v in check_process.sub_values:
+        #         if v != check_process.solving_for and check_process.sub_values[v]:
+        #             var_val_tuple_list.append(
+        #                 (v, UnevaluatedExpr(Decimal(check_process.sub_values[v])))
+        #             )
+        #
+        #     parsed_answer_expr = Expression.parse_latex(check_process.answer)
+        #     answer_expr, feedback = Expression.is_valid(
+        #         list(zip(*var_val_tuple_list))[0], parsed_answer_expr
+        #     )
+        #     answer_with_substitution = simplify(
+        #         answer_expr.subs(
+        #             var_val_tuple_list,
+        #             order="none",
+        #         )
+        #     )
+        #
+        #     parsed_message_expr = Expression.parse_latex(message_latex)
+        #     message_expr, feedback = Expression.is_valid([], parsed_message_expr)
+        #
+        #     if feedback != Mistake.NONE:
+        #         responses.append(
+        #             "I'm having a hard time understanding that. Try again."
+        #         )
+        #     else:
+        #         if simplify(message_expr - answer_with_substitution) == 0:
+        #             val = latex(answer_with_substitution)
+        #             if (
+        #                 str(simplify(answer_with_substitution))
+        #                 .replace(".", "")
+        #                 .isdigit()
+        #             ):
+        #                 if int(simplify(answer_with_substitution)) == simplify(
+        #                     answer_with_substitution
+        #                 ):
+        #                     val = int(simplify(answer_with_substitution))
+        #                 else:
+        #                     val = latex(simplify(answer_with_substitution))
+        #             else:
+        #                 val = latex(simplify(answer_with_substitution))
+        #             check_process.sub_values[check_process.solving_for] = val
+        #             check_process.save()
+        #         else:
+        #             responses.append(
+        #                 "You did not do that substitution correctly. Try again."
+        #             )
+        # else:
+        #     split_msg = message_latex.split(",")
+        #     for m in split_msg:
+        #         if m.count("=") == 1:
+        #             lhs = m.split("=")[0].replace("\\", "").strip()
+        #             rhs = m.split("=")[1].replace("\\", "").strip()
+        #             if check_process.solving_for not in [lhs, rhs] and (
+        #                 lhs in check_process.sub_values
+        #                 or rhs in check_process.sub_values
+        #             ):
+        #                 if lhs in check_process.sub_values:
+        #                     responses.extend(
+        #                         CheckSolution.attempt_set_sub_value(
+        #                             check_process, lhs, rhs
+        #                         )
+        #                     )
+        #                 else:
+        #                     responses.extend(
+        #                         CheckSolution.attempt_set_sub_value(
+        #                             check_process, rhs, lhs
+        #                         )
+        #                     )
+        #
+        #                 if not responses[-1].startswith("Ok"):
+        #                     break
+        #             else:
+        #                 responses.append(
+        #                     f"Please only set values any variables in your answer of `/{check_process.answer}`. "
+        #                     f"Try again."
+        #                 )
+        #                 break
+        #         elif m.count("=") == 0:
+        #             if len(unassigned_vars) == 1:
+        #                 responses.extend(
+        #                     CheckSolution.attempt_set_sub_value(
+        #                         check_process, unassigned_vars[0], m
+        #                     )
+        #                 )
+        #                 if not responses[-1].startswith("Ok"):
+        #                     break
+        #             else:
+        #                 responses.append(
+        #                     "Use an equal sign (`/=`) between the variable and the number you "
+        #                     "are assigning it."
+        #                 )
+        #                 responses.append(
+        #                     "To define more than one variable at once, separate your equations "
+        #                     "with commas (,)"
+        #                 )
+        #                 break
+        #         else:
+        #             responses.append("I'm having a hard time understanding this.")
+        #             responses.append(
+        #                 "To define more than one variable at once, separate equations with commas (,)"
+        #             )
+        #             break
+        #
+
+        # Keep printing this question while there are still vars without values assigned
+        if check_process.other_var and not check_process.other_var_value:
+            responses.append(f"What number do you want to substitute in for `/{check_process.other_var}`?")
+        else:
+            # Now, user has to determine the value of the variable they solved for
+            if not check_process.solving_for_value:
+                response_context = Response.CHOOSE_SOLUTION_VALUES
+                responses.append(
+                    f"You have set `/{check_process.other_var}` equal to `/{check_process.other_var_value}`"
+                )
+                responses.append(
+                    f"Now, determine the value of `/{check_process.solving_for}` by substituting "
+                    f"`/{check_process.other_var_value}` in for `/{check_process.other_var}` in your "
+                    f"answer `/{check_process.answer}`."
+                )
+            else:
+                response_context = Response.CHECK_SOLUTION
+                responses.append(f"Great! That is equal to `/{check_process.solving_for_value}`.")
+                responses.append(
+                    f"You have chosen the following values for the variables in your equation: "
+                    f"`/{check_process.other_var}={check_process.other_var_value}` and "
+                    f"`/{check_process.solving_for}={check_process.solving_for_value}`"
+                )
+                responses.append(
+                    f"Now, substitute those values in for those variables in "
+                    f"the expression `/{check_process.left_latex}`."
+                )
+
+        if message_latex == "start-check-solution":
+            return responses
+        else:
+            for r in responses:
+                Response.save_new(user_message_obj, r, response_context)
+
+    @classmethod
+    def known_incorrect(cls, check_process):
+        completed_solution_checks = CheckSolution.get_matching_completed_checks(check_process, None, None)
+        for c in completed_solution_checks:
+            if c.are_equivalent is False:
+                return True
+
         return False

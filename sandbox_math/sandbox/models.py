@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from django.apps import apps
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
@@ -39,8 +37,10 @@ class CheckAlgebra(models.Model):
         "algebra.Expression", on_delete=models.SET_NULL, related_name="%(class)s_expr2", null=True
     )
     expr2_latex = models.CharField(max_length=100, blank=True, null=True)
-    substitution_values = models.JSONField(null=True)
     solving_for = models.CharField(max_length=100, blank=True, null=True)
+    solving_for_value = models.SmallIntegerField(blank=True, null=True)
+    other_var = models.CharField(max_length=100, blank=True, null=True)
+    other_var_value = models.SmallIntegerField(blank=True, null=True)
     end_time = models.DateTimeField(null=True)
 
     class Meta:
@@ -52,7 +52,7 @@ class CheckAlgebra(models.Model):
     # or the left side of the equation for checking a solution
     # It also needs the side of the equation if it is a check rewrite ("left" or "right")
     @classmethod
-    def save_new(cls, problem, variable_value_dict, expr1_step, side):
+    def save_new(cls, other_var, expr1_step, side):
         step_model = apps.get_model("algebra", "Step")
         # Determine if this is a check rewrite or a check solution
         # based on whether step is the first step (check solution) or not (check rewrite)
@@ -62,25 +62,25 @@ class CheckAlgebra(models.Model):
             model_name = "CheckRewrite"
         check_model = apps.get_model("algebra", model_name)
         # There can only be one active check at a time. To be sure, end all checks in the database
-        unfinished_checks = check_model.objects.filter(problem=problem, end_time__isnull=True)
+        unfinished_checks = check_model.objects.filter(problem=expr1_step.problem, end_time__isnull=True)
         for a in unfinished_checks:
             a.end_time = timezone.now()
             a.save()
 
         # Save the new check process
-        new_check = check_model(problem=problem, solving_for=problem.variable)
+        new_check = check_model(problem=expr1_step.problem, solving_for=expr1_step.problem.variable)
         if model_name == "CheckRewrite":
             new_check.expr1 = getattr(expr1_step, f"{side}_expr")
             new_check.expr2 = getattr(step_model.get_prev(expr1_step), f"{side}_expr")
         else:
-            equation_step = step_model.objects.filter(problem=problem).order_by("created").first()
+            equation_step = step_model.objects.filter(problem=expr1_step.problem).order_by("created").first()
             new_check.expr1 = equation_step.left_expr
             new_check.expr2 = equation_step.right_expr
 
         new_check.expr1_latex = new_check.expr1.latex
         new_check.expr2_latex = new_check.expr2.latex
 
-        new_check.substitution_values = variable_value_dict
+        new_check.other_var = other_var
 
         new_check.save()
 
@@ -103,29 +103,24 @@ class CheckAlgebra(models.Model):
                     None, check_process.expr1.right_side_step, "right"
                 )
             matching_completed_checks = matching_checks.filter(are_equivalent=True)
-            unassigned_variables = check_model.get_unassigned_variables(check_process)
         elif check_process.__class__.__name__ == "CheckSolution":
             check_model = apps.get_model("algebra", "CheckSolution")
             matching_completed_checks = check_model.get_matching_completed_checks(check_process, None, None)
-            unassigned_variables = check_model.get_unassigned_variables(check_process)
         else:
             matching_completed_checks = Sandbox.objects.none()
-            unassigned_variables = []
 
         # For there to be a duplicated check, there must be previously completed checks and
         # there must not be any unassigned variables left to define
-        if matching_completed_checks.count() > 0 and len(unassigned_variables) == 0:
+        if matching_completed_checks.count() > 0:
             for prev_check in matching_completed_checks:
-                if prev_check.substitution_values.keys() == check_process.substitution_values.keys():
-                    same_value_for_variable_count = 0
-                    for variable in prev_check.substitution_values:
-                        if prev_check.substitution_values[variable] and check_process.substitution_values[variable]:
-                            if Decimal(prev_check.substitution_values[variable]) == Decimal(
-                                check_process.substitution_values[variable]
-                            ):
-                                same_value_for_variable_count += 1
-
-                    if same_value_for_variable_count == len(check_process.substitution_values):
+                if (
+                    prev_check.solving_for == check_process.solving_for
+                    and prev_check.other_var == check_process.other_var
+                ):
+                    if (
+                        prev_check.solving_for_value == check_process.solving_for_value
+                        and prev_check.other_var_value == check_process.other_var__value
+                    ):
                         return False
         return True
 
@@ -156,25 +151,12 @@ class CheckAlgebra(models.Model):
                 expr1_latex=solution_check_process.left_latex,
                 expr2_latex=solution_check_process.right_latex,
                 solving_for=solution_check_process.solving_for,
+                other_var=solution_check_process.other_var,
                 answer=solution_check_process.answer,
                 end_time__isnull=False,
             )
 
         return matching_checks
-
-    # This method will return a list of the variables involved in a check process that still need to be given
-    # a value by the user
-    @classmethod
-    def get_unassigned_variables(cls, check_process):
-        unassigned_vars = []
-
-        for variable in check_process.substitution_values:
-            if not check_process.substitution_values[variable]:
-                unassigned_vars.append(variable)
-
-        unassigned_vars.sort()
-
-        return unassigned_vars
 
     # This method will save the user's suggested substitution value for a variable if it makes sense
     # If the user's suggested value does not make sense, it will create a Response object
@@ -199,9 +181,7 @@ class CheckAlgebra(models.Model):
                         max_length += 1
                         if len(suggested_value_str.split(".")[1]) > 2:
                             mistake_model.save_new(check_process, mistake_model.CHOOSE_VALUE)
-                            responses.append(
-                                f"For `/{variable}`, try a simpler number without so many decimal places."
-                            )
+                            responses.append(f"For `/{variable}`, try a simpler whole number...like 5.")
                     else:
                         max_length = 3
 
@@ -210,69 +190,45 @@ class CheckAlgebra(models.Model):
                             mistake_model.save_new(check_process, mistake_model.CHOOSE_VALUE)
                             responses.append(f"Try a smaller and simpler number for `/{variable}`...like `/3`.")
                         else:
-                            check_process.substitution_values[variable] = suggested_value_str
+                            var_field = ""
+                            if variable == check_process.solving_for:
+                                check_process.solving_for_value = suggested_value_str
+                                var_field = "solving_for"
+                            elif variable == check_process.other_var:
+                                check_process.other_var_value = suggested_value_str
+                                var_field = "other_var"
+                            else:
+                                print("trying to set value to unknown variablleeeee")
                             check_process.save()
 
                             if check_model.is_checking_new_values(check_process):
                                 responses.append(f"Ok, `/{variable}={suggested_value_str}`")
                             else:
                                 mistake_model.save_new(check_process, mistake_model.CHOOSE_VALUE)
-                                check_process.substitution_values[variable] = None
+                                setattr(check_process, f"{var_field}_value", None)
                                 check_process.save()
 
-                                if len(check_process.substitution_values) == 1:
-                                    if check_process.__class__.__name__ == "CheckRewrite":
-                                        responses.append(
-                                            f"You've already checked `/{variable}={suggested_value_str}` in these "
-                                            f"expressions."
+                                checked_var_val_string = (
+                                    f"`/{getattr(check_process, f'{var_field}_value')}={suggested_value_str}`"
+                                )
+                                if check_process.other_var:
+                                    checked_var_val_string += (
+                                        f"and `/{check_process.other_var}={check_process.other_var_value}`"
+                                    )
+                                    if var_field == "other_var":
+                                        checked_var_val_string += (
+                                            f"and `/{check_process.solving_for_var}={check_process.solving_for_value}`"
                                         )
-                                        responses.append("Try a different value.")
-                                    else:
-                                        responses.append(
-                                            f"You've already checked `/{variable}={suggested_value_str}` in the "
-                                            f"equation."
-                                        )
-                                        responses.append("Find and fix your mistakes then try again different answer.")
+                                if check_process.__class__.__name__ == "CheckRewrite":
+                                    responses.append(
+                                        f"You've already checked {checked_var_val_string} in these " f"expressions."
+                                    )
+                                    responses.append("Try a different value.")
                                 else:
-                                    # This block of 14 lines of code prepares the substitution values and their
-                                    # variables to be printed out in a response
-                                    var_val_dict = {}
-                                    for temp_var in check_process.substitution_values:
-                                        if check_process.substitution_values[temp_var]:
-                                            var_val_dict[temp_var] = check_process.substitution_values[temp_var]
-                                        elif temp_var == variable:
-                                            var_val_dict[temp_var] = suggested_value_str
-                                    var_val_list_for_response = []
-                                    for temp_var in check_process.substitution_values:
-                                        if not check_process.substitution_values[temp_var]:
-                                            var_val_list_for_response.append(f"{variable}={suggested_value_str}")
-                                        else:
-                                            var_val_list_for_response.append(
-                                                f"{temp_var}={check_process.sub_values[temp_var]}"
-                                            )
-
-                                    if check_process.__class__.__name__ == "CheckRewrite":
-                                        responses.append(
-                                            "You've already checked these exact values before: `/{}`".format(
-                                                ",\\ ".join(var_val_list_for_response)
-                                            )
-                                        )
-                                        responses.append("Try assigning different values to these variables.")
-                                    else:
-                                        if len(var_val_list_for_response) == 1:
-                                            responses.append(
-                                                "You've already checked this exact same value with this "
-                                                "exact same answer before: "
-                                                "`/{}`".format(",\\ ".join(var_val_list_for_response))
-                                            )
-                                            responses.append("Try assigning a different value instead.")
-                                        else:
-                                            responses.append(
-                                                "You've already checked these exact same values with this "
-                                                "exact same answer before: "
-                                                "`/{}`".format(",\\ ".join(var_val_list_for_response))
-                                            )
-                                            responses.append("Try assigning different values to these variables.")
+                                    responses.append(
+                                        f"You've already checked {checked_var_val_string} in the " f"equation."
+                                    )
+                                    responses.append("Find and fix your mistakes then try again different answer.")
             except ValidationError:
                 mistake_model.save_new(check_process, mistake_model.CHOOSE_VALUE)
                 responses.append(
@@ -286,7 +242,7 @@ class CheckAlgebra(models.Model):
     def create_stop_response(cls, check_process_class_name, user_message_obj, reason_for_stop):
         response_model = apps.get_model("calculator", "Response")
         check_model = apps.get_model("algebra", check_process_class_name)
-        active_checks = check_model.objects.filter(problem__id=user_message_obj.problem_id, end_time__isnull=True)
+        active_checks = check_model.objects.filter(problem_id=user_message_obj.problem_id, end_time__isnull=True)
         for check_process in active_checks:
             check_process.end_time = timezone.now()
             check_process.save()

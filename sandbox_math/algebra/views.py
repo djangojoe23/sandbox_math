@@ -44,7 +44,7 @@ class BaseView(UserPassesTestMixin, TemplateView):
             problem.save()
             context["is_new_problem"] = False
             context["problem"] = Problem.objects.get(id=saved_problem_id)
-            context["steps"] = Step.objects.filter(problem__id=saved_problem_id).order_by("created")
+            context["steps"] = Step.objects.filter(problem_id=saved_problem_id).order_by("created")
             context["previous_user_messages"] = UserMessage.get_all_previous_for_problem(
                 Sandbox.ALGEBRA, saved_problem_id
             )
@@ -182,6 +182,7 @@ class UpdateExpressionView(View):
                 "mistakes": Problem.get_all_steps_mistakes(step.problem),
                 "stop_check": stop_check,
                 "badge_updates": badge_updates,
+                "variable_isolated": Problem.variable_isolated_side(step.problem),
             }
 
             response = JsonResponse(feedback)
@@ -285,7 +286,7 @@ class NewStepView(TemplateView):
                 problem_id = int(param_value_split[1])
 
         context["step_prompts"] = BaseView.step_prompts
-        context["step_num"] = len(Step.objects.filter(problem__id=problem_id))
+        context["step_num"] = len(Step.objects.filter(problem_id=problem_id))
         context["is_new_problem"] = False
 
         return context

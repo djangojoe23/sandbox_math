@@ -75,6 +75,10 @@ $(document).ready(function () {
   $('#newStepButton').click(function () {
     AttemptNewStep();
   });
+
+  $('#checkSolutionButton').click(function () {
+    GetResponse('start-check-solution', 'CheckSolutionClick');
+  });
 });
 
 function InitializeNewStep(stepID) {
@@ -423,6 +427,16 @@ async function ExpressionChanged(expressionObject) {
           badge.removeClass('bg-faded-info text-info');
           badge.addClass('bg-faded-danger text-danger');
         }
+      }
+
+      console.log(response['variable_isolated']);
+      if (
+        response['variable_isolated'] === 'left' ||
+        response['variable_isolated'] === 'right'
+      ) {
+        $('#checkSolutionButton').removeClass('d-none');
+      } else {
+        $('#checkSolutionButton').addClass('d-none');
       }
       ToggleNewAndCheckButtons(false);
 

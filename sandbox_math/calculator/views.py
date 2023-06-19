@@ -1,7 +1,7 @@
 from django.utils import timezone
 from django.views.generic.base import TemplateView
 
-from sandbox_math.algebra.models import CheckRewrite, Step
+from sandbox_math.algebra.models import CheckRewrite, CheckSolution, Step
 from sandbox_math.calculator.models import Response, UserMessage
 from sandbox_math.sandbox.models import Sandbox
 
@@ -39,7 +39,7 @@ class GetResponseView(TemplateView):
                 # change badge count or color here if a check rewrite process ended successfully
                 if Response.get_context_of_last_response(user_message_obj) == Response.NO_CONTEXT:
                     just_finished_check = (
-                        CheckRewrite.objects.filter(problem__id=problem_id, end_time__isnull=False)
+                        CheckRewrite.objects.filter(problem_id=problem_id, end_time__isnull=False)
                         .order_by("-end_time")
                         .first()
                     )
@@ -87,6 +87,15 @@ class GetResponseView(TemplateView):
                     CheckRewrite.create_start_response(step_id, side, user_message_obj)
         elif caller in ["StepTypeChanged", "ExpressionChanged", "DeleteStep"]:
             CheckRewrite.create_stop_response("CheckRewrite", user_message_obj, caller)
+        elif caller == "CheckSolutionClick":
+            # The user is trying to check a solution but they are in the middle of checking a rewrite
+            if current_context != Response.NO_CONTEXT:
+                pass
+            # The user is trying to check a solution but they are in the middle of checking the same solution
+            # The user is trying to check a solution but they are in the middle of checking a different solution
+            # The user is trying to check a solution
+            else:
+                CheckSolution.create_start_response(user_message_obj)
 
         context["responses"] = Response.objects.filter(user_message=user_message_obj).order_by("id")
 
