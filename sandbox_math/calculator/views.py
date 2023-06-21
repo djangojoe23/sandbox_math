@@ -23,6 +23,7 @@ class GetResponseView(TemplateView):
                 user_message_obj = UserMessage.save_new(s[0], problem_id, user_message)
 
         current_context = Response.get_context_of_last_response(user_message_obj)
+        print(current_context)
         if caller == "SubmitUserMessage":
             if current_context == Response.NO_CONTEXT:
                 # User is submitting a message with no context (looking for an arithmetic response)
@@ -34,30 +35,44 @@ class GetResponseView(TemplateView):
                     # User is submitting a message to continue a check rewrite
                     CheckRewrite.create_assign_value_response(user_message_obj)
             elif current_context == Response.CHECK_REWRITE:
-                CheckRewrite.create_substitute_values_response(user_message_obj)
+                if user_message == "stop":
+                    CheckRewrite.create_stop_response("CheckRewrite", user_message_obj, None)
+                else:
+                    CheckRewrite.create_substitute_values_response(user_message_obj)
 
-                # change badge count or color here if a check rewrite process ended successfully
-                if Response.get_context_of_last_response(user_message_obj) == Response.NO_CONTEXT:
-                    just_finished_check = (
-                        CheckRewrite.objects.filter(problem_id=problem_id, end_time__isnull=False)
-                        .order_by("-end_time")
-                        .first()
-                    )
-                    if hasattr(just_finished_check.expr1, "left_side_step"):
-                        side = "left"
-                    else:
-                        side = "right"
+                    # change badge count or color here if a check rewrite process ended successfully
+                    if Response.get_context_of_last_response(user_message_obj) == Response.NO_CONTEXT:
+                        just_finished_check = (
+                            CheckRewrite.objects.filter(problem_id=problem_id, end_time__isnull=False)
+                            .order_by("-end_time")
+                            .first()
+                        )
+                        if hasattr(just_finished_check.expr1, "left_side_step"):
+                            side = "left"
+                        else:
+                            side = "right"
 
-                    other_matching_finished_processes = CheckRewrite.get_matching_completed_checks(
-                        "CheckRewrite", getattr(just_finished_check.expr1, f"{side}_side_step"), side
-                    )
-                    context["badge_step_id"] = getattr(just_finished_check.expr1, f"{side}_side_step").id
-                    context["new_badge_count"] = other_matching_finished_processes.count()
-                    context["new_badge_color"] = "info"
-                    for p in other_matching_finished_processes:
-                        if not p.are_equivalent:
-                            context["new_badge_color"] = "danger"
-                    context["new_badge_count_side"] = side
+                        other_matching_finished_processes = CheckRewrite.get_matching_completed_checks(
+                            "CheckRewrite", getattr(just_finished_check.expr1, f"{side}_side_step"), side
+                        )
+                        context["badge_step_id"] = getattr(just_finished_check.expr1, f"{side}_side_step").id
+                        context["new_badge_count"] = other_matching_finished_processes.count()
+                        context["new_badge_color"] = "info"
+                        for p in other_matching_finished_processes:
+                            if not p.are_equivalent:
+                                context["new_badge_color"] = "danger"
+                        context["new_badge_count_side"] = side
+            elif current_context == Response.CHOOSE_SOLUTION_VALUES:
+                if user_message == "stop":
+                    CheckSolution.create_stop_response("CheckSolution", user_message_obj, None)
+                else:
+                    # User is submitting a message to continue a check rewrite
+                    CheckSolution.create_assign_value_response(user_message_obj)
+            elif current_context == Response.CHECK_SOLUTION:
+                if user_message == "stop":
+                    CheckSolution.create_stop_response("CheckSolution", user_message_obj, None)
+                else:
+                    CheckSolution.create_substitute_values_response(user_message_obj)
         elif caller == "InitializeNewStep":
             # User must be starting a new check rewrite
             step_id = int(user_message.split("-")[0][4:])
@@ -80,7 +95,12 @@ class GetResponseView(TemplateView):
                         Response.NO_CONTEXT,
                     )
                     step = Step.objects.get(id=step_id)
-                    currently_active_check = CheckRewrite.objects.get(problem=step.problem, end_time__isnull=True)
+                    currently_active_check = None
+                    try:
+                        currently_active_check = CheckRewrite.objects.get(problem=step.problem, end_time__isnull=True)
+                    except CheckRewrite.DoesNotExist:
+                        CheckRewrite.create_stop_response("CheckRewrite", user_message_obj, "error")
+
                     if currently_active_check:
                         currently_active_check.end_time = timezone.now()
                         currently_active_check.save()
@@ -90,7 +110,7 @@ class GetResponseView(TemplateView):
         elif caller == "CheckSolutionClick":
             # The user is trying to check a solution but they are in the middle of checking a rewrite
             if current_context != Response.NO_CONTEXT:
-                pass
+                print("here!")
             # The user is trying to check a solution but they are in the middle of checking the same solution
             # The user is trying to check a solution but they are in the middle of checking a different solution
             # The user is trying to check a solution

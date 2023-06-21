@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.apps import apps
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
@@ -38,9 +40,9 @@ class CheckAlgebra(models.Model):
     )
     expr2_latex = models.CharField(max_length=100, blank=True, null=True)
     solving_for = models.CharField(max_length=100, blank=True, null=True)
-    solving_for_value = models.SmallIntegerField(blank=True, null=True)
+    solving_for_value = models.DecimalField(max_digits=6, decimal_places=3, blank=True, null=True)
     other_var = models.CharField(max_length=100, blank=True, null=True)
-    other_var_value = models.SmallIntegerField(blank=True, null=True)
+    other_var_value = models.DecimalField(max_digits=6, decimal_places=3, blank=True, null=True)
     end_time = models.DateTimeField(null=True)
 
     class Meta:
@@ -76,6 +78,11 @@ class CheckAlgebra(models.Model):
             equation_step = step_model.objects.filter(problem=expr1_step.problem).order_by("created").first()
             new_check.expr1 = equation_step.left_expr
             new_check.expr2 = equation_step.right_expr
+            answer_step = step_model.objects.filter(problem=expr1_step.problem).order_by("created").last()
+            if answer_step.left_expr.latex == new_check.solving_for:
+                new_check.attempt = answer_step.right_expr.latex
+            else:
+                new_check.attempt = answer_step.left_expr.latex
 
         new_check.expr1_latex = new_check.expr1.latex
         new_check.expr2_latex = new_check.expr2.latex
@@ -119,7 +126,7 @@ class CheckAlgebra(models.Model):
                 ):
                     if (
                         prev_check.solving_for_value == check_process.solving_for_value
-                        and prev_check.other_var_value == check_process.other_var__value
+                        and prev_check.other_var_value == check_process.other_var_value
                     ):
                         return False
         return True
@@ -148,11 +155,12 @@ class CheckAlgebra(models.Model):
             # Getting matching check solutions
             matching_checks = apps.get_model("algebra", "CheckSolution").objects.filter(
                 problem=solution_check_process.problem,
-                expr1_latex=solution_check_process.left_latex,
-                expr2_latex=solution_check_process.right_latex,
+                expr1_latex=solution_check_process.expr1_latex,
+                expr2_latex=solution_check_process.expr2_latex,
                 solving_for=solution_check_process.solving_for,
                 other_var=solution_check_process.other_var,
-                answer=solution_check_process.answer,
+                attempt=solution_check_process.attempt,
+                problem_solved__isnull=False,
                 end_time__isnull=False,
             )
 
@@ -192,10 +200,10 @@ class CheckAlgebra(models.Model):
                         else:
                             var_field = ""
                             if variable == check_process.solving_for:
-                                check_process.solving_for_value = suggested_value_str
+                                check_process.solving_for_value = Decimal(suggested_value_str)
                                 var_field = "solving_for"
                             elif variable == check_process.other_var:
-                                check_process.other_var_value = suggested_value_str
+                                check_process.other_var_value = Decimal(suggested_value_str)
                                 var_field = "other_var"
                             else:
                                 print("trying to set value to unknown variablleeeee")
