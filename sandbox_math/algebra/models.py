@@ -12,7 +12,7 @@ from sympy.parsing.sympy_parser import implicit_multiplication_application, pars
 
 from config.settings.base import AUTH_USER_MODEL
 from sandbox_math.calculator.models import Content, Response
-from sandbox_math.sandbox.models import CheckAlgebra
+from sandbox_math.sandbox.models import CheckAlgebra, Sandbox
 from sandbox_math.users.models import Mistake, User
 
 
@@ -769,8 +769,9 @@ class CheckRewrite(CheckAlgebra):
             else:
                 response_context = Response.CHECK_REWRITE
                 responses.append(
-                    f"Great! You have chosen `/{check_process.solving_for}={check_process.solving_for_value}` and "
-                    f"`/{check_process.other_var}={check_process.other_var_value}.`"
+                    f"Great! You have chosen `/{check_process.solving_for}="
+                    f"{Sandbox.clean_decimal(check_process.solving_for_value)}` and "
+                    f"`/{check_process.other_var}={Sandbox.clean_decimal(check_process.other_var_value)}.`"
                 )
                 responses.append(
                     f"Now, substitute those values in for those variables in "
@@ -799,13 +800,15 @@ class CheckRewrite(CheckAlgebra):
         var_val_string = ""
         if check_process.solving_for in all_vars_to_substitute:
             var_list.append("solving_for")
-            var_val_string = f"`/{check_process.solving_for}={check_process.solving_for_value}`"
+            var_val_string = f"`/{check_process.solving_for}={Sandbox.clean_decimal(check_process.solving_for_value)}`"
             if check_process.other_var:
                 var_list.append("other_var")
-                var_val_string += f"and `/{check_process.other_var}={check_process.other_var_value}`"
+                var_val_string += (
+                    f"and `/{check_process.other_var}={Sandbox.clean_decimal(check_process.other_var_value)}`"
+                )
         elif check_process.other_var:
             var_list.append("other_var")
-            var_val_string = f"`/{check_process.other_var}={check_process.other_var_value}`"
+            var_val_string = f"`/{check_process.other_var}={Sandbox.clean_decimal(check_process.other_var_value)}`"
 
         var_val_tuple_list = []
         for v in var_list:
@@ -843,9 +846,9 @@ class CheckRewrite(CheckAlgebra):
                     check_process.did_expr1_subst = True
                     check_process.save()
                     simplify_user_msg = latex(simplify(sympy_exprs["usr_msg"]))
+                    responses.append(f"Great, that is equal to `/{simplify_user_msg}`.")
                     responses.append(
-                        f"Great, that is equal to `/{simplify_user_msg}`. Now, substitute `/{var_val_string}` in the "
-                        f"expression `/{check_process.expr2_latex}`"
+                        f"Now, substitute `/{var_val_string}` in the expression " f"`/{check_process.expr2_latex}`"
                     )
                 else:
                     Mistake.save_new(check_process, Mistake.SUB_EXPR1)
@@ -883,20 +886,10 @@ class CheckRewrite(CheckAlgebra):
                         check_process.save()
                     else:
                         # We have done our substitution correctly, but we do NOT have equivalence
-
-                        # The next 13 lines of code will make sure the previous expression after substitution is
-                        # formatted appropriately (with decimal places if needed) and sets it to the val variable
-                        if str(simplify(sympy_exprs["usr_msg"])).replace(".", "").isdigit():
-                            if int(simplify(sympy_exprs["rewrite"])) == simplify(sympy_exprs["rewrite"]):
-                                val = int(simplify(sympy_exprs["rewrite"]))
-                            else:
-                                val = latex(simplify(sympy_exprs["rewrite"]))
-                        else:
-                            val = latex(simplify(sympy_exprs["rewrite"]))
                         responses.append(
                             f"You did this substitution correctly, but after substitution the rewritten expression "
-                            f"equals `/{val}` while the original expression equals "
-                            f"`/{latex(simplify(sympy_exprs['usr_msg']))}`."
+                            f"equals `/{Sandbox.clean_decimal(Decimal(latex(simplify(sympy_exprs['rewrite']))))}` "
+                            f"while the original expression equals `/{latex(simplify(sympy_exprs['usr_msg']))}`."
                         )
                         responses.append("Try to find and fix your mistakes, then try again.")
                         check_process.are_equivalent = False
@@ -1078,9 +1071,6 @@ class CheckSolution(CheckAlgebra):
             if not check_process.solving_for_value:
                 response_context = Response.CHOOSE_SOLUTION_VALUES
                 responses.append(
-                    f"You have set `/{check_process.other_var}` equal to `/{check_process.other_var_value}`"
-                )
-                responses.append(
                     f"Now that `/{check_process.other_var}={check_process.other_var_value}`, determine the value "
                     f"of `/{check_process.solving_for}` by substituting `/{check_process.other_var_value}` in for "
                     f"`/{check_process.other_var}` in your answer `/{check_process.attempt}`."
@@ -1089,7 +1079,7 @@ class CheckSolution(CheckAlgebra):
                 response_context = Response.CHECK_SOLUTION
                 responses.append(
                     f"Correct! `/{check_process.attempt}` is equal to `/{check_process.solving_for_value}`"
-                    f" when `/{check_process.other_var}={check_process.other_var_value}`."
+                    f" when `/{check_process.other_var}={Sandbox.clean_decimal(check_process.other_var_value)}`."
                 )
                 responses.append(
                     f"You have chosen the following values for the variables in your equation: "
@@ -1109,147 +1099,138 @@ class CheckSolution(CheckAlgebra):
 
     @classmethod
     def create_substitute_values_response(cls, user_message_obj):
-        pass
-        # responses = []
-        #
-        # var_val_list = []
-        # var_val_tuple_list = []
-        #
-        # for v in check_process.sub_values:
-        #     var_val_list.append(f"{v}={check_process.sub_values[v]}")
-        #     var_val_tuple_list.append(
-        #         (v, UnevaluatedExpr(Decimal(check_process.sub_values[v])))
-        #     )
-        #
-        # message_latex = Content.objects.get(user_message=message_obj).content
-        #
-        # parsed_left_expr = Expression.parse_latex(check_process.left_latex)
-        # left_expr, feedback = Expression.is_valid(
-        #     list(zip(*var_val_tuple_list))[0], parsed_left_expr
-        # )
-        # left_with_substitution = left_expr.subs(
-        #     var_val_tuple_list,
-        #     order="none",
-        # )
-        #
-        # parsed_right_expr = Expression.parse_latex(check_process.right_latex)
-        # right_expr, feedback = Expression.is_valid(
-        #     list(zip(*var_val_tuple_list))[0], parsed_right_expr
-        # )
-        # right_with_substitution = right_expr.subs(
-        #     var_val_tuple_list,
-        #     order="none",
-        # )
-        #
-        # parsed_msg = Expression.parse_latex(message_latex)
-        # msg_expr, msg_feedback = Expression.is_valid(
-        #     list(zip(*var_val_tuple_list))[0], parsed_msg
-        # )
-        #
-        # if msg_feedback != Mistake.NONE:
-        #     responses.append(msg_feedback)
-        # else:
-        #     if not check_process.did_left_expr_subst:
-        #         if simplify(msg_expr - left_with_substitution) == 0:
-        #             check_process.did_left_expr_subst = True
-        #             check_process.save()
-        #             responses.append(
-        #                 "Great, that is equal to `/{}`. Now, substitute `/{}` in the expression "
-        #                 "`/{}`".format(
-        #                     latex(simplify(msg_expr)),
-        #                     ",\\ ".join(var_val_list),
-        #                     check_process.right_latex,
-        #                 )
-        #             )
-        #         else:
-        #             new_mistake = CheckSolutionMistake(
-        #                 check_solution=check_process,
-        #                 mistake_type=CheckSolutionMistake.SUB_LEFT,
-        #             )
-        #             new_mistake.save()
-        #             responses.append(
-        #                 "You didn't do that substitution correctly. Try again."
-        #             )
-        #     else:
-        #         if simplify(msg_expr - right_with_substitution) == 0:
-        #             response_context = Response.NO_CONTEXT
-        #
-        #             if simplify(msg_expr - left_with_substitution) == 0:
-        #                 # the answer was found
-        #                 mistake_count = 0
-        #                 all_mistakes = Problem.get_mistakes(check_process.calculator.problem)
-        #                 for m in all_mistakes:
-        #                     if all_mistakes[m]["left"]["title"] != Mistake.NONE:
-        #                         mistake_count += 1
-        #                     if all_mistakes[m]["right"]["title"] != Mistake.NONE:
-        #                         mistake_count += 1
-        #
-        #                 if mistake_count == 0:
-        #                     check_process.end_time = timezone.now()
-        #                     check_process.problem_solved = True
-        #                     check_process.save()
-        #                     # TODO PROBLEM IS SOLVED CORRECTLY
-        #                     responses.append(
-        #                         f"Great, that is also equal to `/{latex(simplify(msg_expr))}`. "
-        #                         f"`/{check_process.left_latex}={check_process.right_latex}`"
-        #                         f" when `/{check_process.solving_for}={check_process.answer}`."
-        #                     )
-        #                     responses.append(f"Congratulations! You have correctly solved this equation "
-        #                                      f"for `/{check_process.solving_for}`."
-        #                     )
-        #                 else:
-        #                     #answer was found but there are mistakes in the algebra work
-        #                     responses.append(
-        #                         f"That is also equal to `/{latex(simplify(msg_expr))}`. "
-        #                         f"`/{check_process.left_latex}={check_process.right_latex}`"
-        #                         f" when `/{check_process.solving_for}={check_process.answer}`."
-        #                     )
-        #                     responses.append("You have found the answer, but there are mistakes in your algebra!")
-        #                     responses.append("Please find and fix your mistakes by clicking on the"
-        #                                      " <i class='ai-circle-help'></i> icons.")
-        #                     responses.append("Then, check your solution again without any mistakes in your algebra "
-        #                                      "to mark this problem as solved.")
-        #
-        #             else:
-        #                 # test if string is a number using sympy
-        #                 if (
-        #                     str(simplify(left_with_substitution))
-        #                     .replace(".", "")
-        #                     .isdigit()
-        #                 ):
-        #                     if int(simplify(left_with_substitution)) == simplify(
-        #                         left_with_substitution
-        #                     ):
-        #                         val = int(simplify(left_with_substitution))
-        #                     else:
-        #                         val = latex(simplify(left_with_substitution))
-        #                 else:
-        #                     val = latex(simplify(left_with_substitution))
-        #                 responses.append(
-        #                     f"You did this substitution correctly, but the left side of your equation equals "
-        #                     f"`/{latex(simplify(msg_expr))}` while the right side equals `/{val}`."
-        #                 )
-        #                 responses.append(
-        #                     f"It looks like `/{check_process.left_latex}` is not equal "
-        #                     f"to `/{check_process.right_latex}` when "
-        #                     f"`/{check_process.solving_for}={check_process.checking_solution}`."
-        #                 )
-        #                 responses.append(
-        #                     "Try to find and fix your mistakes. Then change you answer and try again."
-        #                 )
-        #                 check_process.are_equivalent = False
-        #                 check_process.save()
-        #         else:
-        #             new_mistake = CheckSolutionMistake(
-        #                 check_solution=check_process,
-        #                 mistake_type=CheckSolutionMistake.SUB_RIGHT,
-        #             )
-        #             new_mistake.save()
-        #             responses.append(
-        #                 "You didn't do that substitution correctly. Try again."
-        #             )
-        # for r in responses:
-        #     Response.save_new(message_obj, r, response_context)
+        check_process = CheckSolution.objects.get(problem_id=user_message_obj.problem_id, end_time__isnull=True)
+        message_latex = Content.objects.get(user_message=user_message_obj).content
+
+        responses = []
+        response_context = Response.CHECK_SOLUTION
+
+        all_vars_in_expressions = Expression.get_variables_in_latex_expression(check_process.expr1_latex)
+        all_vars_in_expressions += Expression.get_variables_in_latex_expression(check_process.expr2_latex)
+        all_vars_to_substitute = list(set(all_vars_in_expressions))
+
+        var_list = []
+        var_val_string = ""
+        if check_process.solving_for in all_vars_to_substitute:
+            var_list.append("solving_for")
+            var_val_string = f"`/{check_process.solving_for}={Sandbox.clean_decimal(check_process.solving_for_value)}`"
+            if check_process.other_var:
+                var_list.append("other_var")
+                var_val_string += (
+                    f"and `/{check_process.other_var}={Sandbox.clean_decimal(check_process.other_var_value)}`"
+                )
+        elif check_process.other_var:
+            var_list.append("other_var")
+            var_val_string = f"`/{check_process.other_var}={Sandbox.clean_decimal(check_process.other_var_value)}`"
+
+        var_val_tuple_list = []
+        for v in var_list:
+            if getattr(check_process, v):
+                var_val_tuple_list.append(
+                    (getattr(check_process, v), UnevaluatedExpr(Decimal(getattr(check_process, f"{v}_value"))))
+                )
+
+        # Store the latex expressions in here first, then replace them with the sympy expressions in the for loop
+        sympy_exprs = {
+            "left": check_process.expr1_latex,
+            "right": check_process.expr2_latex,
+            "usr_msg": message_latex,
+        }
+        for expr_key in sympy_exprs:
+            sympy_expr = Expression.get_sympy_expression_from_latex(sympy_exprs[expr_key])
+            if expr_key != "usr_msg":
+                # Don't do the substitution to the user message
+                sympy_after_subs = sympy_expr.subs(
+                    var_val_tuple_list,
+                    order="none",
+                )
+                sympy_exprs[expr_key] = sympy_after_subs
+            else:
+                if sympy_expr not in list(zip(*Mistake.MISTAKE_TYPES))[0]:
+                    sympy_exprs[expr_key] = sympy_expr
+                else:
+                    # There is an issue with the user message and this will add the mistake message to the responses
+                    responses.append(sympy_expr)
+                    sympy_exprs[expr_key] = None
+
+        if sympy_exprs["usr_msg"]:
+            if not check_process.did_expr1_subst:
+                if simplify(sympy_exprs["usr_msg"] - sympy_exprs["left"]) == 0:
+                    check_process.did_expr1_subst = True
+                    check_process.save()
+                    simplify_user_msg = latex(simplify(sympy_exprs["usr_msg"]))
+                    responses.append(f"Great, that is equal to `/{simplify_user_msg}`.")
+                    responses.append(
+                        f"Now, substitute `/{var_val_string}` in the expression " f"`/{check_process.expr2_latex}`"
+                    )
+                else:
+                    Mistake.save_new(check_process, Mistake.SUB_EXPR1)
+                    responses.append("You didn't do that substitution correctly. Try again.")
+            else:
+                if simplify(sympy_exprs["usr_msg"] - sympy_exprs["right"]) == 0:
+                    response_context = Response.NO_CONTEXT
+                    check_process.end_time = timezone.now()
+                    check_process.save()
+
+                    # Test this user message against the rewritten expression, too
+                    if simplify(sympy_exprs["usr_msg"] - sympy_exprs["left"]) == 0:
+                        # The user has found the answer
+                        mistake_count = 0
+                        all_mistakes = Problem.get_all_steps_mistakes(check_process.problem)
+                        for m in all_mistakes:
+                            if all_mistakes[m][0]["title"] != Mistake.NONE:
+                                mistake_count += 1
+                            if all_mistakes[m][1]["title"] != Mistake.NONE:
+                                mistake_count += 1
+
+                        if mistake_count == 0:
+                            responses.append(
+                                f"Great, that is also equal to `/{latex(simplify(sympy_exprs['usr_msg']))}`. "
+                            )
+                            responses.append(
+                                f"Congratulations! You have correctly solved this equation "
+                                f"for `/{check_process.solving_for}`."
+                            )
+                            responses.append("Keep up the good work!")
+                            check_process.are_equivalent = True
+                            check_process.save()
+                        else:
+                            responses.append(f"That is also equal to `/{latex(simplify(sympy_exprs['usr_msg']))}`. ")
+                            responses.append(
+                                f"You have found the answer: `/{check_process.expr1_latex}="
+                                f"{check_process.expr2_latex}` when `/{check_process.solving_for}="
+                                f"{check_process.answer}`."
+                            )
+                            responses.append("BUT there are mistakes in your algebra!")
+                            responses.append(
+                                "Please find and fix your mistakes by clicking on the"
+                                " <i class='ai-circle-help'></i> icons."
+                            )
+                            responses.append(
+                                "Then, check your solution again without any mistakes in your algebra "
+                                "to consider this problem solved."
+                            )
+                    else:
+                        # We have done our substitution correctly, but we do NOT have equivalence
+                        responses.append(
+                            f"You did this substitution correctly, but the left side of the equation "
+                            f"equals `/{Sandbox.clean_decimal(Decimal(latex(simplify(sympy_exprs['left']))))}` "
+                            f" while the right side equals `/{latex(simplify(sympy_exprs['usr_msg']))}`."
+                        )
+                        responses.append(
+                            f"It looks like `/{check_process.expr1_latex}` is not equal "
+                            f"to `/{check_process.expr2_latex}` when "
+                            f"`/{check_process.solving_for}={check_process.attempt}`."
+                        )
+                        responses.append("Try to find and fix your mistakes. Then change you answer and try again.")
+                        check_process.are_equivalent = False
+                        check_process.save()
+                else:
+                    Mistake.save_new(check_process, Mistake.SUB_EXPR2)
+                    responses.append("You didn't do that substitution correctly. Try again.")
+
+        for r in responses:
+            Response.save_new(user_message_obj, r, response_context)
 
     @classmethod
     def known_incorrect(cls, check_process):

@@ -23,6 +23,10 @@ class Sandbox(models.Model):
     def is_problem_solved(cls):
         pass
 
+    @classmethod
+    def clean_decimal(cls, d):
+        return d.quantize(Decimal(1)) if d == d.to_integral() else d.normalize()
+
 
 # This is the base class for the CheckRewrite and CheckSolution models in algebra/models.py
 # expr1 is the rewrite or the left side of the equation
@@ -213,20 +217,19 @@ class CheckAlgebra(models.Model):
                                 responses.append(f"Ok, `/{variable}={suggested_value_str}`")
                             else:
                                 mistake_model.save_new(check_process, mistake_model.CHOOSE_VALUE)
-                                setattr(check_process, f"{var_field}_value", None)
-                                check_process.save()
 
                                 checked_var_val_string = (
-                                    f"`/{getattr(check_process, f'{var_field}_value')}={suggested_value_str}`"
+                                    f"`/{getattr(check_process, f'{var_field}')}={suggested_value_str}`"
                                 )
                                 if check_process.other_var:
                                     checked_var_val_string += (
-                                        f"and `/{check_process.other_var}={check_process.other_var_value}`"
+                                        f"and `/{check_process.solving_for}="
+                                        f"{Sandbox.clean_decimal(check_process.solving_for_value)}`"
                                     )
-                                    if var_field == "other_var":
-                                        checked_var_val_string += (
-                                            f"and `/{check_process.solving_for_var}={check_process.solving_for_value}`"
-                                        )
+
+                                setattr(check_process, f"{var_field}_value", None)
+                                check_process.save()
+
                                 if check_process.__class__.__name__ == "CheckRewrite":
                                     responses.append(
                                         f"You've already checked {checked_var_val_string} in these " f"expressions."
