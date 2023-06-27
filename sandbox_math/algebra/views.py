@@ -32,6 +32,7 @@ class BaseView(UserPassesTestMixin, TemplateView):
         context["problem"] = Problem.objects.none()
         context["steps"] = Step.objects.none()
         context["previous_user_messages"] = UserMessage.objects.none()
+        context["problem_finished"] = "problem-not-finished"
 
         try:
             saved_problem_id = self.kwargs["problem_id"]
@@ -48,6 +49,12 @@ class BaseView(UserPassesTestMixin, TemplateView):
             context["previous_user_messages"] = UserMessage.get_all_previous_for_problem(
                 Sandbox.ALGEBRA, saved_problem_id
             )
+
+            if CheckSolution.objects.filter(problem=context["problem"], problem_solved=True):
+                context["problem_finished"] = "problem-finished"
+                for step_mistakes in Problem.get_all_steps_mistakes(context["problem"]).items():
+                    if step_mistakes[1][0]["title"] != Mistake.NONE and step_mistakes[1][1]["title"] != Mistake.NONE:
+                        context["problem_finished"] = "problem-not-finished"
 
         return context
 
@@ -94,6 +101,7 @@ class UpdateStepTypeView(View):
             response = JsonResponse({"error": "there was an error updating the step type"})
 
         stop_check_rewrite = False
+
         active_processes = CheckRewrite.objects.filter(problem=step.problem, end_time__isnull=True)
         # check if there is an active check process
         if active_processes.count() == 1:
@@ -103,12 +111,17 @@ class UpdateStepTypeView(View):
                 # need to cancel the rewrite process
                 stop_check_rewrite = True
 
+        stop_check_solution = False
+        if CheckSolution.objects.filter(problem=step.problem, end_time__isnull=True):
+            stop_check_solution = True
+
         if not response:
             step.save()
 
             feedback = {
                 "mistakes": Problem.get_all_steps_mistakes(step.problem),
                 "stop_check_rewrite": stop_check_rewrite,
+                "stop_check_solution": stop_check_solution,
             }
 
             response = JsonResponse(feedback)
@@ -152,11 +165,8 @@ class UpdateExpressionView(View):
                     # step with the expression changed is the previous step
                     if active_process.expr2_latex != getattr(step, f"{side}_expr").latex:
                         stop_check = "rewrite"
-            elif CheckSolution.is_currently_checking(step.id, side):
+            elif CheckSolution.objects.filter(problem=step.problem, end_time__isnull=True).count():
                 stop_check = "solution"
-            elif all_steps.last() == step:
-                if CheckSolution.objects.filter(problem=step.problem, end_time__isnull=True).count() > 0:
-                    stop_check = "solution"
 
             # Editing an expression could have an effect on it's badge count, the previous step's badge count, or the
             # next one's

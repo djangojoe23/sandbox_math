@@ -186,6 +186,10 @@ function GetResponse(userMessageLatex, callerFunctionName) {
             badgeObj.addClass('bg-faded-danger text-danger');
           }
 
+          if (lastResponseParent.find('.problem-solved').length) {
+            LockEverything();
+          }
+
           $('#calculatorSubmit').prop('disabled', false);
           if (calcInputField) {
             calcInputField.config({

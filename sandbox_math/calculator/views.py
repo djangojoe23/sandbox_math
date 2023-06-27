@@ -1,9 +1,10 @@
 from django.utils import timezone
 from django.views.generic.base import TemplateView
 
-from sandbox_math.algebra.models import CheckRewrite, CheckSolution, Step
+from sandbox_math.algebra.models import CheckRewrite, CheckSolution, Problem, Step
 from sandbox_math.calculator.models import Response, UserMessage
 from sandbox_math.sandbox.models import Sandbox
+from sandbox_math.users.models import Mistake
 
 
 # Create your views here.
@@ -23,7 +24,7 @@ class GetResponseView(TemplateView):
                 user_message_obj = UserMessage.save_new(s[0], problem_id, user_message)
 
         current_context = Response.get_context_of_last_response(user_message_obj)
-        print(current_context)
+        print(caller, current_context)
         if caller == "SubmitUserMessage":
             if current_context == Response.NO_CONTEXT:
                 # User is submitting a message with no context (looking for an arithmetic response)
@@ -73,6 +74,26 @@ class GetResponseView(TemplateView):
                     CheckSolution.create_stop_response("CheckSolution", user_message_obj, None)
                 else:
                     CheckSolution.create_substitute_values_response(user_message_obj)
+                    if Response.get_context_of_last_response(user_message_obj) == Response.NO_CONTEXT:
+                        just_finished_check = (
+                            CheckSolution.objects.filter(
+                                problem_id=problem_id, end_time__isnull=False, problem_solved=True
+                            )
+                            .order_by("-end_time")
+                            .first()
+                        )
+                        problem = Problem.objects.get(id=problem_id)
+                        if just_finished_check:
+                            context["problem_solved"] = "problem-solved"
+                            for step_mistakes in Problem.get_all_steps_mistakes(problem).items():
+                                if (
+                                    step_mistakes[1][0]["title"] != Mistake.NONE
+                                    and step_mistakes[1][1]["title"] != Mistake.NONE
+                                ):
+                                    context["problem_finished"] = "problem-not-finished"
+                        else:
+                            context["problem_finished"] = "problem-not-finished"
+
         elif caller == "InitializeNewStep":
             # User must be starting a new check rewrite
             step_id = int(user_message.split("-")[0][4:])
@@ -88,34 +109,91 @@ class GetResponseView(TemplateView):
                         current_context,
                     )
                 else:
-                    # The user is trying to start a different check rewrite than the one they currently have going
-                    Response.save_new(
-                        user_message_obj,
-                        "Canceling the current check rewrite process and starting a new one.",
-                        Response.NO_CONTEXT,
-                    )
                     step = Step.objects.get(id=step_id)
                     currently_active_check = None
-                    try:
-                        currently_active_check = CheckRewrite.objects.get(problem=step.problem, end_time__isnull=True)
-                    except CheckRewrite.DoesNotExist:
-                        CheckRewrite.create_stop_response("CheckRewrite", user_message_obj, "error")
+                    if current_context in [Response.CHOOSE_REWRITE_VALUES, Response.CHECK_REWRITE]:
+                        # The user is trying to start a different check rewrite than the one they currently have going
+                        Response.save_new(
+                            user_message_obj,
+                            "Canceling the current check rewrite process and starting a new one.",
+                            Response.NO_CONTEXT,
+                        )
+                        try:
+                            currently_active_check = CheckRewrite.objects.get(
+                                problem=step.problem, end_time__isnull=True
+                            )
+                        except CheckRewrite.DoesNotExist:
+                            CheckRewrite.create_stop_response("CheckRewrite", user_message_obj, "error")
+                    elif current_context in [Response.CHOOSE_SOLUTION_VALUES, Response.CHECK_SOLUTION]:
+                        Response.save_new(
+                            user_message_obj,
+                            "Canceling the current check solution and starting a check rewrite.",
+                            Response.NO_CONTEXT,
+                        )
+                        try:
+                            currently_active_check = CheckSolution.objects.get(
+                                problem=step.problem, end_time__isnull=True
+                            )
+                        except CheckSolution.DoesNotExist:
+                            CheckSolution.create_stop_response("CheckSolution", user_message_obj, "error")
 
                     if currently_active_check:
                         currently_active_check.end_time = timezone.now()
                         currently_active_check.save()
                     CheckRewrite.create_start_response(step_id, side, user_message_obj)
         elif caller in ["StepTypeChanged", "ExpressionChanged", "DeleteStep"]:
-            CheckRewrite.create_stop_response("CheckRewrite", user_message_obj, caller)
+            if current_context in [Response.CHOOSE_REWRITE_VALUES, Response.CHECK_REWRITE]:
+                CheckRewrite.create_stop_response("CheckRewrite", user_message_obj, caller)
+            elif current_context in [Response.CHOOSE_SOLUTION_VALUES, Response.CHECK_SOLUTION]:
+                CheckRewrite.create_stop_response("CheckSolution", user_message_obj, caller)
+            else:
+                if CheckRewrite.objects.filter(problem_id=problem_id, end_time__isnull=True):
+                    CheckRewrite.create_stop_response("CheckRewrite", user_message_obj, caller)
+                if CheckSolution.objects.filter(problem_id=problem_id, end_time__isnull=True):
+                    CheckSolution.create_stop_response("CheckSolution", user_message_obj, caller)
         elif caller == "CheckSolutionClick":
-            # The user is trying to check a solution but they are in the middle of checking a rewrite
             if current_context != Response.NO_CONTEXT:
-                print("here!")
-            # The user is trying to check a solution but they are in the middle of checking the same solution
-            # The user is trying to check a solution but they are in the middle of checking a different solution
-            # The user is trying to check a solution
+                if current_context == Response.CHOOSE_REWRITE_VALUES:
+                    # The user is trying to check a rewrite but they are in the middle of checking a solution
+                    Response.save_new(
+                        user_message_obj,
+                        "Canceling the current check rewrite process and starting a solution check.",
+                        Response.NO_CONTEXT,
+                    )
+                    currently_active_check = None
+                    try:
+                        currently_active_check = CheckRewrite.objects.get(problem_id=problem_id, end_time__isnull=True)
+                        currently_active_check.end_time = timezone.now()
+                        currently_active_check.save()
+                    except CheckRewrite.DoesNotExist:
+                        CheckRewrite.create_stop_response("CheckRewrite", user_message_obj, "error")
+
+                    CheckSolution.create_start_response(user_message_obj)
+                else:
+                    # The user is trying to check a solution but they are in the middle of checking a solution!
+                    Response.save_new(
+                        user_message_obj,
+                        "You're already checking this solution! Respond to the last message to continue.",
+                        current_context,
+                    )
             else:
                 CheckSolution.create_start_response(user_message_obj)
+                just_finished_check = (
+                    CheckSolution.objects.filter(problem_id=problem_id, end_time__isnull=False, problem_solved=True)
+                    .order_by("-end_time")
+                    .first()
+                )
+                problem = Problem.objects.get(id=problem_id)
+                if just_finished_check:
+                    context["problem_solved"] = "problem-solved"
+                    for step_mistakes in Problem.get_all_steps_mistakes(problem).items():
+                        if (
+                            step_mistakes[1][0]["title"] != Mistake.NONE
+                            and step_mistakes[1][1]["title"] != Mistake.NONE
+                        ):
+                            context["problem_finished"] = "problem-not-finished"
+                else:
+                    context["problem_finished"] = "problem-not-finished"
 
         context["responses"] = Response.objects.filter(user_message=user_message_obj).order_by("id")
 

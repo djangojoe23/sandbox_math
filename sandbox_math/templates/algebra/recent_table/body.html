@@ -7,14 +7,14 @@
     <td class="col-2 text-center align-middle" style="">{{ problem.last_viewed.date }}</td>
     <td class="col-6 text-center">
       <p class="no-margin"><span class="recentEquation" style="">
-        {% if not problem.left and not problem.right %}
+        {% if not problem.left_expr and not problem.right_expr %}
           Undefined
         {% else %}
-          {{ problem.left }} = {{ problem.right }}
+          {{ problem.left_expr }} = {{ problem.right_expr }}
         {% endif %}
       </span></p>
     </td>
     <td class="col-1 text-center align-middle">{{ problem.step_count }}</td>
-    <td class="col-1 text-center align-middle">{% if not problem.solved %}Unsolved{% else %}Solved{% endif %}</td>
+    <td class="col-1 text-center align-middle">{% if problem.solved == 0 %}Unsolved{% else %}Solved{% endif %}</td>
   </tr>
 {% endfor %}

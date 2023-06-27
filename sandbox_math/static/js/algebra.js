@@ -40,6 +40,10 @@ $(document).ready(function () {
     });
     //This will populate the variable options menu
     void ExpressionChanged($('.algebra-step:first-child .left-mq-input'));
+
+    if ($('#unique-problem-id').hasClass('problem-finished')) {
+      LockEverything();
+    }
   } else {
     //Start New Problem
     $('#algebra').prepend(
@@ -346,6 +350,9 @@ async function StepTypeChanged(menuButtonObject) {
         if (response['stop_check_rewrite']) {
           GetResponse('stop-check-rewrite', 'StepTypeChanged');
         }
+        if (response['stop_check_solution']) {
+          GetResponse('stop-check-solution', 'StepTypeChanged');
+        }
         ToggleNewAndCheckButtons(false);
       })
       .fail(function () {
@@ -429,7 +436,6 @@ async function ExpressionChanged(expressionObject) {
         }
       }
 
-      console.log(response['variable_isolated']);
       if (
         response['variable_isolated'] === 'left' ||
         response['variable_isolated'] === 'right'
@@ -634,4 +640,41 @@ async function ToggleExpressionHelp(stepID, exprObject) {
 function ToggleNewAndCheckButtons(isDisabled) {
   $('#newStepButton').prop('disabled', isDisabled);
   $('#checkSolutionButton').prop('disabled', isDisabled);
+}
+
+function LockEverything() {
+  $('.algebra-step').each(function () {
+    let stepID = $(this).attr('id');
+    let thisStepObject = $('#' + stepID);
+
+    $(
+      '#' +
+        stepID +
+        ' .check-rewrite-left, #' +
+        stepID +
+        ' .check-rewrite-right',
+    ).each(function () {
+      $(this).prop('disabled', true);
+      $(this).css('pointer-events', 'none');
+    });
+
+    //disable var dropdown
+
+    $('#' + stepID + ' .left-mq-input, #' + stepID + ' .right-mq-input').css(
+      'pointer-events',
+      'none',
+    );
+    $('#variableDropdown button').prop('disabled', true);
+    $('#' + stepID + ' .step-type-dropdown button').prop('disabled', true);
+    $('#' + stepID + ' .delete-step button').prop('disabled', true);
+    $(
+      '#' + stepID + ' .left-help-button, #' + stepID + ' .right-help-button',
+    ).css('pointer-events', 'none');
+    $('#checkSolutionButton, #newStepButton')
+      .css('pointer-events', 'none')
+      .prop('disabled', 'true');
+
+    const popoverTriggerList = null;
+    const popoverList = null;
+  });
 }

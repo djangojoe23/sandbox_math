@@ -9,10 +9,11 @@
 
 {% block javascript %}
   {{ block.super }}
+    <script defer src="{% static 'js/mathquill-0.10.1/mathquill-basic.js' %}"></script>
+      <script defer src="{% static 'js/calculator.js' %}"></script>
     <script defer src="{% static 'js/algebra.js' %}"></script>
     <script defer src="{% static 'js/algebra-recent-table.js' %}"></script>
-    <script defer src="{% static 'js/calculator.js' %}"></script>
-    <script defer src="{% static 'js/mathquill-0.10.1/mathquill-basic.js' %}"></script>
+
 {% endblock javascript %}
 
 {% block content %}
@@ -68,7 +69,7 @@
                       <div class="ms-auto">
                         <a href="#" data-bs-target="#sidebar" data-bs-toggle="collapse" class="fs-4"><i class="ai-arrow-left"></i><i class="ai-messages"></i><i class="ai-arrow-right"></i></a>
                       </div>
-                      <div class="d-none" id="unique-problem-id" >{{ problem.id }}</div>
+                      <div class="d-none {{ problem_finished }}" id="unique-problem-id" >{{ problem.id }}</div>
                       <div id="algebra" class="steps mt-1" style="margin: 10px;">
                         {% for step in steps %}
                           <div id="step{{ step.id }}" class="step algebra-step pb-1 {{ step.step_type }} {% if forloop.counter > 2 %}pt-3{% else %}pt-0{% endif %}" style="">

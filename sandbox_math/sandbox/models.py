@@ -253,6 +253,7 @@ class CheckAlgebra(models.Model):
     def create_stop_response(cls, check_process_class_name, user_message_obj, reason_for_stop):
         response_model = apps.get_model("calculator", "Response")
         check_model = apps.get_model("algebra", check_process_class_name)
+        print(check_model)
         active_checks = check_model.objects.filter(problem_id=user_message_obj.problem_id, end_time__isnull=True)
         for check_process in active_checks:
             check_process.end_time = timezone.now()
@@ -263,7 +264,7 @@ class CheckAlgebra(models.Model):
         if reason_for_stop == "DeleteStep":
             response += " One of the expressions you were checking was deleted."
         elif reason_for_stop == "StepTypeChanged":
-            response += " The rewrite you were checking is no longer a rewrite step."
+            response += " The type of one of the steps you were checking was changed."
         elif reason_for_stop == "var":
             response += " The variable you are solving for has changed."
         elif reason_for_stop == "ExpressionChanged":
