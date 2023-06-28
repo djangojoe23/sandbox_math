@@ -44,3 +44,42 @@
 #sidebar-nav {
   width: 400px;
 }
+
+/*confetti particle text animation*/
+/*https://codepen.io/z-/pen/bpxgWZ*/
+.particletext {
+  text-align: center;
+  /*font-size: 24px;*/
+  position: relative;
+}
+.particletext.letterconfetti > .particle {
+  opacity: 0;
+  position: absolute;
+  animation: letterconfetti 3s ease-in infinite;
+}
+.particletext.letterconfetti > .particle.c1 {
+  background-color: rgba(76, 175, 80, 0.5);
+}
+.particletext.letterconfetti > .particle.c2 {
+  background-color: rgba(156, 39, 176, 0.5);
+}
+@keyframes letterconfetti {
+  0% {
+    opacity: 0;
+    transform: translateY(0%) rotate(0deg);
+  }
+  10% {
+    opacity: 1;
+  }
+  35% {
+    transform: translateY(-800%) rotate(270deg);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(2000%) rotate(1440deg);
+  }
+}
+/*END confetti particle text animation*/

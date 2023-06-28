@@ -188,6 +188,8 @@ function GetResponse(userMessageLatex, callerFunctionName) {
 
           if (lastResponseParent.find('.problem-solved').length) {
             LockEverything();
+            stopConfetti = false;
+            poof();
           }
 
           $('#calculatorSubmit').prop('disabled', false);

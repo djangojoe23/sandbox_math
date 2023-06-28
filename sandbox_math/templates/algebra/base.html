@@ -56,7 +56,7 @@
             <div class="navbar card-header w-100 mx-0 px-4">
               <div class="d-flex align-items-center w-100 px-sm-3">
                 <button class="navbar-toggler me-3 me-sm-4" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu" aria-controls="contactsList" aria-label="Toggle contacts list"><span class="navbar-toggler-icon"></span></button>
-                <div class="h6 ps-2 ms-1 mb-0">Current</div>
+                <div class="h6 ps-2 ms-1 mb-0 w-100">{% if problem_finished == 'problem-finished' %}<span class="particletext letterconfetti">This Problem is Solved!</span>{% else %}Current{% endif %}</div>
               </div>
             </div>
             <!-- Body-->

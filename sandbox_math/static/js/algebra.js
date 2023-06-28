@@ -43,6 +43,13 @@ $(document).ready(function () {
 
     if ($('#unique-problem-id').hasClass('problem-finished')) {
       LockEverything();
+
+      jQuery.rnd = function (m, n) {
+        m = parseInt(m);
+        n = parseInt(n);
+        return Math.floor(Math.random() * (n - m + 1)) + m;
+      };
+      initparticles();
     }
   } else {
     //Start New Problem
