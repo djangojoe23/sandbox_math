@@ -1,4 +1,6 @@
-{% load static i18n compress%}<!DOCTYPE html>
+{% load static i18n compress%}
+{% load guest_user %}
+<!DOCTYPE html>
 {% get_current_language as LANGUAGE_CODE %}
 <html lang="{{ LANGUAGE_CODE }}">
   <head>
@@ -26,6 +28,8 @@
     <link href="{% static 'css/project.css' %}" rel="stylesheet">
     <link href="{% static 'css/project.css' %}" rel="stylesheet">
     <link href="{% static 'css/simplebar.css' %}" rel="stylesheet" media="screen">
+    <link href="{% static 'css/aos.css' %}" rel="stylesheet" media="screen">
+    <link href="{% static 'css/swiper-bundle.min.css' %}" rel="stylesheet" media="screen">
     <link href="{% static 'css/theme.min.css' %}" rel="stylesheet" media="screen">
     {% endcompress %}
     {% endblock %}
@@ -46,6 +50,8 @@
       <script defer src="{% static 'js/theme/smooth-scroll/dist/smooth-scroll.min.js' %}"></script>
       <script defer src="{% static 'js/theme/simplebar/dist/simplebar.min.js' %}"></script>
       <script defer src="{% static 'js/theme/parallax-js/dist/parallax.min.js' %}"></script>
+      <script defer src="{% static 'js/theme/swiper/swiper-bundle.min.js' %}"></script>
+      <script defer src="{% static 'js/theme/aos/aos.js' %}"></script>
       <script defer type="module" src="{% static 'js/theme/theme.js' %}"></script>
       {% endcompress %}
 
@@ -54,7 +60,7 @@
   </head>
 
   <body class="{{ body_bg }}">
-    <div id="userID" class="d-none">{{ request.user.id }}</div>
+    <div id="userID" class="d-none {% if user|is_guest_user %}is-guest{% endif %}">{{ request.user.id }}</div>
     <main class="page-wrapper">
       <div class="{{theme_mode}}">
         <header class="navbar navbar-expand-lg fixed-top">
@@ -68,58 +74,56 @@
             </span>
             Sandbox Math
           </a>
-          {% if request.user.is_authenticated %}
-            <div class="dropdown nav d-block order-lg-2 ms-auto">
-{#              <a href="{% url 'users:overview' request.user.username  %}" class="nav-link d-flex align-items-center p-0" aria-expanded="false">#}
-                <div class="bg-primary" style="width:48px; height:48px; border-radius:50%;">
-                  <p class="text-light text-center fs-2 text-uppercase" style="line-height:48px;">{{ request.user.username|make_list|first }}</p>
-                </div>
-                <div class="d-none d-sm-block ps-2">
-                  <div class="fs-xs lh-1 opacity-60">Hello,</div>
-                  <div class="fs-sm dropdown-toggle">{{ request.user.username }}</div>
-                </div>
-              </a>
-              <div class="dropdown-menu dropdown-menu-end my-1">
-                <h6 class="dropdown-header fs-xs fw-medium text-muted text-uppercase pb-1">Activity</h6>
-{#                <a href="{% url 'users:practice' request.user.username %}" class="dropdown-item">#}
-                  <i class="ai-activity fs-lg opacity-70 me-2"></i>
-                  Practice
-                </a>
-{#                <a href="{% url 'users:mistakes' request.user.username %}" class="dropdown-item">#}
-                  <i class="ai-circle-help fs-lg opacity-70 me-2"></i>
-                  Mistakes
-                </a>
-{#                <a href="{% url 'users:solutions' request.user.username %}" class="dropdown-item d-flex align-items-center">#}
-                  <i class="ai-award fs-lg opacity-70 me-2"></i>
-                  Solutions
-{#                  <span class="badge bg-danger ms-auto">4</span>#}
-                </a>
-{#                <a href="{% url 'users:variety' request.user.username %}" class="dropdown-item">#}
-                  <i class="ai-shuffle fs-lg opacity-70 me-2"></i>
-                  Variety
-                </a>
-                <div class="dropdown-divider"></div>
-                <h6 class="dropdown-header fs-xs fw-medium text-muted text-uppercase pb-1">Account</h6>
-{#                <a href="{% url 'users:overview' request.user.username  %}" class="dropdown-item">#}
-                  <i class="ai-dashboard fs-lg opacity-70 me-2"></i>
-                  Overview
-                </a>
-                <a href="#" class="dropdown-item">
-                  <i class="ai-edit fs-lg opacity-70 me-2"></i>
-                  Edit
-                </a>
-                <div class="dropdown-divider"></div>
-                <a href="{% url 'account_logout' %}" class="dropdown-item">
-                  <i class="ai-logout fs-lg opacity-70 me-2"></i>
-                  Sign out
-                </a>
+          <div class="dropdown nav d-block order-lg-2 ms-auto">
+              <a href="#" class="nav-link d-flex align-items-center p-0" data-bs-toggle="dropdown" aria-expanded="false">
+              <div class="bg-primary" style="width:48px; height:48px; border-radius:50%;">
+                <p class="text-light text-center fs-2 text-uppercase" style="line-height:48px;">{% if user|is_guest_user %}X{% else %}{{ request.user.username|make_list|first }}{% endif %}</p>
               </div>
+              <div class="d-none d-sm-block ps-2">
+                <div class="fs-xs lh-1 opacity-60">Hello,</div>
+                <div class="fs-sm dropdown-toggle">{% if user|is_guest_user %}Guest{% else %}{{ request.user.username }}{% endif %}</div>
+              </div>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end my-1">
+              <h6 class="dropdown-header fs-xs fw-medium text-muted text-uppercase pb-1">Activity</h6>
+{#                <a href="{% url 'users:practice' request.user.username %}" class="dropdown-item">#}
+                <i class="ai-activity fs-lg opacity-70 me-2"></i>
+                Practice
+              </a>
+{#                <a href="{% url 'users:mistakes' request.user.username %}" class="dropdown-item">#}
+                <i class="ai-circle-help fs-lg opacity-70 me-2"></i>
+                Mistakes
+              </a>
+{#                <a href="{% url 'users:solutions' request.user.username %}" class="dropdown-item d-flex align-items-center">#}
+                <i class="ai-award fs-lg opacity-70 me-2"></i>
+                Solutions
+{#                  <span class="badge bg-danger ms-auto">4</span>#}
+              </a>
+{#                <a href="{% url 'users:variety' request.user.username %}" class="dropdown-item">#}
+                <i class="ai-shuffle fs-lg opacity-70 me-2"></i>
+                Variety
+              </a>
+              <div class="dropdown-divider"></div>
+              <h6 class="dropdown-header fs-xs fw-medium text-muted text-uppercase pb-1">Account</h6>
+{#                <a href="{% url 'users:overview' request.user.username  %}" class="dropdown-item">#}
+                <i class="ai-dashboard fs-lg opacity-70 me-2"></i>
+                Overview
+              </a>
+              <a href="#" class="dropdown-item">
+                <i class="ai-edit fs-lg opacity-70 me-2"></i>
+                Edit
+              </a>
+              <div class="dropdown-divider"></div>
+              <a href="{% url 'account_logout' %}" class="dropdown-item">
+                <i class="ai-logout fs-lg opacity-70 me-2"></i>
+                Sign out
+              </a>
             </div>
-          {% endif %}
+          </div>
           <button type="button" class="navbar-toggler ms-3" data-bs-toggle="collapse" data-bs-target="#navbarCollapse1">
             <span class="navbar-toggler-icon"></span>
           </button>
-          <nav class="collapse navbar-collapse" id="navbarCollapse1">
+          <nav class="collapse navbar-collapse me-3" id="navbarCollapse1">
             <ul class="navbar-nav me-auto">
               <li class="nav-item">
                 <a href="{% url 'about' %}" class="nav-link">About</a>
@@ -133,7 +137,7 @@
                   <li><a href="#" class="dropdown-item">Shapes</a></li>
                 </ul>
               </li>
-              {% if not request.user.is_authenticated %}
+              {% if user|is_guest_user %}
                 <li class="nav-item">
                   <a href="{% url 'account_signup' %}" class="nav-link">Join</a>
                 </li>
@@ -146,7 +150,7 @@
                 <a href="{% url 'contact' %}" class="nav-link">Contact</a>
               </li>
             </ul>
-            {% if not request.user.is_authenticated %}
+            {% if user|is_guest_user %}
               <a href="{% url 'account_login' %}" class="btn btn-outline-primary btn-sm fs-sm ms-3 mb-4 mb-lg-0">
                 <i class="ai-user me-2 ms-n1"></i>
                 Sign in

@@ -147,7 +147,7 @@ class Mistake(models.Model):
             CANNOT_REWRITE,
             "Fix the expression in the previous step so it makes sense, then try to rewrite it.",
         ),
-        (NONE, "All good!"),
+        (NONE, "This expression is correct at this step."),
         (ALREADY_INCORRECT, "Trying to check rewrite or answer already proven to be wrong."),
         (INVALID_EXPR, "Trying to check expression that isn't valid."),
         (CHOOSE_VALUE, "Mistake made while choosing a value to substitute in for a variable."),

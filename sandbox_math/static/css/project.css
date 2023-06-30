@@ -45,6 +45,22 @@
   width: 400px;
 }
 
+.no-mistake-popover {
+  --ar-popover-bg: #ecf4f1 !important;
+  --ar-popover-border-color: #3d7e68 !important;
+  --ar-popover-arrow-border: #3d7e68 !important;
+  --ar-popover-header-color: #3d7e68 !important;
+  --ar-popover-body-color: #3d7e68 !important;
+}
+
+.has-mistake-popover {
+  --ar-popover-bg: #fdeeee !important;
+  --ar-popover-border-color: #f6a8a8 !important;
+  --ar-popover-arrow-border: #f6a8a8 !important;
+  --ar-popover-header-color: #d54848 !important;
+  --ar-popover-body-color: #d54848 !important;
+}
+
 /*confetti particle text animation*/
 /*https://codepen.io/z-/pen/bpxgWZ*/
 .particletext {

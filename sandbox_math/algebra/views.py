@@ -1,8 +1,8 @@
-from django.contrib.auth.mixins import UserPassesTestMixin
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.generic.base import TemplateView, View
 from django.views.generic.list import ListView
+from guest_user.mixins import AllowGuestUserMixin
 
 from sandbox_math.algebra.models import CheckRewrite, CheckSolution, Expression, Problem, Step
 from sandbox_math.calculator.models import UserMessage
@@ -11,16 +11,13 @@ from sandbox_math.users.models import HelpClick, Mistake, Proceed
 
 
 # Create your views here.
-class BaseView(UserPassesTestMixin, TemplateView):
+class BaseView(AllowGuestUserMixin, TemplateView):
     template_name = "algebra/base.html"
     step_prompts = {
         1: "What do you need to do before you start?",
         2: "What is your first step going to be?",
         3: "What are you going to do next?",
     }
-
-    def test_func(self):
-        return self.request.user.is_authenticated
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -209,6 +206,7 @@ class UpdateVariableView(View):
 
         feedback = {
             "mistakes": Problem.get_all_steps_mistakes(problem),
+            "variable_isolated": Problem.variable_isolated_side(problem),
         }
 
         return JsonResponse(feedback)

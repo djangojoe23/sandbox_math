@@ -1,5 +1,15 @@
 let MQ = null;
 let studentID = null;
+let guestClickCount = 0;
+
+addEventListener('click', (event) => {
+  guestClickCount++;
+  if (guestClickCount > 5 && $('#userID').hasClass('is-guest')) {
+    let myModal = new bootstrap.Modal(document.getElementById('myModal'), {});
+    myModal.show();
+    guestClickCount = 0;
+  }
+});
 
 function waitForElement(elementPath, callBack) {
   window.setTimeout(function () {
@@ -15,6 +25,14 @@ function waitForElement(elementPath, callBack) {
 $(document).ready(function () {
   MQ = MathQuill.getInterface(2);
   studentID = $('#userID').html();
+
+  if ($('#userID').hasClass('is-guest')) {
+    let modal = setInterval(function () {
+      let myModal = new bootstrap.Modal(document.getElementById('myModal'), {});
+      myModal.show();
+      clearInterval(modal);
+    }, 2000);
+  }
 
   $('#offcanvasMenu a').click(function () {
     if ($(this).html() !== 'New Blank') {
@@ -476,7 +494,14 @@ function VariableChanged(varSelected) {
   })
     .done(function (response) {
       UpdateAllExpressionHelp(response['mistakes']);
-
+      if (
+        response['variable_isolated'] === 'left' ||
+        response['variable_isolated'] === 'right'
+      ) {
+        $('#checkSolutionButton').removeClass('d-none');
+      } else {
+        $('#checkSolutionButton').addClass('d-none');
+      }
       ToggleNewAndCheckButtons(false);
     })
     .fail(function () {
@@ -624,6 +649,11 @@ async function ToggleExpressionHelp(stepID, exprObject) {
     '.popover-header': helpTitle,
     '.popover-body': helpContent,
   });
+  if (helpTitle === 'No Mistake Here') {
+    $('.popover').addClass('no-mistake-popover');
+  } else {
+    $('.popover').addClass('has-mistake-popover');
+  }
 
   let uniqueStepID = parseInt(stepID.substring('step'.length, stepID.length));
   if (uniqueStepID !== 0) {

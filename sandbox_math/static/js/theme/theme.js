@@ -16,7 +16,7 @@ import scrollTopButton from './components/scroll-top-button.js';
 import passwordVisibilityToggle from './components/password-visibility-toggle.js';
 // import interactiveMap from './components/interactive-map.js';
 import parallax from './components/parallax.js';
-// import carousel from './components/carousel.js';
+import carousel from './components/carousel.js';
 // import gallery from './components/gallery.js';
 // import charts from './components/charts.js';
 // import rangeSlider from './components/range-slider.js';

@@ -7,7 +7,11 @@ from django.views import defaults as default_views
 from django.views.generic import TemplateView
 
 urlpatterns = [
-    path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
+    path(
+        "",
+        TemplateView.as_view(template_name="pages/home.html", extra_context={"body_bg": "bg-secondary"}),
+        name="home",
+    ),
     path("about/", TemplateView.as_view(template_name="pages/about.html"), name="about"),
     path("contact/", TemplateView.as_view(template_name="pages/contact.html"), name="contact"),
     # Django Admin, use {% url 'admin:index' %}
@@ -18,6 +22,7 @@ urlpatterns = [
     # Your stuff: custom urls includes go here
     path("algebra/", include("sandbox_math.algebra.urls")),
     path("calculator/", include("sandbox_math.calculator.urls")),
+    path("convert/", include("guest_user.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 if settings.DEBUG:
     # Static file serving when using Gunicorn + Uvicorn for local web socket development

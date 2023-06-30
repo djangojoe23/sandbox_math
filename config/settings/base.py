@@ -83,6 +83,7 @@ LOCAL_APPS = [
     "sandbox_math.sandbox",
     "sandbox_math.algebra",
     "sandbox_math.calculator",
+    "guest_user",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -98,6 +99,7 @@ MIGRATION_MODULES = {"sites": "sandbox_math.contrib.sites.migrations"}
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
+    "guest_user.backends.GuestBackend",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#auth-user-model
 AUTH_USER_MODEL = "users.User"

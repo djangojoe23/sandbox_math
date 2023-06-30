@@ -1,0 +1,44 @@
+{% load static %}
+
+<!-- Product details (Image hotspots)-->
+<section class="position-relative">
+  <div class="container py-1 my-md-3 my-xl-0 my-xxl-4">
+    <div class="hotspots mx-auto mb-2" style="max-width: 75%;"><img class="d-block rounded-5 w-100" src="{% static 'images/example.png' %}" alt="Image">
+      <div class="position-absolute" style="top: -0.6%; left: 21%; width: 4rem; height: 4rem;" data-aos="zoom-in" data-aos-easing="ease-out-back" data-aos-offset="300">
+        <div class="hotspot" data-bs-toggle="popover" data-bs-trigger="hover" title="Choose Each Step's Type" data-bs-content="Make sure you choose what kind of algebraic step you want for each step.">
+          <div class="hotspot-inner"><i class="ai-plus"></i></div>
+        </div>
+      </div>
+      <div class="position-absolute" style="bottom: 70%; left: 11.5%; width: 4rem; height: 4rem;" data-aos="zoom-in" data-aos-easing="ease-out-back" data-aos-offset="200" data-aos-delay="300">
+        <div class="hotspot" data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="top" data-bs-html="true" title="Find and Fix Mistakes" data-bs-content="Click the <i class='ai-circle-help'></i> icons to find any mistakes with your algebra, or to realize that you're doing it correctly!">
+          <div class="hotspot-inner"><i class="ai-plus"></i></div>
+        </div>
+      </div>
+      <div class="position-absolute" style="bottom: 70%; right: 23%; width: 4rem; height: 4rem;" data-aos="zoom-in" data-aos-easing="ease-out-back" data-aos-offset="200" data-aos-delay="300">
+        <div class="hotspot" data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="top" data-bs-html="true" title="Doing Arithmetic" data-bs-content="Make sure you copy the previous step's expression exactly and then do arithmetic to it.">
+          <div class="hotspot-inner"><i class="ai-plus"></i></div>
+        </div>
+      </div>
+      <div class="position-absolute" style="bottom: 50%; right: 23%; width: 4rem; height: 4rem;" data-aos="zoom-in" data-aos-easing="ease-out-back" data-aos-offset="100" data-aos-delay="150">
+        <div class="hotspot" data-bs-toggle="popover" data-bs-trigger="hover" title="Check Your Rewrites!" data-bs-content="Click these buttons after doing rewrite steps. They will lead you through a process to check for yourself if the previous step's expression is equivalent the rewritten expression.">
+          <div class="hotspot-inner"><i class="ai-plus"></i></div>
+        </div>
+      </div>
+      <div class="position-absolute" style="bottom: 8%; right: 42%; width: 4rem; height: 4rem;" data-aos="zoom-in" data-aos-easing="ease-out-back" data-aos-offset="100" data-aos-delay="150">
+        <div class="hotspot" data-bs-toggle="popover" data-bs-trigger="hover" title="Check Your Answer!" data-bs-content="Click this button when you've isolated the variable. It will lead you through a process to check for yourself if your answer is correct.">
+          <div class="hotspot-inner"><i class="ai-plus"></i></div>
+        </div>
+      </div>
+      <div class="position-absolute" style="bottom: 0%; right: 42%; width: 4rem; height: 4rem;" data-aos="zoom-in" data-aos-easing="ease-out-back" data-aos-offset="100" data-aos-delay="150">
+        <div class="hotspot" data-bs-toggle="popover" data-bs-trigger="hover" title="Add Another Step" data-bs-content="Click this button to give yourself another blank step. Don't forget to set the step type after you do! Also, don't worry if you end up not needing it. You can always delete it.">
+          <div class="hotspot-inner"><i class="ai-plus"></i></div>
+        </div>
+      </div>
+      <div class="position-absolute" style="top: 11%; right: 39%; width: 4rem; height: 4rem;" data-aos="zoom-in" data-aos-easing="ease-out-back" data-aos-offset="100" data-aos-delay="150">
+        <div class="hotspot" data-bs-toggle="popover" data-bs-trigger="hover" title="Choose the Variable" data-bs-content="After you've defined the equation, select the variable you will solve for. It will automatically provide any variable it finds in the equation as options.">
+          <div class="hotspot-inner"><i class="ai-plus"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
