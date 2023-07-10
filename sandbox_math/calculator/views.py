@@ -24,7 +24,7 @@ class GetResponseView(TemplateView):
                 user_message_obj = UserMessage.save_new(s[0], problem_id, user_message)
 
         current_context = Response.get_context_of_last_response(user_message_obj)
-        print(caller, current_context)
+
         if caller == "SubmitUserMessage":
             if current_context == Response.NO_CONTEXT:
                 # User is submitting a message with no context (looking for an arithmetic response)
@@ -74,14 +74,14 @@ class GetResponseView(TemplateView):
                     CheckSolution.create_stop_response("CheckSolution", user_message_obj, None)
                 else:
                     CheckSolution.create_substitute_values_response(user_message_obj)
-                    if Response.get_context_of_last_response(user_message_obj) == Response.NO_CONTEXT:
-                        just_finished_check = (
-                            CheckSolution.objects.filter(
-                                problem_id=problem_id, end_time__isnull=False, problem_solved=True
-                            )
-                            .order_by("-end_time")
-                            .first()
+                    just_finished_check = (
+                        CheckSolution.objects.filter(
+                            problem_id=problem_id, end_time__isnull=False, problem_solved=True
                         )
+                        .order_by("-end_time")
+                        .first()
+                    )
+                    if Response.get_context_of_last_response(user_message_obj) == Response.NO_CONTEXT:
                         problem = Problem.objects.get(id=problem_id)
                         if just_finished_check:
                             context["problem_solved"] = "problem-solved"
@@ -90,10 +90,9 @@ class GetResponseView(TemplateView):
                                     step_mistakes[1][0]["title"] != Mistake.NONE
                                     and step_mistakes[1][1]["title"] != Mistake.NONE
                                 ):
-                                    context["problem_finished"] = "problem-not-finished"
+                                    context["problem_solved"] = "problem-not-solved"
                         else:
-                            context["problem_finished"] = "problem-not-finished"
-
+                            context["problem_solved"] = "problem-not-solved"
         elif caller == "InitializeNewStep":
             # User must be starting a new check rewrite
             step_id = int(user_message.split("-")[0][4:])
@@ -191,9 +190,9 @@ class GetResponseView(TemplateView):
                             step_mistakes[1][0]["title"] != Mistake.NONE
                             and step_mistakes[1][1]["title"] != Mistake.NONE
                         ):
-                            context["problem_finished"] = "problem-not-finished"
+                            context["problem_solved"] = "problem-not-solved"
                 else:
-                    context["problem_finished"] = "problem-not-finished"
+                    context["problem_solved"] = "problem-not-solved"
 
         context["responses"] = Response.objects.filter(user_message=user_message_obj).order_by("id")
 

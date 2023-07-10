@@ -1,13 +1,15 @@
 from django.http import JsonResponse
+from django.shortcuts import redirect
 from django.utils import timezone
 from django.views.generic.base import TemplateView, View
 from django.views.generic.list import ListView
 from guest_user.mixins import AllowGuestUserMixin
+from guest_user.models import is_guest_user
 
 from sandbox_math.algebra.models import CheckRewrite, CheckSolution, Expression, Problem, Step
 from sandbox_math.calculator.models import UserMessage
 from sandbox_math.sandbox.models import Sandbox
-from sandbox_math.users.models import HelpClick, Mistake, Proceed
+from sandbox_math.users.models import HelpClick, Mistake, Proceed, User
 
 
 # Create your views here.
@@ -19,6 +21,67 @@ class BaseView(AllowGuestUserMixin, TemplateView):
         3: "What are you going to do next?",
     }
 
+    def get(self, request, *args, **kwargs):
+        try:
+            saved_problem_id = self.kwargs["problem_id"]
+        except KeyError:
+            saved_problem_id = None
+
+        if saved_problem_id:
+            try:
+                Problem.objects.get(student_id=self.request.user.id, id=saved_problem_id)
+                context = self.get_context_data()
+                return self.render_to_response(context)
+            except Problem.DoesNotExist:
+                # the problem that is trying to be accessed is not associated with the account trying to access it
+                try:
+                    problem = Problem.objects.get(id=saved_problem_id)
+                    requester = User.objects.get(id=self.request.user.id)
+                    if is_guest_user(requester):
+                        # create a new problem like this one
+                        new_saved_problem = Problem.save_new(request.user.id)
+                        new_saved_problem.last_view = timezone.now()
+                        new_saved_problem.variable = problem.variable
+                        new_saved_problem.save()
+
+                        step_one = Step.save_new(new_saved_problem)
+                        Step.copy_step(
+                            Step.objects.filter(problem_id=problem.id).order_by("created").first(), step_one
+                        )
+
+                        return redirect(f"/algebra/{new_saved_problem.id}")
+                    else:
+                        try:
+                            guest_id = self.request.GET.get("guest-id")
+                        except KeyError:
+                            guest_id = None
+
+                        if guest_id and is_guest_user(User.objects.get(id=guest_id)):
+                            # then convert everything from that guest account over to this account
+                            problem.student = requester
+                            problem.save()
+                            return redirect(f"/algebra/{saved_problem_id}")
+                        else:
+                            # create a new problem like this one
+                            new_saved_problem = Problem.save_new(request.user.id)
+                            new_saved_problem.last_view = timezone.now()
+                            new_saved_problem.variable = problem.variable
+                            new_saved_problem.save()
+
+                            step_one = Step.save_new(new_saved_problem)
+                            Step.copy_step(
+                                Step.objects.filter(problem_id=problem.id).order_by("created").first(), step_one
+                            )
+
+                            return redirect(f"/algebra/{new_saved_problem.id}")
+                except Problem.DoesNotExist:
+                    # there was a problem id on the URL but it not a known problem
+                    pass
+        else:
+            # user is just browsing to algebra base view without any problem id
+            context = self.get_context_data()
+            return self.render_to_response(context)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -29,7 +92,7 @@ class BaseView(AllowGuestUserMixin, TemplateView):
         context["problem"] = Problem.objects.none()
         context["steps"] = Step.objects.none()
         context["previous_user_messages"] = UserMessage.objects.none()
-        context["problem_finished"] = "problem-not-finished"
+        context["problem_solved"] = "problem-not-solved"
 
         try:
             saved_problem_id = self.kwargs["problem_id"]
@@ -37,21 +100,42 @@ class BaseView(AllowGuestUserMixin, TemplateView):
             saved_problem_id = None
 
         if saved_problem_id:
-            problem = Problem.objects.get(id=saved_problem_id)
-            problem.last_viewed = timezone.now()
-            problem.save()
-            context["is_new_problem"] = False
-            context["problem"] = Problem.objects.get(id=saved_problem_id)
-            context["steps"] = Step.objects.filter(problem_id=saved_problem_id).order_by("created")
-            context["previous_user_messages"] = UserMessage.get_all_previous_for_problem(
-                Sandbox.ALGEBRA, saved_problem_id
-            )
+            try:
+                problem = Problem.objects.get(student_id=self.request.user.id, id=saved_problem_id)
+                problem.last_viewed = timezone.now()
+                problem.save()
+                context["is_new_problem"] = False
+                context["problem"] = problem
+                context["steps"] = Step.objects.filter(problem_id=saved_problem_id).order_by("created")
+                context["previous_user_messages"] = UserMessage.get_all_previous_for_problem(
+                    Sandbox.ALGEBRA, saved_problem_id
+                )
+                if CheckSolution.objects.filter(problem=context["problem"], problem_solved=True):
+                    context["problem_solved"] = "problem-solved"
+                    for step_mistakes in Problem.get_all_steps_mistakes(context["problem"]).items():
+                        if (
+                            step_mistakes[1][0]["title"] != Mistake.NONE
+                            and step_mistakes[1][1]["title"] != Mistake.NONE
+                        ):
+                            context["problem_solved"] = "problem-not-solved"
+            except Problem.DoesNotExist:
+                # the problem that is trying to be accessed is not associated with the account trying to access it
+                requester = User.objects.get(id=self.request.user.id)
+                if is_guest_user(requester):
+                    # create a new problem like this one
+                    return redirect("algebra:start-new")
+                else:
+                    try:
+                        guest_id = self.request.GET.get("guest-id")
+                    except KeyError:
+                        guest_id = None
 
-            if CheckSolution.objects.filter(problem=context["problem"], problem_solved=True):
-                context["problem_finished"] = "problem-finished"
-                for step_mistakes in Problem.get_all_steps_mistakes(context["problem"]).items():
-                    if step_mistakes[1][0]["title"] != Mistake.NONE and step_mistakes[1][1]["title"] != Mistake.NONE:
-                        context["problem_finished"] = "problem-not-finished"
+                    if guest_id and is_guest_user(User.objects.get(id=guest_id)):
+                        print("we did it!")
+                        # then convert everything from that guest account over to this account
+                    else:
+                        pass
+                        # else create a new problem like this one
 
         return context
 
@@ -70,8 +154,8 @@ class StartNewView(TemplateView):
 
 
 class SaveNewView(View):
-    @staticmethod
-    def get(request):
+    @classmethod
+    def get(cls, request):
         new_saved_problem = Problem.save_new(request.user.id)
         new_saved_problem.last_view = timezone.now()
         new_saved_problem.save()

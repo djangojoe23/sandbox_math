@@ -1,15 +1,5 @@
 let MQ = null;
 let studentID = null;
-let guestClickCount = 0;
-
-addEventListener('click', (event) => {
-  guestClickCount++;
-  if (guestClickCount > 5 && $('#userID').hasClass('is-guest')) {
-    let myModal = new bootstrap.Modal(document.getElementById('myModal'), {});
-    myModal.show();
-    guestClickCount = 0;
-  }
-});
 
 function waitForElement(elementPath, callBack) {
   window.setTimeout(function () {
@@ -25,14 +15,39 @@ function waitForElement(elementPath, callBack) {
 $(document).ready(function () {
   MQ = MathQuill.getInterface(2);
   studentID = $('#userID').html();
+  let problemID = $('#unique-problem-id').html();
 
   if ($('#userID').hasClass('is-guest')) {
-    let modal = setInterval(function () {
-      let myModal = new bootstrap.Modal(document.getElementById('myModal'), {});
-      myModal.show();
-      clearInterval(modal);
-    }, 2000);
+    $('#not-logged-in-alert').removeClass('d-none');
+  } else {
+    $('#not-logged-in-alert').addClass('d-none');
   }
+
+  $('#guest-login-link').click(function () {
+    problemID = $('#unique-problem-id').html();
+    //log out guest and go directly to login screen
+    let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    $.ajax({
+      url: '/accounts/logout/',
+      type: 'POST',
+      headers: { 'X-CSRFToken': csrfToken },
+      data: {},
+    })
+      .done(function () {
+        if (problemID) {
+          window.location.href =
+            '/accounts/login/?next=/algebra/' +
+            problemID +
+            '?guest-id=' +
+            studentID;
+        } else {
+          window.location.href = '/accounts/login/?next=/algebra/';
+        }
+      })
+      .fail(function () {
+        console.log('fail');
+      });
+  });
 
   $('#offcanvasMenu a').click(function () {
     if ($(this).html() !== 'New Blank') {
@@ -50,7 +65,7 @@ $(document).ready(function () {
     }
   });
 
-  if ($('#unique-problem-id').html().length) {
+  if (problemID.length) {
     //Load Existing Problem
     $('.algebra-step').each(function () {
       let thisStep = $(this);
@@ -59,7 +74,7 @@ $(document).ready(function () {
     //This will populate the variable options menu
     void ExpressionChanged($('.algebra-step:first-child .left-mq-input'));
 
-    if ($('#unique-problem-id').hasClass('problem-finished')) {
+    if ($('#unique-problem-id').hasClass('problem-solved')) {
       LockEverything();
 
       jQuery.rnd = function (m, n) {

@@ -1,9 +1,17 @@
 from decimal import Decimal
 
+from allauth.account.signals import user_signed_up
 from django.apps import apps
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
+from django.dispatch.dispatcher import receiver
 from django.utils import timezone
+
+
+@receiver(user_signed_up)
+def user_signed_up_(request, user, **kwargs):
+    print(request.GET)
+    print(kwargs)
 
 
 # Create your models here.

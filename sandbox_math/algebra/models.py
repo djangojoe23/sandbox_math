@@ -518,6 +518,15 @@ class Step(models.Model):
         return step
 
     @classmethod
+    def copy_step(cls, step_to_copy, new_step):
+        new_step.step_type = step_to_copy.step_type
+        new_step.left_expr = Expression(latex=step_to_copy.left_expr.latex)
+        new_step.left_expr.save()
+        new_step.right_expr = Expression(latex=step_to_copy.right_expr.latex)
+        new_step.right_expr.save()
+        new_step.save()
+
+    @classmethod
     def is_first(cls, this_step):
         first_step = (Step.objects.filter(problem=this_step.problem).order_by("created").first())  # fmt: skip
         if first_step == this_step:

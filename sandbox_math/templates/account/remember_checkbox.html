@@ -1,0 +1,9 @@
+{% load crispy_forms_field %}
+{% load i18n %}
+
+<div class="d-flex flex-wrap align-items-center justify-content-between pb-4">
+  <form-check class="my-1">
+    {% crispy_field field 'class' 'form-check-input' %}
+    <label class="form-check-label ms-1" for="{{ field.id_for_label }}">{{ field.label }}</label>
+  </form-check><a class="fs-sm fw-semibold text-decoration-none my-1" href="{% url 'account_reset_password' %}">Forgot password?</a>
+</div>
