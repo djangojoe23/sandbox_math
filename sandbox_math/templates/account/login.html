@@ -7,55 +7,63 @@
 {% block head_title %}{% translate "Log In" %}{% endblock %}
 
 {% block inner %}
-<main class="page-wrapper">
-      <!-- Page content-->
-      <div class="position-relative h-100">
-        <!-- Sign in form-->
-        <div class="d-flex flex-column align-items-center h-100 px-3 px-lg-5 pt-5">
-          <div class="w-100 mt-5" style="max-width: 526px;">
-            <h1>{% translate "Log In to Sandbox Math" %}</h1>
+  <!-- Sign in form-->
+  <div class="w-100 mt-5" style="max-width: 526px;">
+    <h1>{% translate "Log In to Sandbox Math" %}</h1>
 
-            {% get_providers as socialaccount_providers %}
+    {% get_providers as socialaccount_providers %}
 
-            {% if socialaccount_providers %}
-              <p>
-                {% translate "Please sign in with one of your existing third party accounts:" %}
-                {% if ACCOUNT_ALLOW_REGISTRATION %}
-                  {% blocktranslate trimmed %}
-                    Or, <a href="{{ signup_url }}">sign up</a>
-                    for a {{ site_name }} account and sign in below:
-                  {% endblocktranslate %}
-                {% endif %}
-              </p>
+    {% if socialaccount_providers %}
+      <p>
+        {% translate "Please sign in with one of your existing third party accounts:" %}
+        {% if ACCOUNT_ALLOW_REGISTRATION %}
+          {% blocktranslate trimmed %}
+            Or, <a href="{{ signup_url }}">sign up</a>
+            for a {{ site_name }} account and sign in below:
+          {% endblocktranslate %}
+        {% endif %}
+      </p>
 
-              <div class="socialaccount_ballot">
+      <div class="socialaccount_ballot">
 
-                <ul class="socialaccount_providers">
-                  {% include "socialaccount/snippets/provider_list.html" with process="login" %}
-                </ul>
+        <ul class="socialaccount_providers">
+          {% include "socialaccount/snippets/provider_list.html" with process="login" %}
+        </ul>
 
-                <div class="login-or">{% translate "or" %}</div>
+        <div class="login-or">{% translate "or" %}</div>
 
-              </div>
+      </div>
 
-              {% include "socialaccount/snippets/login_extra.html" %}
+      {% include "socialaccount/snippets/login_extra.html" %}
 
-            {% else %}
-              {% if ACCOUNT_ALLOW_REGISTRATION %}
-                <p class="pb-3 mb-3 mb-lg-4">
-                  {% blocktranslate trimmed %}
-                    Don't have an account yet?
-                    <a href="{{ signup_url }}">Sign Up Here!</a>
-                  {% endblocktranslate %}
-                </p>
-              {% endif %}
-            {% endif %}
+    {% else %}
+      {% if ACCOUNT_ALLOW_REGISTRATION %}
+        <p class="pb-3 mb-3 mb-lg-4">
+          {% blocktranslate trimmed %}
+            Don't have an account yet?
+            <a href="{{ signup_url }}">Sign Up Here!</a>
+          {% endblocktranslate %}
+        </p>
+      {% endif %}
+    {% endif %}
 
-            {% crispy form %}
+    {% crispy form %}
 
-          </div>
-        </div>
-       </div>
-    </main>
+  </div>
 
 {% endblock %}
+
+{% block inline_javascript %}
+
+{#Script tags with only code, no src (defer by default). To run#}
+{#with a "defer" so that you run inline code:#}
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    let userID = $("#userID")
+    if(userID.hasClass('is-guest')){
+      $('input[name="guest_id"]').val(userID.html())
+    }
+  });
+</script>
+
+{% endblock inline_javascript %}

@@ -1,34 +1,50 @@
-{% extends "base.html" %}
+{% extends "users/user_base.html" %}
 {% load static %}
 
 {% block title %}User: {{ object.username }}{% endblock %}
 
-{% block content %}
-<div class="container">
-
-  <div class="row">
-    <div class="col-sm-12">
-
-      <h2>{{ object.username }}</h2>
-      {% if object.name %}
-        <p>{{ object.name }}</p>
-      {% endif %}
+{% block inner %}
+  <!-- Page content-->
+  <div class="col-lg-9 pt-4 pb-2 pb-sm-4">
+    <div class="d-sm-flex align-items-center mb-4">
+      <h1 class="h2 mb-4 mb-sm-0 me-4">Your Overview</h1>
+    </div>
+    <div class="card border-0 py-1 p-md-2 p-xl-3 p-xxl-4">
+      <div class="card-body">
+        <p>Practice</p>
+        <p>Fixing and Finding Mistakes</p>
+        <p>Finding solutions</p>
+        <p>Variety</p>
+      </div>
     </div>
   </div>
-
-{% if object == request.user %}
-<!-- Action buttons -->
-<div class="row">
-
-  <div class="col-sm-12">
-    <a class="btn btn-primary" href="{% url 'users:update' %}" role="button">My Info</a>
-    <a class="btn btn-primary" href="{% url 'account_email' %}" role="button">E-Mail</a>
-    <!-- Your Stuff: Custom user template urls -->
-  </div>
-
-</div>
-<!-- End Action buttons -->
-{% endif %}
-
-</div>
-{% endblock content %}
+{% endblock %}
+{#{% block content %}#}
+{#<div class="container">#}
+{##}
+{#  <div class="row">#}
+{#    <div class="col-sm-12">#}
+{##}
+{#      <h2>{{ object.username }}</h2>#}
+{#      {% if object.name %}#}
+{#        <p>{{ object.name }}</p>#}
+{#      {% endif %}#}
+{#    </div>#}
+{#  </div>#}
+{##}
+{#{% if object == request.user %}#}
+{#<!-- Action buttons -->#}
+{#<div class="row">#}
+{##}
+{#  <div class="col-sm-12">#}
+{#    <a class="btn btn-primary" href="{% url 'users:update' %}" role="button">My Info</a>#}
+{#    <a class="btn btn-primary" href="{% url 'account_email' %}" role="button">E-Mail</a>#}
+{#    <!-- Your Stuff: Custom user template urls -->#}
+{#  </div>#}
+{##}
+{#</div>#}
+{#<!-- End Action buttons -->#}
+{#{% endif %}#}
+{##}
+{#</div>#}
+{#{% endblock content %}#}

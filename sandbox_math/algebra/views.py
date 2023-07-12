@@ -86,7 +86,6 @@ class BaseView(AllowGuestUserMixin, TemplateView):
         context = super().get_context_data(**kwargs)
 
         context["step_prompts"] = BaseView.step_prompts
-        context["body_bg"] = "bg-secondary"
         context["variable_options"] = []
         context["is_new_problem"] = True
         context["problem"] = Problem.objects.none()

@@ -58,7 +58,7 @@
 
   </head>
 
-  <body class="{{ body_bg }}">
+  <body class="bg-secondary">
     <div id="userID" class="d-none {% if user|is_guest_user %}is-guest{% endif %}">{{ request.user.id }}</div>
     <main class="page-wrapper">
       <div class="{{theme_mode}}">
@@ -85,31 +85,13 @@
               </div>
             </a>
             <div class="dropdown-menu dropdown-menu-end my-1">
-              <h6 class="dropdown-header fs-xs fw-medium text-muted text-uppercase pb-1">Activity</h6>
-{#                <a href="{% url 'users:practice' request.user.username %}" class="dropdown-item">#}
-                <i class="ai-activity fs-lg opacity-70 me-2"></i>
-                Practice
-              </a>
-{#                <a href="{% url 'users:mistakes' request.user.username %}" class="dropdown-item">#}
-                <i class="ai-circle-help fs-lg opacity-70 me-2"></i>
-                Mistakes
-              </a>
-{#                <a href="{% url 'users:solutions' request.user.username %}" class="dropdown-item d-flex align-items-center">#}
-                <i class="ai-award fs-lg opacity-70 me-2"></i>
-                Solutions
-{#                  <span class="badge bg-danger ms-auto">4</span>#}
-              </a>
-{#                <a href="{% url 'users:variety' request.user.username %}" class="dropdown-item">#}
-                <i class="ai-shuffle fs-lg opacity-70 me-2"></i>
-                Variety
-              </a>
               <div class="dropdown-divider"></div>
               <h6 class="dropdown-header fs-xs fw-medium text-muted text-uppercase pb-1">Account</h6>
-{#                <a href="{% url 'users:overview' request.user.username  %}" class="dropdown-item">#}
+                <a href="{% url 'users:detail' request.user.username %}" class="dropdown-item">
                 <i class="ai-dashboard fs-lg opacity-70 me-2"></i>
                 Overview
               </a>
-              <a href="#" class="dropdown-item">
+              <a href="{% url 'users:update' %}" class="dropdown-item">
                 <i class="ai-edit fs-lg opacity-70 me-2"></i>
                 Edit
               </a>
@@ -144,7 +126,7 @@
                 </li>
               {% else %}
                 <li class="nav-item">
-{#                  <a href="{% url 'users:overview' request.user.username  %}" class="nav-link">My Account</a>#}
+                  <a href="{% url 'users:detail' request.user.username  %}" class="nav-link">My Account</a>
                 </li>
               {% endif %}
               <li class="nav-item">

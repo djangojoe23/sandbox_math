@@ -1,11 +1,14 @@
 from allauth.account.forms import LoginForm, SignupForm
 from allauth.socialaccount.forms import SignupForm as SocialSignupForm
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import HTML, Div, Field, Layout, Submit
+from crispy_forms.layout import HTML, Div, Field, Hidden, Layout, Submit
+from django import forms
 from django.contrib.auth import forms as admin_forms
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+
+from sandbox_math.algebra.models import Problem
 
 User = get_user_model()
 
@@ -36,6 +39,8 @@ class UserLoginForm(LoginForm):
     Check UserSocialSignupForm for accounts created from social.
     """
 
+    guest_id = forms.IntegerField()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
@@ -51,6 +56,7 @@ class UserLoginForm(LoginForm):
                 ),
                 css_class="pb-3",
             ),
+            Hidden("guest_id", "23"),
             Div(
                 Div(
                     HTML(
@@ -81,6 +87,37 @@ class UserLoginForm(LoginForm):
         except KeyError:
             pass
 
+    def clean_guest_id(self):
+        user = None
+        try:
+            user = User.objects.get(username=self.cleaned_data["login"])
+        except User.DoesNotExist:
+            pass
+
+        if not user:
+            try:
+                user = User.objects.get(email=self.cleaned_data["login"])
+            except User.DoesNotExist:
+                pass
+
+        if not user:
+            pass
+        else:
+            guest_user = None
+            try:
+                guest_user = User.objects.get(id=self.cleaned_data["guest_id"])
+            except User.DoesNotExist:
+                pass
+
+            if guest_user:
+                # associate all problems with self.cleaned_data['guest_id'] account with the new user account
+                all_guest_problems = Problem.objects.filter(student_id=guest_user.id)
+                for p in all_guest_problems:
+                    p.student_id = user.id
+                    p.save()
+
+        return self.cleaned_data["guest_id"]
+
 
 class UserSignupForm(SignupForm):
     """
@@ -88,6 +125,8 @@ class UserSignupForm(SignupForm):
     Default fields will be added automatically.
     Check UserSocialSignupForm for accounts created from social.
     """
+
+    guest_id = forms.IntegerField()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -98,6 +137,7 @@ class UserSignupForm(SignupForm):
         self.helper.form_action = reverse("account_signup")
         self.helper.layout = Layout(
             Div(UserSignupInput("username"), UserSignupInput("email"), css_class="row row-cols-1 row-cols-sm-2"),
+            Hidden("guest_id", "-1"),
             Div(
                 Field("password1", css_class="form-control-lg"),
                 HTML(
@@ -118,6 +158,25 @@ class UserSignupForm(SignupForm):
             ),
             Submit("submit", "Join", css_class="btn-lg w-100 mb-4"),
         )
+
+    def save(self, request):
+        user = super().save(request)
+
+        if self.cleaned_data["guest_id"]:
+            guest_user = None
+            try:
+                guest_user = User.objects.get(id=self.cleaned_data["guest_id"])
+            except User.DoesNotExist:
+                pass
+
+            if guest_user:
+                # associate all problems with self.cleaned_data['guest_id'] account with the new user account
+                all_guest_problems = Problem.objects.filter(student_id=guest_user.id)
+                for p in all_guest_problems:
+                    p.student_id = user.id
+                    p.save()
+
+        return user
 
 
 class UserSocialSignupForm(SocialSignupForm):

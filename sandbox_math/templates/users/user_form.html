@@ -1,17 +1,35 @@
-{% extends "base.html" %}
+{% extends "users/user_base.html" %}
 {% load crispy_forms_tags %}
 
 {% block title %}{{ user.username }}{% endblock %}
 
-{% block content %}
-  <h1>{{ user.username }}</h1>
-  <form class="form-horizontal" method="post" action="{% url 'users:update' %}">
-    {% csrf_token %}
-    {{ form|crispy }}
-    <div class="control-group">
-      <div class="controls">
-        <button type="submit" class="btn btn-primary">Update</button>
+{% block inner %}
+    <div class="col-lg-9 pt-4 pb-2 pb-sm-4">
+    <div class="d-sm-flex align-items-center mb-4">
+      <h1 class="h2 mb-4 mb-sm-0 me-4">{{ user.username }}</h1>
+    </div>
+    <div class="card border-0 py-1 p-md-2 p-xl-3 p-xxl-4">
+      <div class="card-body">
+        <form class="form-horizontal" method="post" action="{% url 'users:update' %}">
+          {% csrf_token %}
+          {{ form|crispy }}
+          <div class="control-group">
+            <div class="controls">
+              <button type="submit" class="btn btn-primary">Update</button>
+            </div>
+          </div>
+        </form>
       </div>
     </div>
-  </form>
+  </div>
 {% endblock %}
+{#  <h1>{{ user.username }}</h1>#}
+{#  <form class="form-horizontal" method="post" action="{% url 'users:update' %}">#}
+{#    {% csrf_token %}#}
+{#    {{ form|crispy }}#}
+{#    <div class="control-group">#}
+{#      <div class="controls">#}
+{#        <button type="submit" class="btn btn-primary">Update</button>#}
+{#      </div>#}
+{#    </div>#}
+{#  </form>#}

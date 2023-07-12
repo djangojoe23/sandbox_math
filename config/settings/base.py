@@ -75,6 +75,7 @@ THIRD_PARTY_APPS = [
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
+    "guest_user",
 ]
 
 LOCAL_APPS = [
@@ -83,7 +84,6 @@ LOCAL_APPS = [
     "sandbox_math.sandbox",
     "sandbox_math.algebra",
     "sandbox_math.calculator",
-    "guest_user",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -264,6 +264,7 @@ ACCOUNT_EMAIL_REQUIRED = True
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = True
+ACCOUNT_AUTHENTICATED_LOGIN_REDIRECTS = False
 
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_ADAPTER = "sandbox_math.users.adapters.AccountAdapter"
@@ -284,4 +285,3 @@ STATICFILES_FINDERS += ["compressor.finders.CompressorFinder"]
 
 # Your stuff...
 # ------------------------------------------------------------------------------
-GUEST_USER_CONVERT_FORM = "users.forms.UserSignupForm"

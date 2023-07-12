@@ -26,9 +26,9 @@
 
       <div id="not-logged-in-alert" class="alert alert-danger d-none" role="alert">
         <h4 class="pt-2 alert-heading">Your work is not being saved!</h4>
-        <p>For newcomers, <a href="{% if user|is_guest_user  %}{% url "guest_user_convert" %}{% else %}{% url "account_signup" %}{% endif %}" class="alert-link">click here to join</a>.</p>
+        <p>For newcomers, <a href="{% url "account_signup" %}" class="alert-link">click here to join</a>.</p>
         <hr class="text-primary opacity-25 mb-3">
-        <p class="mb-2">Or, if you've been here before and want to save this problem to your account, <a id="guest-login-link" href="#" class="alert-link">log in here</a>.</p>
+        <p class="mb-2">Or, if you've been here before and want to save this problem to your account, <a href="{% url "account_login" %}" class="alert-link">log in here</a>.</p>
       </div>
 
 

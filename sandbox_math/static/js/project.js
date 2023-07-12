@@ -1,45 +1,5 @@
 /* Project specific Javascript goes here. */
 
-$(document).ready(function () {
-  if ($('#userID').hasClass('is-guest')) {
-    let accountButtons = $('#sign-in-button, #join-button');
-    accountButtons.prop('href', '#');
-    accountButtons.click(function () {
-      let path = 'login';
-      if ($(this).prop('id').includes('join')) {
-        path = 'signup';
-      }
-      let problemID = $('#unique-problem-id').html();
-      let csrfToken = document.querySelector(
-        '[name=csrfmiddlewaretoken]',
-      ).value;
-      $.ajax({
-        url: '/accounts/logout/',
-        type: 'POST',
-        headers: { 'X-CSRFToken': csrfToken },
-        data: {},
-      })
-        .done(function () {
-          if (problemID) {
-            window.location.href =
-              '/accounts/' +
-              path +
-              '/?next=/algebra/' +
-              problemID +
-              '?guest-id=' +
-              $('#userID').html();
-          } else {
-            window.location.href =
-              '/accounts/' + path + '/?next=' + window.location.pathname;
-          }
-        })
-        .fail(function () {
-          console.log('fail');
-        });
-    });
-  }
-});
-
 /*confetti particle text animation*/
 /*https://codepen.io/z-/pen/bpxgWZ*/
 function initparticles() {

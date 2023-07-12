@@ -6,18 +6,25 @@
 {% block head_title %}{% translate "Join" %}{% endblock %}
 
 {% block inner %}
-<main class="page-wrapper">
-      <!-- Page content-->
-      <div class="position-relative h-100">
-        <!-- Sign in form-->
-        <div class="d-flex flex-column align-items-center h-100 px-3 px-lg-5 pt-5">
-          <div class="w-100 mt-5" style="max-width: 526px;">
-            <h1>{% translate "Join Sandbox Math" %}</h1>
-            <p class="pb-3 mb-3 mb-lg-4">{% blocktranslate %}Already have an account? Then please <a href="{{ login_url }}">sign in</a>.{% endblocktranslate %}</p>
-            {% crispy form %}
-          </div>
-        </div>
-       </div>
-    </main>
-
+  <!-- Sign in form-->
+  <div class="w-100 mt-5" style="max-width: 526px;">
+    <h1>{% translate "Join Sandbox Math" %}</h1>
+    <p class="pb-3 mb-3 mb-lg-4">{% blocktranslate %}Already have an account? Then please <a href="{{ login_url }}">sign in</a>.{% endblocktranslate %}</p>
+    {% crispy form %}
+  </div>
 {% endblock %}
+
+{% block inline_javascript %}
+
+{#Script tags with only code, no src (defer by default). To run#}
+{#with a "defer" so that you run inline code:#}
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    let userID = $("#userID")
+    if(userID.hasClass('is-guest')){
+      $('input[name="guest_id"]').val(userID.html())
+    }
+  });
+</script>
+
+{% endblock inline_javascript %}
