@@ -1,5 +1,5 @@
 {% load static i18n compress%}
-{% load guest_user %}
+{% load sandbox_extras %}
 <!DOCTYPE html>
 {% get_current_language as LANGUAGE_CODE %}
 <html lang="{{ LANGUAGE_CODE }}">
@@ -59,7 +59,7 @@
   </head>
 
   <body class="bg-secondary">
-    <div id="userID" class="d-none {% if user and user|is_guest_user %}is-guest{% endif %}">{{ request.user.id }}</div>
+    <div id="userID" class="d-none {% if user|custom_is_guest_user %}is-guest{% endif %}">{{ request.user.id }}</div>
     <main class="page-wrapper">
       <div class="{{theme_mode}}">
         <header class="navbar navbar-expand-lg fixed-top">
@@ -77,11 +77,11 @@
           <div class="dropdown nav d-block order-lg-2 ms-auto">
               <a href="#" class="nav-link d-flex align-items-center p-0" data-bs-toggle="dropdown" aria-expanded="false">
               <div class="bg-primary" style="width:48px; height:48px; border-radius:50%;">
-                <p class="text-light text-center fs-2 text-uppercase" style="line-height:48px;">{% if user|is_guest_user %}X{% else %}{{ request.user.username|make_list|first }}{% endif %}</p>
+                <p class="text-light text-center fs-2 text-uppercase" style="line-height:48px;">{% if user|custom_is_guest_user %}X{% else %}{{ request.user.username|make_list|first }}{% endif %}</p>
               </div>
               <div class="d-none d-sm-block ps-2">
                 <div class="fs-xs lh-1 opacity-60">Hello,</div>
-                <div class="fs-sm dropdown-toggle">{% if user|is_guest_user %}Guest{% else %}{{ request.user.username }}{% endif %}</div>
+                <div class="fs-sm dropdown-toggle">{% if user|custom_is_guest_user %}Guest{% else %}{{ request.user.username }}{% endif %}</div>
               </div>
             </a>
             <div class="dropdown-menu dropdown-menu-end my-1">
@@ -120,7 +120,7 @@
                   <li><a href="#" class="dropdown-item">Shapes</a></li>
                 </ul>
               </li>
-              {% if user|is_guest_user or not request.user.is_authenticated %}
+              {% if user|custom_is_guest_user or not request.user.is_authenticated %}
                 <li class="nav-item">
                   <a href="{% url 'account_signup' %}" class="btn btn-outline-primary btn-sm fs-sm mt-1" id="join-button">Join</a>
                 </li>
@@ -133,7 +133,7 @@
                 <a href="{% url 'contact' %}" class="nav-link">Contact</a>
               </li>
             </ul>
-            {% if user|is_guest_user or not request.user.is_authenticated %}
+            {% if user|custom_is_guest_user or not request.user.is_authenticated %}
               <a href="{% url 'account_login' %}" class="btn btn-outline-primary btn-sm fs-sm ms-3 mb-4 mb-lg-0" id="sign-in-button">
                 <i class="ai-user me-2 ms-n1"></i>
                 {% csrf_token %}
