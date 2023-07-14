@@ -27,7 +27,11 @@ class BaseView(AllowGuestUserMixin, TemplateView):
         except KeyError:
             saved_problem_id = None
 
-        if saved_problem_id:
+        if not saved_problem_id:
+            # user is just browsing to algebra base view without any problem id
+            context = self.get_context_data()
+            return self.render_to_response(context)
+        else:
             try:
                 Problem.objects.get(student_id=self.request.user.id, id=saved_problem_id)
                 context = self.get_context_data()
@@ -57,7 +61,6 @@ class BaseView(AllowGuestUserMixin, TemplateView):
                             guest_id = None
 
                         if guest_id and is_guest_user(User.objects.get(id=guest_id)):
-                            # then convert everything from that guest account over to this account
                             problem.student = requester
                             problem.save()
                             return redirect(f"/algebra/{saved_problem_id}")
@@ -76,11 +79,7 @@ class BaseView(AllowGuestUserMixin, TemplateView):
                             return redirect(f"/algebra/{new_saved_problem.id}")
                 except Problem.DoesNotExist:
                     # there was a problem id on the URL but it not a known problem
-                    pass
-        else:
-            # user is just browsing to algebra base view without any problem id
-            context = self.get_context_data()
-            return self.render_to_response(context)
+                    return redirect("/algebra/")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -119,22 +118,8 @@ class BaseView(AllowGuestUserMixin, TemplateView):
                             context["problem_solved"] = "problem-not-solved"
             except Problem.DoesNotExist:
                 # the problem that is trying to be accessed is not associated with the account trying to access it
-                requester = User.objects.get(id=self.request.user.id)
-                if is_guest_user(requester):
-                    # create a new problem like this one
-                    return redirect("algebra:start-new")
-                else:
-                    try:
-                        guest_id = self.request.GET.get("guest-id")
-                    except KeyError:
-                        guest_id = None
-
-                    if guest_id and is_guest_user(User.objects.get(id=guest_id)):
-                        print("we did it!")
-                        # then convert everything from that guest account over to this account
-                    else:
-                        pass
-                        # else create a new problem like this one
+                # This must be an invalid problem and I am not sure how we would have gotten here
+                pass
 
         return context
 

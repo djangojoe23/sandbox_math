@@ -59,7 +59,7 @@
   </head>
 
   <body class="bg-secondary">
-    <div id="userID" class="d-none {% if user|is_guest_user %}is-guest{% endif %}">{{ request.user.id }}</div>
+    <div id="userID" class="d-none {% if user and user|is_guest_user %}is-guest{% endif %}">{{ request.user.id }}</div>
     <main class="page-wrapper">
       <div class="{{theme_mode}}">
         <header class="navbar navbar-expand-lg fixed-top">
@@ -73,7 +73,7 @@
             </span>
             Sandbox Math
           </a>
-          {% if request.user.is_authenticated or user|is_guest_user %}
+          {% if request.user.is_authenticated %}
           <div class="dropdown nav d-block order-lg-2 ms-auto">
               <a href="#" class="nav-link d-flex align-items-center p-0" data-bs-toggle="dropdown" aria-expanded="false">
               <div class="bg-primary" style="width:48px; height:48px; border-radius:50%;">
