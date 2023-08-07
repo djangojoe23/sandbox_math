@@ -74,9 +74,10 @@ class GetResponseView(TemplateView):
                     CheckSolution.create_stop_response("CheckSolution", user_message_obj, None)
                 else:
                     CheckSolution.create_substitute_values_response(user_message_obj)
+                    solved_states = [CheckSolution.SOLVED, CheckSolution.INFINITELY_MANY, CheckSolution.NO_SOLUTION]
                     just_finished_check = (
                         CheckSolution.objects.filter(
-                            problem_id=problem_id, end_time__isnull=False, problem_solved=True
+                            problem_id=problem_id, end_time__isnull=False, problem_solved__in=solved_states
                         )
                         .order_by("-end_time")
                         .first()
@@ -177,22 +178,25 @@ class GetResponseView(TemplateView):
                     )
             else:
                 CheckSolution.create_start_response(user_message_obj)
+                solved_states = [CheckSolution.SOLVED, CheckSolution.INFINITELY_MANY, CheckSolution.NO_SOLUTION]
                 just_finished_check = (
-                    CheckSolution.objects.filter(problem_id=problem_id, end_time__isnull=False, problem_solved=True)
+                    CheckSolution.objects.filter(
+                        problem_id=problem_id, end_time__isnull=False, problem_solved__in=solved_states
+                    )
                     .order_by("-end_time")
                     .first()
                 )
                 problem = Problem.objects.get(id=problem_id)
                 if just_finished_check:
-                    context["problem_solved"] = "problem-solved"
+                    context["problem_finished"] = "finished"
                     for step_mistakes in Problem.get_all_steps_mistakes(problem).items():
                         if (
                             step_mistakes[1][0]["title"] != Mistake.NONE
-                            and step_mistakes[1][1]["title"] != Mistake.NONE
+                            or step_mistakes[1][1]["title"] != Mistake.NONE
                         ):
-                            context["problem_solved"] = "problem-not-solved"
+                            context["problem_finished"] = "unfinished"
                 else:
-                    context["problem_solved"] = "problem-not-solved"
+                    context["problem_finished"] = "unfinished"
 
         context["responses"] = Response.objects.filter(user_message=user_message_obj).order_by("id")
 

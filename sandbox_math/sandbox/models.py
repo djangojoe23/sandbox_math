@@ -68,8 +68,8 @@ class CheckAlgebra(models.Model):
             model_name = "CheckRewrite"
         check_model = apps.get_model("algebra", model_name)
         # There can only be one active check at a time. To be sure, end all checks in the database
-        unfinished_checks = check_model.objects.filter(problem=expr1_step.problem, end_time__isnull=True)
-        for a in unfinished_checks:
+        incomplete_checks = check_model.objects.filter(problem=expr1_step.problem, end_time__isnull=True)
+        for a in incomplete_checks:
             a.end_time = timezone.now()
             a.save()
 
@@ -85,7 +85,7 @@ class CheckAlgebra(models.Model):
             answer_step = step_model.objects.filter(problem=expr1_step.problem).order_by("created").last()
             if answer_step.left_expr.latex == new_check.solving_for:
                 new_check.attempt = answer_step.right_expr.latex
-            else:
+            elif answer_step.right_expr.latex == new_check.solving_for:
                 new_check.attempt = answer_step.left_expr.latex
 
         new_check.expr1_latex = new_check.expr1.latex
@@ -164,7 +164,6 @@ class CheckAlgebra(models.Model):
                 solving_for=solution_check_process.solving_for,
                 other_var=solution_check_process.other_var,
                 attempt=solution_check_process.attempt,
-                problem_solved__isnull=False,
                 end_time__isnull=False,
             )
 

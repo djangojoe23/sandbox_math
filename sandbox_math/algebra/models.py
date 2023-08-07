@@ -9,6 +9,7 @@ from django.utils import timezone
 from sympy import UnevaluatedExpr, latex, simplify
 from sympy.core import symbol
 from sympy.parsing.sympy_parser import implicit_multiplication_application, parse_expr, standard_transformations
+from sympy.solvers import solve
 
 from config.settings.base import AUTH_USER_MODEL
 from sandbox_math.calculator.models import Content, Response
@@ -83,9 +84,14 @@ class Problem(models.Model):
                 equation_filter.add(Q(left_expr__contains=table_filter["equation"]), Q.OR)
                 equation_filter.add(Q(right_expr__contains=table_filter["equation"]), Q.OR)
 
+        solved_states = [CheckSolution.SOLVED, CheckSolution.INFINITELY_MANY, CheckSolution.NO_SOLUTION]
         recent = (
             Problem.objects.filter(student=student_id)
-            .annotate(solved=Count(Case(When(checksolution_problem__problem_solved=True, then=1)), distinct=True))
+            .annotate(
+                solved=Count(
+                    Case(When(checksolution_problem__problem_solved__in=solved_states, then=1)), distinct=True
+                )
+            )
             .filter(and_filter)
             .annotate(step_count=Count("step_problem", distinct=True))
             .annotate(created=Subquery(step_qs.values("created")[:1]))
@@ -298,11 +304,27 @@ class Problem(models.Model):
                 last_step.right_expr.latex
             ):
                 return "right"
+            else:
+                for m in Problem.get_all_steps_mistakes(problem).items():
+                    if m[1][0]["title"] != Mistake.NONE or m[1][1]["title"] != Mistake.NONE:
+                        return None
+                if last_step.right_expr.latex == problem.variable:
+                    return CheckSolution.INFINITELY_MANY
         elif last_step.right_expr.latex == problem.variable:
             if last_step.right_expr.latex not in Expression.get_variables_in_latex_expression(
                 last_step.left_expr.latex
             ):
                 return "left"
+        else:
+            if last_step.right_expr.latex.isnumeric() and last_step.left_expr.latex.isnumeric():
+                if Decimal(last_step.right_expr.latex) - Decimal(last_step.left_expr.latex) == 0:
+                    return CheckSolution.INFINITELY_MANY
+                else:
+                    return CheckSolution.NO_SOLUTION
+
+            for m in Problem.get_all_steps_mistakes(problem).items():
+                if m[1][0]["title"] != Mistake.NONE or m[1][1]["title"] != Mistake.NONE:
+                    return None
 
         return None
 
@@ -427,7 +449,7 @@ class Expression(models.Model):
         except (SyntaxError, TypeError, NameError, IndexError):
             sympy_expr = None
 
-        if not sympy_expr:
+        if sympy_expr is None:
             feedback = Mistake.NON_MATH
         else:
             for i in range(0, len(sympy_friendly_str)):
@@ -748,32 +770,32 @@ class CheckRewrite(CheckAlgebra):
 
         # Interpret the message from the user
         if "start-check-rewrite" not in message_latex:
-            if not check_process.solving_for_value and check_process.solving_for in all_vars_to_substitute:
+            if check_process.solving_for_value is None and check_process.solving_for in all_vars_to_substitute:
                 responses.extend(
                     CheckRewrite.save_substitution_value(check_process, check_process.solving_for, message_latex)
                 )
-            elif check_process.other_var and not check_process.other_var_value:
+            elif check_process.other_var and check_process.other_var_value is None:
                 responses.extend(
                     CheckRewrite.save_substitution_value(check_process, check_process.other_var, message_latex)
                 )
 
         # Ask the user to set a value of a variable
-        if not check_process.solving_for_value and check_process.solving_for in all_vars_to_substitute:
+        if check_process.solving_for_value is None and check_process.solving_for in all_vars_to_substitute:
             responses.append(f"What number do you want to substitute in for `/{check_process.solving_for}`?")
-        elif check_process.other_var and not check_process.other_var_value:
+        elif check_process.other_var and check_process.other_var_value is None:
             responses.append(f"What number do you want to substitute in for `/{check_process.other_var}`?")
         else:
             # if all values are assigned, then start substitute values response
             if not check_process.other_var:
                 response_context = Response.CHECK_REWRITE
                 responses.append(
-                    f"Great, now substitute `/{check_process.solving_for_value}` in "
+                    f"Great, now substitute `/{Sandbox.clean_decimal(check_process.solving_for_value)}` in "
                     f"for `/{check_process.solving_for}` in the expression `/{check_process.expr1_latex}`."
                 )
             elif check_process.solving_for not in all_vars_to_substitute:
                 response_context = Response.CHECK_REWRITE
                 responses.append(
-                    f"Great, now substitute `/{check_process.other_var_value}` in "
+                    f"Great, now substitute `/{Sandbox.clean_decimal(check_process.other_var_value)}` in "
                     f"for `/{check_process.other_var}` in the expression `/{check_process.expr1_latex}`."
                 )
             else:
@@ -850,7 +872,7 @@ class CheckRewrite(CheckAlgebra):
                     responses.append("I don't even recognize that as a valid math expression. Please try again.")
                     sympy_exprs[expr_key] = None
 
-        if sympy_exprs["usr_msg"]:
+        if sympy_exprs["usr_msg"] is not None:
             if not check_process.did_expr1_subst:
                 if simplify(sympy_exprs["usr_msg"] - sympy_exprs["rewrite"]) == 0:
                     check_process.did_expr1_subst = True
@@ -858,7 +880,7 @@ class CheckRewrite(CheckAlgebra):
                     simplify_user_msg = latex(simplify(sympy_exprs["usr_msg"]))
                     responses.append(f"Great, that is equal to `/{simplify_user_msg}`.")
                     responses.append(
-                        f"Now, substitute `/{var_val_string}` in the expression " f"`/{check_process.expr2_latex}`"
+                        f"Now, substitute {var_val_string} in the expression " f"`/{check_process.expr2_latex}`"
                     )
                 else:
                     Mistake.save_new(check_process, Mistake.SUB_EXPR1)
@@ -932,8 +954,21 @@ class CheckRewrite(CheckAlgebra):
 
 
 class CheckSolution(CheckAlgebra):
+    SOLVED = "solved"
+    INFINITELY_MANY = "inf many"
+    NO_SOLUTION = "no solution"
+    UNSOLVED = "unsolved"
+    INCOMPLETE = "incomplete"
+    SOLVED_TYPES = [
+        (SOLVED, "The problem has one answer."),
+        (INFINITELY_MANY, "The problem has infinitely many answers."),
+        (NO_SOLUTION, "The problem does not have an answer."),
+        (UNSOLVED, "The problem is not solved yet."),
+        (INCOMPLETE, "The solution check was not completed."),
+    ]
+
     attempt = models.CharField(max_length=100, blank=True, null=True)
-    problem_solved = models.BooleanField(default=None, null=True)
+    problem_solved = models.CharField(max_length=11, choices=SOLVED_TYPES, default=INCOMPLETE)
 
     @classmethod
     def create_start_response(cls, user_message_obj):
@@ -998,21 +1033,24 @@ class CheckSolution(CheckAlgebra):
                 check_process.save()
             else:
                 if CheckSolution.known_incorrect(check_process):
-                    responses.append(
-                        f"You've already checked `/{check_process.solving_for}={check_process.attempt}` and know "
-                        f"it does not make your equation true."
-                    )
+                    if check_process.attempt is not None:
+                        responses.append(
+                            f"You've already checked `/{check_process.solving_for}={check_process.attempt}` and know "
+                            f"it is not the answer."
+                        )
                     responses.append("Please find and fix all your mistakes before checking another answer.")
                     Mistake.save_new(check_process, Mistake.ALREADY_INCORRECT)
                     check_process.end_time = timezone.now()
                     check_process.save()
                 else:
+                    problem = Problem.objects.get(id=user_message_obj.problem_id)
+                    solved_states = [CheckSolution.SOLVED, CheckSolution.INFINITELY_MANY, CheckSolution.NO_SOLUTION]
                     prev_correct_check_process = CheckSolution.objects.filter(
                         problem_id=user_message_obj.problem_id,
                         solving_for=check_process.solving_for,
                         expr1_latex=check_process.expr1_latex,
                         expr2_latex=check_process.expr2_latex,
-                        problem_solved=True,
+                        problem_solved__in=solved_states,
                     )
                     if prev_correct_check_process:
                         responses.append(
@@ -1024,7 +1062,6 @@ class CheckSolution(CheckAlgebra):
                         )
                         sympy_current = Expression.get_sympy_expression_from_latex(check_process.attempt)
                         if simplify(sympy_correct - sympy_current) == 0:
-                            problem = Problem.objects.get(id=user_message_obj.problem_id)
                             still_has_mistakes = None
                             for step_mistakes in Problem.get_all_steps_mistakes(problem).items():
                                 if step_mistakes[1][0]["title"] != Mistake.NONE:
@@ -1046,7 +1083,7 @@ class CheckSolution(CheckAlgebra):
                                     f"for `/{check_process.solving_for}`."
                                 )
                                 responses.append("Keep up the good work!")
-                                check_process.problem_solved = True
+                                check_process.problem_solved = CheckSolution.SOLVED
                         else:
                             responses.append(
                                 f"However, you changed your answer to `/{check_process.solving_for}="
@@ -1059,23 +1096,76 @@ class CheckSolution(CheckAlgebra):
                         check_process.end_time = timezone.now()
                         check_process.save()
                     else:
-                        responses.append(
-                            f"Let's figure out if `/{check_process.expr1_latex}` is equivalent to "
-                            f"`/{check_process.expr2_latex}` when "
-                            f"`/{check_process.solving_for}={check_process.attempt}`."
-                        )
-                        responses.append(
-                            f"To do this, we will substitute `/{check_process.attempt}` in for "
-                            f"`/{check_process.solving_for}` in both sides of the starting equation."
-                        )
                         if not other_var:
-                            check_process.solving_for_value = check_process.attempt
-                            check_process.save()
-                            responses.append(
-                                f"Substitute `/{check_process.solving_for}={check_process.attempt}` in the left side "
-                                f"of the starting equation `/({check_process.expr1_latex})`"
-                            )
-                            response_context = Response.CHECK_SOLUTION
+                            solved_status = Problem.variable_isolated_side(problem)
+
+                            if solved_status in [CheckSolution.INFINITELY_MANY, CheckSolution.NO_SOLUTION]:
+                                has_mistakes = False
+                                for step_mistakes in Problem.get_all_steps_mistakes(problem).items():
+                                    if (
+                                        step_mistakes[1][0]["title"] != Mistake.NONE
+                                        or step_mistakes[1][1]["title"] != Mistake.NONE
+                                    ):
+                                        has_mistakes = True
+                                check_process.end_time = timezone.now()
+                                if has_mistakes:
+                                    responses.append(
+                                        "There are too many mistakes in your algebra so I'm not sure how "
+                                        "to check your answer."
+                                    )
+                                else:
+                                    responses.append("This is an interesting result!")
+                                    if solved_status == CheckSolution.INFINITELY_MANY:
+                                        check_process.problem_solved = solved_status
+                                        responses.append(
+                                            f"It means that {check_process.solving_for} can be ANY real "
+                                            f"number to make your starting equation true!"
+                                        )
+                                        responses.append("Congratulations! You have correctly solved this equation.")
+                                        responses.append("Keep up the good work!")
+                                    else:
+                                        left = Expression.get_sympy_expression_from_latex(check_process.expr1_latex)
+                                        right = Expression.get_sympy_expression_from_latex(check_process.expr2_latex)
+                                        if not solve(left - right):
+                                            check_process.problem_solved = solved_status
+                                            responses.append(
+                                                f"It means that there isn't a single number you can "
+                                                f"substitute in for {check_process.solving_for} to make "
+                                                f"your starting equation true."
+                                            )
+                                            responses.append(
+                                                "Congratulations! You have correctly solved this equation."
+                                            )
+                                            responses.append("Keep up the good work!")
+                                        else:
+                                            check_process.problem_solved = CheckSolution.UNSOLVED
+                                            responses.append(
+                                                "Even though there are no mistakes in your algebra, it is "
+                                                "possible to find an answer for this equation."
+                                            )
+                                            responses.append(
+                                                "Try doing some different arithmetic and see if that leads "
+                                                "you to a different result."
+                                            )
+                                check_process.save()
+                                response_context = Response.NO_CONTEXT
+                            else:
+                                responses.append(
+                                    f"Let's figure out if `/{check_process.expr1_latex}` is equivalent to "
+                                    f"`/{check_process.expr2_latex}` when "
+                                    f"`/{check_process.solving_for}={check_process.attempt}`."
+                                )
+                                responses.append(
+                                    f"To do this, we will substitute `/{check_process.attempt}` in for "
+                                    f"`/{check_process.solving_for}` in both sides of the starting equation."
+                                )
+                                check_process.solving_for_value = check_process.attempt
+                                check_process.save()
+                                responses.append(
+                                    f"Substitute `/{check_process.solving_for}={check_process.attempt}` in the "
+                                    f"left side of the starting equation `/({check_process.expr1_latex})`"
+                                )
+                                response_context = Response.CHECK_SOLUTION
                         else:
                             responses.append(
                                 "Since you have solved for one variable in terms of another, you first have to pick "
@@ -1233,7 +1323,7 @@ class CheckSolution(CheckAlgebra):
                     simplify_user_msg = latex(simplify(sympy_exprs["usr_msg"]))
                     responses.append(f"Great, that is equal to `/{simplify_user_msg}`.")
                     responses.append(
-                        f"Now, substitute `/{var_val_string}` in the right side of the starting equation "
+                        f"Now, substitute {var_val_string} in the right side of the starting equation "
                         f"`/({check_process.expr2_latex})`"
                     )
                 else:
@@ -1247,9 +1337,7 @@ class CheckSolution(CheckAlgebra):
 
                     # Test this user message against the rewritten expression, too
                     if simplify(sympy_exprs["usr_msg"] - sympy_exprs["left"]) == 0:
-                        # The user has found the answer
-                        check_process.problem_solved = True
-                        check_process.save()
+                        # The user has found the answer or maybe just one answer if there are inf many solutions
                         mistake_count = 0
                         all_mistakes = Problem.get_all_steps_mistakes(check_process.problem)
                         for m in all_mistakes:
@@ -1269,12 +1357,27 @@ class CheckSolution(CheckAlgebra):
                             responses.append("Keep up the good work!")
                         else:
                             responses.append(f"That is also equal to `/{latex(simplify(sympy_exprs['usr_msg']))}`. ")
-                            responses.append(
-                                f"You have found the answer: `/{check_process.expr1_latex}="
-                                f"{check_process.expr2_latex}` when `/{check_process.solving_for}="
-                                f"{check_process.attempt}`."
-                            )
-                            responses.append("BUT there are mistakes in your algebra!")
+                            left = Expression.get_sympy_expression_from_latex(check_process.expr1_latex)
+                            right = Expression.get_sympy_expression_from_latex(check_process.expr2_latex)
+                            if solve(left - right):
+                                check_process.problem_solved = CheckSolution.SOLVED
+                                check_process.save()
+                                responses.append(
+                                    f"You have found the answer: `/{check_process.expr1_latex}="
+                                    f"{check_process.expr2_latex}` when `/{check_process.solving_for}="
+                                    f"{check_process.attempt}`."
+                                )
+                                responses.append("BUT there are mistakes in your algebra!")
+                            else:
+                                check_process.problem_solved = CheckSolution.UNSOLVED
+                                check_process.save()
+                                responses.append(
+                                    f"You have found ONE answer: `/{check_process.expr1_latex}="
+                                    f"{check_process.expr2_latex}` when `/{check_process.solving_for}="
+                                    f"{check_process.attempt}`."
+                                )
+                                responses.append("BUT there are other answers and there are mistakes in your algebra!")
+
                             responses.append(
                                 "Please find and fix your mistakes by clicking on the"
                                 " <i class='ai-circle-help'></i> icons."
@@ -1296,8 +1399,6 @@ class CheckSolution(CheckAlgebra):
                             f"`/{check_process.solving_for}={check_process.attempt}`."
                         )
                         responses.append("Try to find and fix your mistakes. Then change you answer and try again.")
-                        check_process.problem_solved = False
-                        check_process.save()
                 else:
                     Mistake.save_new(check_process, Mistake.SUB_EXPR2)
                     responses.append("You didn't do that substitution correctly. Try again.")
@@ -1309,7 +1410,7 @@ class CheckSolution(CheckAlgebra):
     def known_incorrect(cls, check_process):
         completed_solution_checks = CheckSolution.get_matching_completed_checks(check_process, None, None)
         for c in completed_solution_checks:
-            if c.problem_solved is False:
+            if c.problem_solved == CheckSolution.UNSOLVED:
                 return True
 
         return False

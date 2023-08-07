@@ -1,4 +1,11 @@
 function InitializeCalculator() {
+  $('.response .d-flex.align-items-end.d-none').each(function () {
+    $(this).removeClass('d-none');
+    $(this).find('p.message-load-animation').addClass('d-none');
+    $(this).find('p.content.d-none').removeClass('d-none');
+    $(this).parent().find('.fs-xs.text-muted.d-none').removeClass('d-none');
+  });
+
   $('.latex-message-span').each(function () {
     MQ.MathField($(this)[0]);
   });
@@ -117,18 +124,11 @@ function GetResponse(userMessageLatex, callerFunctionName) {
 
       // For each message in the response to the last user message (it might be split up into more than 1)
       // show the message load animation and do not display the message
-      lastResponses.each(function () {
-        $(this)
-          .find('p.no-margin')
-          .each(function () {
-            if ($(this).hasClass('message-load-animation')) {
-              $(this).removeClass('d-none');
-            } else {
-              $(this).addClass('d-none');
-            }
-          });
-      });
-
+      lastResponses.first().removeClass('d-none');
+      lastResponseParent
+        .find('.fs-xs.text-muted')
+        .first()
+        .removeClass('d-none');
       //Now, since each response message for the last user message is hidden, this will make the messages appear
       //and make the loading animation disappear every 1.2 seconds
       let responseIndex = 0;
@@ -145,6 +145,13 @@ function GetResponse(userMessageLatex, callerFunctionName) {
             }
           });
         responseIndex++;
+        if (responseIndex < lastResponses.length) {
+          lastResponses.eq(responseIndex).removeClass('d-none');
+          lastResponseParent
+            .find('.fs-xs.text-muted')
+            .eq(responseIndex)
+            .removeClass('d-none');
+        }
 
         lastResponseParent.find('.latex-message-span').each(function () {
           MQ.StaticMath($(this)[0]);
@@ -186,7 +193,7 @@ function GetResponse(userMessageLatex, callerFunctionName) {
             badgeObj.addClass('bg-faded-danger text-danger');
           }
 
-          if (lastResponseParent.find('.problem-solved').length) {
+          if (lastResponseParent.find('.finished').length) {
             LockEverything();
             stopConfetti = false;
             poof();

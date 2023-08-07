@@ -90,7 +90,7 @@ class BaseView(AllowGuestUserMixin, TemplateView):
         context["problem"] = Problem.objects.none()
         context["steps"] = Step.objects.none()
         context["previous_user_messages"] = UserMessage.objects.none()
-        context["problem_solved"] = "problem-not-solved"
+        context["problem_finished"] = "unfinished"
 
         try:
             saved_problem_id = self.kwargs["problem_id"]
@@ -108,14 +108,15 @@ class BaseView(AllowGuestUserMixin, TemplateView):
                 context["previous_user_messages"] = UserMessage.get_all_previous_for_problem(
                     Sandbox.ALGEBRA, saved_problem_id
                 )
-                if CheckSolution.objects.filter(problem=context["problem"], problem_solved=True):
-                    context["problem_solved"] = "problem-solved"
+                solved_states = [CheckSolution.SOLVED, CheckSolution.INFINITELY_MANY, CheckSolution.NO_SOLUTION]
+                if CheckSolution.objects.filter(problem=context["problem"], problem_solved__in=solved_states):
+                    context["problem_finished"] = "finished"
                     for step_mistakes in Problem.get_all_steps_mistakes(context["problem"]).items():
                         if (
                             step_mistakes[1][0]["title"] != Mistake.NONE
-                            and step_mistakes[1][1]["title"] != Mistake.NONE
+                            or step_mistakes[1][1]["title"] != Mistake.NONE
                         ):
-                            context["problem_solved"] = "problem-not-solved"
+                            context["problem_finished"] = "unfinished"
             except Problem.DoesNotExist:
                 # the problem that is trying to be accessed is not associated with the account trying to access it
                 # This must be an invalid problem and I am not sure how we would have gotten here
@@ -187,6 +188,7 @@ class UpdateStepTypeView(View):
                 "mistakes": Problem.get_all_steps_mistakes(step.problem),
                 "stop_check_rewrite": stop_check_rewrite,
                 "stop_check_solution": stop_check_solution,
+                "variable_isolated": Problem.variable_isolated_side(step.problem),
             }
 
             response = JsonResponse(feedback)

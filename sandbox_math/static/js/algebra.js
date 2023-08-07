@@ -74,7 +74,7 @@ $(document).ready(function () {
     //This will populate the variable options menu
     void ExpressionChanged($('.algebra-step:first-child .left-mq-input'));
 
-    if ($('#unique-problem-id').hasClass('problem-solved')) {
+    if ($('#unique-problem-id').hasClass('finished')) {
       LockEverything();
 
       jQuery.rnd = function (m, n) {
@@ -112,6 +112,7 @@ $(document).ready(function () {
   }
 
   InitializeCalculator();
+
   $('.tab-pane#recent').load('/algebra/recent-table/', function () {
     InitializeTable();
   });
@@ -393,6 +394,15 @@ async function StepTypeChanged(menuButtonObject) {
         if (response['stop_check_solution']) {
           GetResponse('stop-check-solution', 'StepTypeChanged');
         }
+        if (
+          ['left', 'right', 'inf many', 'no solution'].includes(
+            response['variable_isolated'],
+          )
+        ) {
+          $('#checkSolutionButton').removeClass('d-none');
+        } else {
+          $('#checkSolutionButton').addClass('d-none');
+        }
         ToggleNewAndCheckButtons(false);
       })
       .fail(function () {
@@ -477,8 +487,9 @@ async function ExpressionChanged(expressionObject) {
       }
 
       if (
-        response['variable_isolated'] === 'left' ||
-        response['variable_isolated'] === 'right'
+        ['left', 'right', 'inf many', 'no solution'].includes(
+          response['variable_isolated'],
+        )
       ) {
         $('#checkSolutionButton').removeClass('d-none');
       } else {
@@ -510,8 +521,9 @@ function VariableChanged(varSelected) {
     .done(function (response) {
       UpdateAllExpressionHelp(response['mistakes']);
       if (
-        response['variable_isolated'] === 'left' ||
-        response['variable_isolated'] === 'right'
+        ['left', 'right', 'inf many', 'no solution'].includes(
+          response['variable_isolated'],
+        )
       ) {
         $('#checkSolutionButton').removeClass('d-none');
       } else {
