@@ -8,7 +8,7 @@
 {#        <h5>Calculator</h5>#}
 {#      </div>#}
       <div id="calculatorDialog" class="card-body px-4 pb-0 pt-1" style="height: 10px;" data-simplebar>
-        <div class="mb-3 w-75 response">
+        <div class="mb-3 w-90 response">
           <div class="d-flex align-items-end mb-2 response">
             <div class="message-box-start text-dark">
               <p class="no-margin">
@@ -19,7 +19,7 @@
         </div>
         {% for message in previous_user_messages %}
           {% for content in message|get_message_content %}
-            <div class="ms-auto mb-3 w-75 user-message {% if content.content_type == "hidden" %}d-none{% endif %}">
+            <div class="ms-auto mb-3 w-90 user-message {% if content.content_type == "hidden" %}d-none{% endif %}">
               <div class="d-flex align-items-end">
                 <div class="message-box-end bg-primary text-white">
                   <p class="no-margin">
@@ -35,12 +35,12 @@
               </div>
             </div>
           {% endfor %}
-          <div class="mb-3 w-75 response">
+          <div class="mb-3 w-90 response">
             {% include "calculator/response.html" with responses=message|get_responses %}
           </div>
         {% endfor %}
       </div>
-      <div class="card-footer w-100 border-0 px-4 pt-1 pb-0">
+      <div class="card-footer w-100 border-0 px-2 pt-1 pb-0">
         <div class="position-relative">
           <div id="calculatorInputBorder" class="d-flex align-items-center my-mathquill w-100">
             <div class="w-100" style="overflow: hidden;"><p class="no-margin"><span id="calculatorInput" class="py-2 w-100" style="font-size: 200%;"></span></p></div>

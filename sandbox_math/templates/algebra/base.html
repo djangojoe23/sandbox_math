@@ -19,11 +19,14 @@
 
 {% block content %}
 
-
 <div class="container py-5 mt-4 mt-lg-5 mb-lg-4 my-xl-5">
   <div class="row pt-sm-2 pt-lg-0">
     <div class="col pt-4 pb-4 pb-sm-4 pe-0">
 
+      <div id="small-screen-alert" class="alert alert-warning d-none" role="alert">
+        <h4 class="pt-2 alert-heading">Your screen width is too small!</h4>
+        <p>This will make this website unusable. If possible, make the window bigger.</p>
+      </div>
       <div id="not-logged-in-alert" class="alert alert-danger d-none" role="alert">
         <h4 class="pt-2 alert-heading">Your work is not being saved!</h4>
         <p>For newcomers, <a href="{% url "account_signup" %}" class="alert-link">click here to join</a>.</p>

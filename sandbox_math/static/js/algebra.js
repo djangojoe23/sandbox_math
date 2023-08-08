@@ -1,6 +1,16 @@
 let MQ = null;
 let studentID = null;
 
+window.onresize = onWindowResize;
+
+function onWindowResize() {
+  if (screen.width < 812) {
+    $('#small-screen-alert').removeClass('d-none');
+  } else {
+    $('#small-screen-alert').addClass('d-none');
+  }
+}
+
 function waitForElement(elementPath, callBack) {
   window.setTimeout(function () {
     if ($(elementPath).length) {
@@ -201,7 +211,7 @@ function InitializeNewStep(stepID) {
   });
 
   const popoverTriggerList = document.querySelectorAll(
-    '[data-bs-toggle="popover"]',
+    'a.left-help-button, a.right-help-button',
   );
   const popoverList = [...popoverTriggerList].map(
     (popoverTriggerEl) => new bootstrap.Popover(popoverTriggerEl),
