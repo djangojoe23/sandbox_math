@@ -1,5 +1,6 @@
 import requests
 from django.conf import settings
+from django.http import HttpResponseRedirect
 from django.views.generic.edit import FormView
 
 from sandbox_math.sandbox.forms import ContactForm
@@ -22,5 +23,7 @@ class ContactFormView(FormView):
             print(result)
             if result["success"] is True and result["score"] >= 0.5:
                 form.send_email()
+            else:
+                return HttpResponseRedirect("/contact-error/")
 
         return super().form_valid(form)

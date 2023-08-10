@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+        <section class="container py-5 mt-5 mb-lg-3 mb-xl-4 mb-xxl-5">
+        <!-- Page title-->
+        <div class="text-center pb-3 pt-lg-2 pt-xl-4 my-1 my-sm-3 my-lg-4">
+          <h1 class="display-2">There was an issue sending your message.</h1>
+          <h1 class="display-2"><i class="ai-emoji-meh text-info"></i></h1>
+          <p class="fs-lg mb-0"><a href="{% url "contact" %}">Click here to try again.</p>
+        </div>
+      </section>
+{% endblock content %}
