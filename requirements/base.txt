@@ -20,7 +20,7 @@ django-redis==5.2.0  # https://github.com/jazzband/django-redis
 
 # My Stuff
 # ------------------------------------------------------------------------------
-mpmath==1.2.1
+mpmath==1.3.0
 sympy==1.11.1
 django-guest-user==0.5.4  # https://github.com/julianwachholz/django-guest-user/blob/main/docs/usage.rst
 django-recaptcha==3.0.0   # https://github.com/torchbox/django-recaptcha.git
