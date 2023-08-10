@@ -37,7 +37,6 @@ class UserUpdateView(LoginRequiredMixin, SuccessMessageMixin, UserPassesTestMixi
     success_message = _("Information successfully updated")
 
     def test_func(self):
-        print("herhehere")
         if is_guest_user(self.request.user):
             return False
         else:

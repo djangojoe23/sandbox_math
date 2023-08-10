@@ -6,6 +6,8 @@ from django.urls import include, path
 from django.views import defaults as default_views
 from django.views.generic import TemplateView
 
+from sandbox_math.sandbox.views import ContactFormView
+
 urlpatterns = [
     path(
         "",
@@ -13,7 +15,9 @@ urlpatterns = [
         name="home",
     ),
     path("about/", TemplateView.as_view(template_name="pages/about.html"), name="about"),
-    path("contact/", TemplateView.as_view(template_name="pages/contact.html"), name="contact"),
+    path("contact/", ContactFormView.as_view(), name="contact"),
+    path("contact-thanks/", TemplateView.as_view(template_name="pages/contact-thanks.html"), name="contact-thanks"),
+    # path("contact/", TemplateView.as_view(template_name="pages/contact.html"), name="contact"),
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
     # User management

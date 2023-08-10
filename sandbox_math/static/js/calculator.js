@@ -84,7 +84,7 @@ function SubmitUserMessage() {
   let userMessage = calcInputObj.latex();
 
   $('#calculatorDialog .simplebar-content').append(
-    "<div class='ms-auto mb-3 w-90 user-message'>" +
+    "<div class='ms-auto mb-3 w-75 user-message'>" +
       "<div class='d-flex align-items-end'>" +
       "<div class='message-box-end bg-primary text-white'><p class='no-margin'><span class='latex-message-span' style='font-size: 125%;'>" +
       userMessage +
@@ -114,7 +114,7 @@ function GetResponse(userMessageLatex, callerFunctionName) {
   responseParameters += '&caller=' + encodeURIComponent(callerFunctionName);
 
   $('#calculatorDialog .simplebar-content').append(
-    "<div class='mb-3 w-90 response'></div>",
+    "<div class='mb-3 w-75 response'></div>",
   );
   $('#calculatorDialog .response')
     .last()

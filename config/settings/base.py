@@ -76,6 +76,7 @@ THIRD_PARTY_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "guest_user",
+    "captcha",
 ]
 
 LOCAL_APPS = [
@@ -285,3 +286,6 @@ STATICFILES_FINDERS += ["compressor.finders.CompressorFinder"]
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+RECAPTCHA_PUBLIC_KEY = "6Lc5eI0nAAAAAOHYyfRoSxySD8JbZwn1bdpkhGjr"
+RECAPTCHA_PRIVATE_KEY = "6Lc5eI0nAAAAAL9qSHKMerophv2oi7dW8MMJ9cst"
+SILENCED_SYSTEM_CHECKS = ["captcha.recaptcha_test_key_error"]

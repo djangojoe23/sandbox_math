@@ -23,3 +23,4 @@ django-redis==5.2.0  # https://github.com/jazzband/django-redis
 mpmath==1.2.1
 sympy==1.11.1
 django-guest-user==0.5.4  # https://github.com/julianwachholz/django-guest-user/blob/main/docs/usage.rst
+django-recaptcha==3.0.0   # https://github.com/torchbox/django-recaptcha.git
