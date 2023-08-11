@@ -2,9 +2,6 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block javascript %}
-  {{ block.super }}
-{% endblock javascript %}
 
 {% block content %}
 <!-- Page title + contact form-->
@@ -22,21 +19,3 @@
 </section>
 
 {% endblock content %}
-
-{% block inline_javascript %}
-  <script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_key }}"></script>
-  <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
-  <script>
-    $('#id_captcha').val('') //Need this to clear the form field and get a new token
-    grecaptcha.ready(function() {
-      $('#contactForm').submit(function(e){
-        let form = this;
-        e.preventDefault()
-        grecaptcha.execute('{{ recaptcha_key }}', {action: 'contactForm'}).then(function(token) {
-          $('#id_captcha').val(token)
-          form.submit()
-        });
-      })
-    });
-</script>
-{% endblock inline_javascript %}

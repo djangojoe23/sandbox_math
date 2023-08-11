@@ -43,7 +43,7 @@ class ContactForm(forms.Form):
                 Field("message", css_class="form-control form-control-lg", rows="5"),
                 css_class="col-sm-12",
             ),
-            Field("captcha", type="hidden", data_name="g-recaptcha-response"),
+            Field("captcha"),
         )
         self.helper.add_input(Submit("submitForm", "Submit", css_class="btn-lg"))
 
