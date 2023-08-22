@@ -4,7 +4,7 @@ let studentID = null;
 window.onresize = onWindowResize;
 
 function onWindowResize() {
-  if (screen.width < 812) {
+  if (window.innerWidth < 865) {
     $('#small-screen-alert').removeClass('d-none');
   } else {
     $('#small-screen-alert').addClass('d-none');

@@ -75,6 +75,7 @@ class GetResponseView(TemplateView):
                 else:
                     CheckSolution.create_substitute_values_response(user_message_obj)
                     solved_states = [CheckSolution.SOLVED, CheckSolution.INFINITELY_MANY, CheckSolution.NO_SOLUTION]
+                    print(problem_id)
                     just_finished_check = (
                         CheckSolution.objects.filter(
                             problem_id=problem_id, end_time__isnull=False, problem_solved__in=solved_states
@@ -82,18 +83,19 @@ class GetResponseView(TemplateView):
                         .order_by("-end_time")
                         .first()
                     )
+                    print(just_finished_check)
                     if Response.get_context_of_last_response(user_message_obj) == Response.NO_CONTEXT:
                         problem = Problem.objects.get(id=problem_id)
                         if just_finished_check:
-                            context["problem_solved"] = "problem-solved"
+                            context["problem_finished"] = "finished"
                             for step_mistakes in Problem.get_all_steps_mistakes(problem).items():
                                 if (
                                     step_mistakes[1][0]["title"] != Mistake.NONE
                                     and step_mistakes[1][1]["title"] != Mistake.NONE
                                 ):
-                                    context["problem_solved"] = "problem-not-solved"
+                                    context["problem_finished"] = "unfinished"
                         else:
-                            context["problem_solved"] = "problem-not-solved"
+                            context["problem_finished"] = "unfinished"
         elif caller == "InitializeNewStep":
             # User must be starting a new check rewrite
             step_id = int(user_message.split("-")[0][4:])
@@ -160,7 +162,6 @@ class GetResponseView(TemplateView):
                         "Canceling the current check rewrite process and starting a solution check.",
                         Response.NO_CONTEXT,
                     )
-                    currently_active_check = None
                     try:
                         currently_active_check = CheckRewrite.objects.get(problem_id=problem_id, end_time__isnull=True)
                         currently_active_check.end_time = timezone.now()

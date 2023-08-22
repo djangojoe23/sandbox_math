@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load users_extras %}
 {% load static %}
 
 {% block content %}
@@ -6,20 +7,20 @@
   <section class="py-5">
     <div class="container text-center pt-5 mt-lg-4 mt-xl-5">
       <div class="position-relative mx-auto my-3" style="max-width: 850px;">
-        <h1 class="display-3 text-center mx-auto my-2 my-sm-4" style="max-width: 750px;">Play With Your Algebra</h1>
+        <h1 class="display-3 text-center mx-auto my-2 my-sm-4" style="max-width: 750px;">There's More To Math Than The Answer Box</h1>
         <svg class="d-block mx-auto text-primary" width="511" height="40" viewBox="0 0 511 40" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
           <path d="M385.252 0.160149C313.41 0.614872 292.869 0.910678 253.008 2.06539C211.7 3.26203 182.137 4.46154 135.231 6.84429C124.358 7.39665 112.714 7.92087 99.0649 8.47247C48.9242 10.4987 39.1671 11.0386 22.9579 12.6833C14.9267 13.4984 7.98117 14.0624 4.08839 14.2162C0.627411 14.3527 0 14.4386 0 14.7762C0 15.0745 5.53537 15.3358 8.56298 15.1804C9.64797 15.1248 12.5875 14.9887 15.0956 14.8782C17.6037 14.7676 23.123 14.4706 27.3608 14.2183C37.3399 13.6238 42.1312 13.4363 59.2817 12.9693C88.1133 12.1844 109.893 11.43 136.647 10.2898C146.506 9.86957 159.597 9.31166 165.737 9.04993C212.308 7.06466 269.195 5.29439 303.956 4.74892C346.139 4.08665 477.094 3.50116 474.882 3.98441C474.006 4.17607 459.021 5.6015 450.037 6.34782C441.786 7.03345 428 8.02235 411.041 9.14508C402.997 9.67773 391.959 10.4149 386.51 10.7832C366.042 12.1673 359.3 12.5966 347.67 13.2569C294.096 16.2987 258.708 18.9493 209.451 23.6091C180.174 26.3788 156.177 29.5584 129.396 34.2165C114.171 36.8648 112.687 37.3352 114.186 39.0402C115.161 40.1495 122.843 40.2933 138.338 39.492C166.655 38.0279 193.265 36.8923 219.043 36.048C235.213 35.5184 237.354 35.4296 253.795 34.6075C259.935 34.3005 270.549 33.8517 277.382 33.6105L289.804 33.1719L273.293 32.999C248.274 32.7369 221.435 32.7528 212.596 33.035C183.334 33.9693 167.417 34.6884 141.419 36.2506C135.222 36.623 129.994 36.8956 129.801 36.8566C127.94 36.4786 169.612 30.768 189.492 28.6769C234.369 23.956 280.582 20.4337 351.602 16.3207C358.088 15.9451 371.108 15.1233 380.535 14.4947C389.962 13.866 404.821 12.8761 413.556 12.2946C447.177 10.057 457.194 9.22358 489.506 5.97543C510.201 3.895 510.311 3.8772 510.875 2.50901C511.496 1.00469 509.838 0.322131 505.088 0.127031C500.576 -0.0584957 416.098 -0.0351424 385.252 0.160149ZM291.144 33.02C291.536 33.0658 292.102 33.0641 292.402 33.0162C292.703 32.9683 292.383 32.9308 291.691 32.9329C290.999 32.935 290.753 32.9743 291.144 33.02Z"></path>
         </svg>
       </div>
-      <p class="fs-lg pb-3 mb-2 mb-sm-3 mb-lg-4 mx-auto" style="max-width: 640px;">Stop worrying about making mistakes when it comes to math. Just try something and learn from what happens!</p><a class="btn btn-lg btn-primary" href="{% url 'algebra:base' %}">Click Here to Dig In</a>
+      <p class="fs-lg pb-3 mb-2 mb-sm-3 mb-lg-4 mx-auto" style="max-width: 640px;">Get better at solving problems <em>and</em> finding answers.</p><a class="btn btn-lg btn-primary" href="{% url 'algebra:base' %}">Click Here to Dig In</a>
     </div>
 
     <div class="container-fluid overflow-hidden px-4 pt-1 pt-sm-4 pb-sm-2 pb-md-3 py-lg-1 py-xl-1 mt-4">
       <div class="parallax mx-auto" style="max-width: 1440px;">
-        <div class="parallax-layer" data-depth="0.1"><img class="d-dark-mode-none" src="{% static 'images/placeholders/saas-3/hero/01-light.png' %}" alt="Layer"><img class="d-none d-dark-mode-block" src="{% static 'images/placeholders/saas-3/hero/01-dark.png' %}" alt="Layer"></div>
-        <div class="parallax-layer zindex-2" data-depth="0.25"><img class="d-dark-mode-none" src="{% static 'images/placeholders/saas-3/hero/02-light.png' %}" alt="Layer"><img class="d-none d-dark-mode-block" src="{% static 'images/placeholders/saas-3/hero/02-dark.png' %}" alt="Layer"></div>
-        <div class="parallax-layer zindex-1" data-depth="0.35"><img class="d-dark-mode-none" src="{% static 'images/placeholders/saas-3/hero/03-light.png' %}" alt="Layer"><img class="d-none d-dark-mode-block" src="{% static 'images/placeholders/saas-3/hero/03-dark.png' %}" alt="Layer"></div>
-        <div class="parallax-layer zindex-1" data-depth="0.45"><img class="d-dark-mode-none" src="{% static 'images/placeholders/saas-3/hero/04-light.png' %}" alt="Layer"><img class="d-none d-dark-mode-block" src="{% static 'images/placeholders/saas-3/hero/04-dark.png' %}" alt="Layer"></div>
+        <div class="parallax-layer" data-depth="0.1"><img class="d-dark-mode-none" src="{% static 'images/custom/hero/sandbox-base-light.png' %}" alt="Layer"><img class="d-none d-dark-mode-block" src="{% static 'images/custom/hero/sandbox-base-light.png' %}" alt="Layer"></div>
+        <div class="parallax-layer zindex-2" data-depth="0.25"><img class="d-dark-mode-none" src="{% static 'images/custom/hero/sandbox-left-light.png' %}" alt="Layer"><img class="d-none d-dark-mode-block" src="{% static 'images/custom/hero/sandbox-left-light.png' %}" alt="Layer"></div>
+        <div class="parallax-layer zindex-1" data-depth="0.35"><img class="d-dark-mode-none" src="{% static 'images/custom/hero/sandbox-right-light.png' %}" alt="Layer"><img class="d-none d-dark-mode-block" src="{% static 'images/custom/hero/sandbox-right-light.png' %}" alt="Layer"></div>
+        <div class="parallax-layer zindex-1" data-depth="0.45"><img class="d-dark-mode-none" src="{% static 'images/custom/hero/sandbox-right-text-light.png' %}" alt="Layer"><img class="d-none d-dark-mode-block" src="{% static 'images/custom/hero/sandbox-right-text-light.png' %}" alt="Layer"></div>
       </div>
     </div>
   </section>
@@ -31,326 +32,160 @@
           <div class="col d-md-flex justify-content-center text-center text-md-start position-relative">
             <div class="position-absolute top-50 end-0 translate-middle-y border-end" style="height: 60px;"></div>
             <div class="p-3 px-sm-0 py-sm-4">
-              <div class="h2 display-5 text-primary mb-0">540+</div><span>Problems Started</span>
+              <div class="h2 display-5 text-primary mb-0">{{ "all"|get_problem_count }}</div><span>Problems Started</span>
             </div>
           </div>
           <div class="col d-md-flex justify-content-center text-center text-md-start position-relative">
             <div class="position-absolute top-50 end-0 translate-middle-y border-end d-none d-md-block" style="height: 60px;"></div>
             <div class="p-3 px-sm-0 py-sm-4">
-              <div class="h2 display-5 text-primary mb-0">1070</div><span>Mistakes Made</span>
+              <div class="h2 display-5 text-primary mb-0">{{ "all"|get_mistake_count }}</div><span>Mistakes Made</span>
+            </div>
+          </div>
+          <div class="col d-md-flex justify-content-center text-center text-md-start position-relative">
+            <div class="p-3 px-sm-0 py-sm-4">
+              <div class="h2 display-5 text-primary mb-0">{{ "fixed"|get_mistake_count }}</div><span>Mistakes Fixed</span>
             </div>
           </div>
           <div class="col d-md-flex justify-content-center text-center text-md-start position-relative">
             <div class="position-absolute top-50 end-0 translate-middle-y border-end" style="height: 60px;"></div>
             <div class="p-3 px-sm-0 py-sm-4">
-              <div class="h2 display-5 text-primary mb-0">30+</div><span>Problems Solved</span>
-            </div>
-          </div>
-          <div class="col d-md-flex justify-content-center text-center text-md-start position-relative">
-            <div class="p-3 px-sm-0 py-sm-4">
-              <div class="h2 display-5 text-primary mb-0">15</div><span>Mistakes Fixed</span>
+              <div class="h2 display-5 text-primary mb-0">{{ "solved"|get_problem_count }}</div><span>Problems Solved</span>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-  <!-- Application (Tabs)-->
-  <section class="container pt-2 mt-lg-3 mt-xl-4 mt-xxl-5">
-    <h2 class="h1 text-center pt-2 pt-sm-3">What is Sandbox Math?</h2>
-    <p class="text-center pb-3 mb-3 mb-lg-4">It is for people who are learning math.</p>
-    <!-- Nav tabs-->
-    <ul class="nav nav-tabs flex-nowrap overflow-auto text-nowrap w-100 mx-auto pb-3 mb-3 mb-lg-4 justify-content-center" role="tablist" style="max-width: 892px;">
-      <li class="nav-item mb-0"><a class="nav-link active" href="#pre-algebra" data-bs-toggle="tab" role="tab">Pre-Algebra</a></li>
-      <li class="nav-item mb-0"><a class="nav-link" href="#algebra" data-bs-toggle="tab" role="tab">Algebra</a></li>
-      <li class="nav-item mb-0"><a class="nav-link" href="#graphs" data-bs-toggle="tab" role="tab">Graphs</a></li>
-      <li class="nav-item mb-0"><a class="nav-link" href="#shapes" data-bs-toggle="tab" role="tab">Shapes</a></li>
-    </ul>
-    <!-- Tab content-->
-    <div class="tab-content">
-      <!-- Pre-Algebra-->
-      <div class="tab-pane fade show active" id="pre-algebra" role="tabpanel">
-        <div class="row align-items-lg-center">
-          <div class="col-md-6 pb-4 pb-md-0 mb-2 mb-md-0"><img class="rounded-5" src="assets/img/landing/yoga-studio/classes/beginners.jpg" alt="Pre-Algebra Pic"></div>
-          <div class="col-md-6 col-lg-5 col-xl-4 offset-lg-1">
-            <div class="ps-md-4 ps-lg-0">
-              <h2 class="mb-xl-4">Pre-Algebra</h2>
-              <p class="pb-3 mb-3 mb-xl-4">Purus magna lectus feugiat arcu tellus vitae urna neque, eu velit in vulputate sodales ut tellus amet lorem sit consectetur quisque justo laoreet proin.</p>
-              <div class="row row-cols-2 g-4 pb-2 pb-xl-0 mb-4 mb-xl-5">
-                <div class="col"><i class="ai-spa d-block h2 text-primary fw-normal pb-2 mb-1"></i>
-                  <h3 class="h6 mb-2">Spa area</h3>
-                  <p class="fs-sm mb-0">Neque, blandit consectetur viverra placerat ante.</p>
-                </div>
-                <div class="col"><i class="ai-towel d-block h2 text-primary fw-normal pb-2 mb-1"></i>
-                  <h3 class="h6 mb-2">Changing rooms</h3>
-                  <p class="fs-sm mb-0">Neque, blandit consectetur viverra placerat ante.</p>
-                </div>
-                <div class="col"><i class="ai-cafe d-block h2 text-primary fw-normal pb-2 mb-1"></i>
-                  <h3 class="h6 mb-2">Lounge cafe</h3>
-                  <p class="fs-sm mb-0">Neque, blandit consectetur viverra placerat ante.</p>
-                </div>
-                <div class="col"><i class="ai-sofa d-block h2 text-primary fw-normal pb-2 mb-1"></i>
-                  <h3 class="h6 mb-2">Bright halls</h3>
-                  <p class="fs-sm mb-0">Neque, blandit consectetur viverra placerat ante.</p>
-                </div>
-              </div><a class="btn btn-primary w-100 w-sm-auto" href="#">Try a free lesson</a>
-            </div>
+  <!-- How it works (Steps)-->
+    <section class="overflow-hidden pt-5 mt-md-3 mt-lg-2 mt-xl-4 mt-xxl-5">
+      <div class="container pt-2 pt-sm-4 pt-lg-5">
+        <h2 class="h1 text-center pb-3 mb-3 mb-lg-4">What is Sandbox Math?</h2>
+        <!-- Step-->
+        <div class="row align-items-center position-relative pb-5 pb-lg-0 mb-1 mb-sm-2 mb-md-4 mb-lg-0">
+          <div class="col-md-6 col-xl-5 offset-lg-1 order-md-2 pb-2 pb-md-0 mb-4 mb-md-0" data-aos="fade-left" data-aos-duration="500" data-aos-offset="250" data-disable-parallax-down="md"><img class="d-dark-mode-none" src="{% static 'images/step-by-step.png' %}" width="700" alt="Image"><img class="d-none d-dark-mode-block" src="{% static 'images/step-by-step.png' %}" width="525" alt="Image">
+          </div>
+          <div class="col-md-6 col-lg-5 col-xl-4 offset-xl-1 order-md-1" data-aos="fade-right" data-aos-duration="500" data-aos-offset="250" data-disable-parallax-down="md">
+            <h3 class="h2 mb-3 mb-lg-4">Solve problems step-by-step</h3>
+            <p class="pb-1 pb-lg-0 mb-4 mb-lg-5">Practicing each step of solving math problems is crucial because it builds a strong foundation of understanding. While finding the final answer is important, the process of working through the problem hones critical thinking, problem-solving, and analytical skills. This approach helps identify mistakes, fosters a deeper comprehension of mathematical concepts, and equips you to tackle more complex challenges. By engaging with each step, you cultivate a resilient problem-solving mindset that extends beyond numbers, benefiting various aspects of learning and problem-solving in everyday life.</p>
           </div>
         </div>
-      </div>
-      <!-- Algebra-->
-      <div class="tab-pane fade" id="algebra" role="tabpanel">
-        <div class="row align-items-lg-center">
-          <div class="col-md-6 pb-4 pb-md-0 mb-2 mb-md-0"><img class="rounded-5" src="{% static 'images/landing-algebra.png' %}" alt="Algebra Pic">
-          </div>
-          <div class="col-md-6 col-lg-5 col-xl-4 offset-lg-1">
-            <div class="ps-md-4 ps-lg-0">
-              <h2 class="mb-xl-4">Solve for x</h2>
-              <p class="pb-3 mb-3 mb-xl-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse id lectus nec nunc bibendum facilisis pellentesque ut eros. Praesent bibendum sed mi aliquet tempus.</p>
-              <div class="row row-cols-2 g-4 pb-2 pb-xl-0 mb-4 mb-xl-5">
-                <div class="col"><i class="ai-sofa d-block h2 text-primary fw-normal pb-2 mb-1"></i>
-                  <h3 class="h6 mb-2">One Step at a Time</h3>
-                  <p class="fs-sm mb-0">Neque, blandit consectetur viverra placerat ante.</p>
-                </div>
-                <div class="col"><i class="ai-spa d-block h2 text-primary fw-normal pb-2 mb-1"></i>
-                  <h3 class="h6 mb-2">Check Yourself</h3>
-                  <p class="fs-sm mb-0">Neque, blandit consectetur viverra placerat ante.</p>
-                </div>
-                <div class="col"><i class="ai-cafe d-block h2 text-primary fw-normal pb-2 mb-1"></i>
-                  <h3 class="h6 mb-2">Find and Fix Mistakes</h3>
-                  <p class="fs-sm mb-0">Neque, blandit consectetur viverra placerat ante.</p>
-                </div>
-                <div class="col"><i class="ai-towel d-block h2 text-primary fw-normal pb-2 mb-1"></i>
-                  <h3 class="h6 mb-2">Figure It Out!</h3>
-                  <p class="fs-sm mb-0">Neque, blandit consectetur viverra placerat ante.</p>
-                </div>
-              </div><a class="btn btn-primary w-100 w-sm-auto" href="{% url 'algebra:base' %}">Try it now!</a>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!--Graphs-->
-      <div class="tab-pane fade" id="graphs" role="tabpanel">
-        <div class="row align-items-lg-center">
-          <div class="col-md-6 pb-4 pb-md-0 mb-2 mb-md-0"><img class="rounded-5" src="assets/img/landing/yoga-studio/classes/fly-yoga.jpg" alt="Graphs Shape"></div>
-          <div class="col-md-6 col-lg-5 col-xl-4 offset-lg-1">
-            <div class="ps-md-4 ps-lg-0">
-              <h2 class="mb-xl-4">Graphs</h2>
-              <p class="pb-3 mb-3 mb-xl-4">Varius purus dui nunc faucibus mauris iaculis tortor enim cursus quisque eu, vel amet massa suscipit cursus sit mattis quis magnis dignissim dui fames tortor amet quis.</p>
-              <div class="row row-cols-2 g-4 pb-2 pb-xl-0 mb-4 mb-xl-5">
-                <div class="col"><i class="ai-towel d-block h2 text-primary fw-normal pb-2 mb-1"></i>
-                  <h3 class="h6 mb-2">Changing rooms</h3>
-                  <p class="fs-sm mb-0">Neque, blandit consectetur viverra placerat ante.</p>
-                </div>
-                <div class="col"><i class="ai-rug d-block h2 text-primary fw-normal pb-2 mb-1"></i>
-                  <h3 class="h6 mb-2">Free rugs</h3>
-                  <p class="fs-sm mb-0">Neque, blandit consectetur viverra placerat ante.</p>
-                </div>
-                <div class="col"><i class="ai-spa d-block h2 text-primary fw-normal pb-2 mb-1"></i>
-                  <h3 class="h6 mb-2">Spa area</h3>
-                  <p class="fs-sm mb-0">Neque, blandit consectetur viverra placerat ante.</p>
-                </div>
-                <div class="col"><i class="ai-sofa d-block h2 text-primary fw-normal pb-2 mb-1"></i>
-                  <h3 class="h6 mb-2">Bright halls</h3>
-                  <p class="fs-sm mb-0">Neque, blandit consectetur viverra placerat ante.</p>
-                </div>
-              </div><a class="btn btn-primary w-100 w-sm-auto" href="#">Try a free lesson</a>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!--Shapes-->
-      <div class="tab-pane fade" id="shapes" role="tabpanel">
-        <div class="row align-items-lg-center">
-          <div class="col-md-6 pb-4 pb-md-0 mb-2 mb-md-0"><img class="rounded-5" src="assets/img/landing/yoga-studio/classes/for-pregnant.jpg" alt="Shapes Pic"></div>
-          <div class="col-md-6 col-lg-5 col-xl-4 offset-lg-1">
-            <div class="ps-md-4 ps-lg-0">
-              <h2 class="mb-xl-4">Shapes</h2>
-              <p class="pb-3 mb-3 mb-xl-4">At duis est ante tortor, dictum dictumst nisl erat. Tellus erat pharetra eget vestibulum. Netus eu sit cursus et vehicula porttitor nulla turpis a. In volutpat at orci.</p>
-              <div class="row row-cols-2 g-4 pb-2 pb-xl-0 mb-4 mb-xl-5">
-                <div class="col"><i class="ai-sofa d-block h2 text-primary fw-normal pb-2 mb-1"></i>
-                  <h3 class="h6 mb-2">Bright halls</h3>
-                  <p class="fs-sm mb-0">Neque, blandit consectetur viverra placerat ante.</p>
-                </div>
-                <div class="col"><i class="ai-spa d-block h2 text-primary fw-normal pb-2 mb-1"></i>
-                  <h3 class="h6 mb-2">Spa area</h3>
-                  <p class="fs-sm mb-0">Neque, blandit consectetur viverra placerat ante.</p>
-                </div>
-                <div class="col"><i class="ai-cafe d-block h2 text-primary fw-normal pb-2 mb-1"></i>
-                  <h3 class="h6 mb-2">Lounge cafe</h3>
-                  <p class="fs-sm mb-0">Neque, blandit consectetur viverra placerat ante.</p>
-                </div>
-                <div class="col"><i class="ai-towel d-block h2 text-primary fw-normal pb-2 mb-1"></i>
-                  <h3 class="h6 mb-2">Changing rooms</h3>
-                  <p class="fs-sm mb-0">Neque, blandit consectetur viverra placerat ante.</p>
-                </div>
-              </div><a class="btn btn-primary w-100 w-sm-auto" href="#">Try a free lesson</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Industries (Binded accordion)-->
-  <section class="container py-5 mt-2 mt-sm-3 mt-md-4">
-    <h2 class="h1 text-center pt-lg-3">Why Should You Join?</h2>
-    <p class="pb-3 pb-md-4 mb-0 mb-sm-2 mb-lg-3 text-center">Learn from your successes and your mistakes.</p>
-    <div class="row align-items-lg-center">
-      <!-- Accordion-->
-      <div class="col-md-6 col-lg-5 pb-2 pb-lg-0 mb-4 mb-md-0">
-        <div class="accordion accordion-alt" id="industries">
-          <div class="accordion-item mb-n3 mb-lg-n2 mb-xl-1">
-            <h3 class="accordion-header">
-              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-binded-content="#finance-img" data-bs-target="#finance" aria-expanded="true" aria-controls="finance">Practice</button>
-            </h3>
-            <div class="accordion-collapse collapse show" id="finance" data-bs-parent="#industries">
-              <div class="accordion-body">Sit purus platea nunc semper auctor integer semper et ac odio eget a lacus eu duis ante sed molestie varius tempus gravida libero pretium sit etiam morbi orci et vestibulum velit.</div>
-            </div>
-          </div>
-          <div class="accordion-item mb-n3 mb-lg-n2 mb-xl-1">
-            <h3 class="accordion-header">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-binded-content="#tech-img" data-bs-target="#tech" aria-expanded="false" aria-controls="tech">Solutions</button>
-            </h3>
-            <div class="accordion-collapse collapse" id="tech" data-bs-parent="#industries">
-              <div class="accordion-body">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum posuere finibus dui, eget scelerisque ipsum suscipit nec. Praesent nec quam in ipsum ultricies ultricies et sagittis dui.</div>
-            </div>
-          </div>
-          <div class="accordion-item mb-n3 mb-lg-n2 mb-xl-1">
-            <h3 class="accordion-header">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-binded-content="#medicine-img" data-bs-target="#medicine" aria-expanded="false" aria-controls="medicine">Mistakes</button>
-            </h3>
-            <div class="accordion-collapse collapse" id="medicine" data-bs-parent="#industries">
-              <div class="accordion-body">Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Mauris tincidunt imperdiet hendrerit. Fusce tortor turpis, facilisis ac efficitur eget.</div>
-            </div>
-          </div>
-          <div class="accordion-item mb-n3 mb-lg-n2 mb-xl-1">
-            <h3 class="accordion-header">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-binded-content="#ecommerce-img" data-bs-target="#ecommerce" aria-expanded="false" aria-controls="ecommerce">Variety</button>
-            </h3>
-            <div class="accordion-collapse collapse" id="ecommerce" data-bs-parent="#industries">
-              <div class="accordion-body">Curabitur dictum sodales aliquam. Etiam tortor augue, ultrices in efficitur sit amet, luctus dapibus magna. Vivamus eu lacus elementum, ultrices massa vitae, elementum lorem.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- Binded images-->
-      <div class="col-md-6 col-lg-7 col-xl-6 offset-xl-1">
-        <div class="ps-lg-4 ps-xl-0">
-          <div class="binded-content">
-            <div class="binded-item active" id="finance-img"><img class="rounded-5" src="assets/img/landing/web-studio/industries/01.jpg" alt="Image"></div>
-            <div class="binded-item" id="tech-img"><img class="rounded-5" src="assets/img/landing/web-studio/industries/02.jpg" alt="Image"></div>
-            <div class="binded-item" id="medicine-img"><img class="rounded-5" src="assets/img/landing/web-studio/industries/03.jpg" alt="Image"></div>
-            <div class="binded-item" id="ecommerce-img"><img class="rounded-5" src="assets/img/landing/web-studio/industries/04.jpg" alt="Image"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Testimonials (Carousel)-->
-    <section class="container position-relative zindex-2 py-5 mt-n3 mt-sm-0 mb-md-3 my-lg-3 my-xl-4 my-xxl-5">
-      <div class="row py-md-4 py-lg-5">
-        <div class="col-md-9 col-lg-7 order-md-2">
-          <!-- Swiper slider-->
-          <div class="swiper" data-swiper-options="{
-          &quot;spaceBetween&quot;: 40,
-          &quot;loop&quot;: true,
-          &quot;bindedContent&quot;: true,
-          &quot;autoHeight&quot;: true,
-          &quot;pagination&quot;: {
-            &quot;el&quot;: &quot;.testimonials-count&quot;,
-            &quot;type&quot;: &quot;fraction&quot;
-          },
-          &quot;navigation&quot;: {
-            &quot;prevEl&quot;: &quot;#prev-testimonial&quot;,
-            &quot;nextEl&quot;: &quot;#next-testimonial&quot;
-          }
-        }">
-            <div class="swiper-wrapper">
-              <!-- Item-->
-              <div class="swiper-slide" data-swiper-binded="#testimonial-1">
-                <div class="d-flex d-md-none pt-3 mb-3"><i class="ai-quotes d-md-none text-primary display-3 mt-n2"></i>
-                  <div class="ps-3">
-                    <h3 class="h5 mb-0">Lilia Bocouse</h3>
-                    <p class="text-muted mb-0">Head of Marketing</p>
-                  </div>
-                </div>
-                <h2 class="mb-lg-4">Awesome experience with a professional team. Thank you :)</h2>
-                <p class="lead mb-0">Suspendisse mauris elit, pellentesque nec purus sed, finibus finibus ipsum. Proin posuere, metus sed porttitor pellentesque, ante magna tincidunt mi, nec fermentum dui ligula vel massa. Praesent ultrices iaculis arcu iaculis ultrices. Maecenas vitae nulla odio. In laoreet, lectus in tempus ultricies.  </p>
-              </div>
-              <!-- Item-->
-              <div class="swiper-slide" data-swiper-binded="#testimonial-2">
-                <div class="d-flex d-md-none pt-3 mb-3"><i class="ai-quotes d-md-none text-primary display-3 mt-n2"></i>
-                  <div class="ps-3">
-                    <h3 class="h5 mb-0">Robert Fox</h3>
-                    <p class="text-muted mb-0">Marketing Coordinator</p>
-                  </div>
-                </div>
-                <h2 class="mb-lg-4">Thanks to your talented team for the banding we dreamed about</h2>
-                <p class="lead mb-0">Leo vitae sem eget eget at in vivamus placerat sodales tristique risusiis senectusic quisque faucibus est justo egetert lobortis ultrices eu dignissim etiamier turpis tincidunt eget placerat feugiat senectusic quisque faucibus placerat sodales vitae tempor morbi tellus pulvinar tristique in turpis.  </p>
-              </div>
-              <!-- Item-->
-              <div class="swiper-slide" data-swiper-binded="#testimonial-3">
-                <div class="d-flex d-md-none pt-3 mb-3"><i class="ai-quotes d-md-none text-primary display-3 mt-n2"></i>
-                  <div class="ps-3">
-                    <h3 class="h5 mb-0">Jenny Wilson</h3>
-                    <p class="text-muted mb-0">CEO, Co-Founder</p>
-                  </div>
-                </div>
-                <h2 class="mb-lg-4">Thanks to you, we have created a unique branding that is our pride!</h2>
-                <p class="lead mb-0">Duis sapien velit, rutrum ac rutrum dapibus, auctor ut lacus. Aenean sit amet erat augue. Aenean finibus, nibh sed malesuada maximus, nisi tellus iaculis quam, eget egestas mi felis eu urna. Quisque id nisl commodo, egestas eros ac, cursus odio. Ut nec rutrum magna, vel tempor erat. Vivamus nec tempus purus.  </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3 offset-lg-1 order-md-1 mt-n3"><i class="ai-quotes d-none d-md-block text-primary ms-n2 mb-1" style="font-size: 150px;"></i>
-          <!-- Contnetn binded to slider (on screens > 768px)-->
-          <div class="binded-content h-auto d-none d-md-block">
-            <div class="binded-item h-auto active" id="testimonial-1">
-              <h3 class="h5 mb-1">Lilia Bocouse</h3>
-              <p class="text-muted mb-0">Head of Marketing</p>
-            </div>
-            <div class="binded-item h-auto" id="testimonial-2">
-              <h3 class="h5 mb-1">Robert Fox</h3>
-              <p class="text-muted mb-0">Marketing Coordinator</p>
-            </div>
-            <div class="binded-item h-auto" id="testimonial-3">
-              <h3 class="h5 mb-1">Jenny Wilson</h3>
-              <p class="text-muted mb-0">CEO, Co-Founder</p>
-            </div>
-          </div>
-          <!-- Swiper controls-->
-          <div class="d-flex align-items-center pb-2 pb-md-0 pt-4 mt-3">
-            <button class="btn btn-icon btn-sm btn-outline-primary rounded-circle me-3" type="button" id="prev-testimonial"><i class="ai-arrow-left"></i></button>
-            <div class="testimonials-count fw-medium flex-shrink-0 text-center" style="width: 2.5rem;"></div>
-            <button class="btn btn-icon btn-sm btn-outline-primary rounded-circle ms-3" type="button" id="next-testimonial"><i class="ai-arrow-right"></i></button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-
-  <!-- CTA-->
-  <section class="bg-primary dark-mode py-5">
-    <div class="container pt-lg-2 pt-xl-4 pt-xxl-5 pb-1 pb-sm-3">
-      <div class="row pt-sm-3 pt-md-4">
-        <div class="col-md-6 col-xl-5 offset-xl-1">
-          <h2 class="display-3">Ready to take your business to the next level?</h2>
-        </div>
-        <div class="col-md-6 col-lg-5 col-xl-4 offset-lg-1">
-          <p class="fs-xl pb-4 mb-2 mb-lg-3">Massa velitienes semper faucibus tristique id nibh elementum, id eu aliquamd diam mi tempus at laciniarty scelerisques augue at morbi. Arcu sit orcirs, risus mattissit laoreet.</p>
-          <div class="input-group"><span class="input-group-text text-muted"><i class="ai-mail"></i></span>
-            <input class="form-control" type="email" placeholder="Enter your email">
-            <button class="btn btn-warning" type="button">Subscribe</button>
-          </div>
-        </div>
-      </div>
-      <div class="d-none d-md-block text-center mt-n5">
-        <svg class="text-warning ms-lg-5" width="171" height="97" viewBox="0 0 171 97" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-          <path d="M169.319 54.333C162.404 55.9509 155.712 58.0764 149.09 60.6764L149.07 60.6761C148.967 60.7158 148.863 60.7554 148.76 60.7951C147.3 61.3811 148.325 63.4238 149.672 63.2067C154.548 62.4134 159.994 59.8725 164.87 59.0792C148.278 73.1339 129.684 89.2549 107.779 92.6402C85.6981 96.0539 65.5665 86.7839 56.8768 66.9865C70.9662 55.0671 79.2106 35.6614 79.0299 17.6457C78.9484 10.3157 76.1485 -3.36373 65.7068 1.21851C55.8557 5.53146 52.0466 22.5213 50.5736 31.7739C48.7364 43.2858 49.7593 55.5291 53.8643 66.2014C52.787 67.0812 51.6907 67.8989 50.5755 68.6546C40.6328 75.3851 27.1039 78.8929 16.4487 72.0362C2.91045 63.3259 1.93984 44.9485 1.56902 30.4091C1.54778 29.6265 0.359869 29.6092 0.360624 30.3915C0.322634 44.0809 0.835929 59.065 10.5664 69.6857C18.5722 78.4182 30.4315 79.7753 41.3346 75.9924C46.2437 74.2834 50.7739 71.7557 54.8581 68.6348C59.9738 80.2586 68.9965 89.6956 82.2735 93.7393C113.474 103.223 141.744 83.0494 164.903 63.697L161.901 71.0334C161.267 72.5887 163.76 73.2736 164.393 71.7389C165.986 67.8713 167.569 63.9933 169.152 60.1359C169.288 60.0247 169.695 58.6127 169.821 58.491C170.122 57.1161 169.152 60.1359 169.851 58.4169C170.189 57.6087 170.517 56.79 170.855 55.9818C171.248 54.9994 170.185 54.1192 169.319 54.333ZM54.3624 59.8578C51.4872 49.1623 51.6051 37.5841 54.2025 26.8039C55.5185 21.3369 57.4405 15.8066 60.1572 10.8541C61.2311 8.89354 62.5139 6.77134 64.2307 5.31421C69.4231 0.902277 74.3649 4.80357 75.8002 10.4446C80.5272 28.9489 70.1806 51.6898 55.8431 64.5114C55.2971 63.0109 54.793 61.4698 54.3624 59.8578Z"></path>
+      <!-- Arrow-->
+      <div class="d-none d-lg-flex justify-content-center" data-aos="fade-in" data-aos-duration="500" data-aos-offset="250">
+        <svg class="d-block text-primary" width="339" height="365" viewBox="0 0 339 365" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left: -150px; margin-top: -140px; margin-bottom: -108px;">
+          <path d="M324 291.371C120.111 291.37 240.756 58.7225 1.00032 73.2606" stroke="url(#arrow1)" stroke-width="2" stroke-linecap="round" stroke-dasharray="6 6"></path>
+          <path d="M337.375 290.62C338.074 290.998 338.074 292.001 337.375 292.379L328.476 297.196C327.81 297.557 327 297.074 327 296.317L327 286.683C327 285.925 327.81 285.443 328.476 285.803L337.375 290.62Z" fill="currentColor"></path>
+          <defs>
+            <linearGradient id="arrow1" x1="324" y1="291.5" x2="-2.99974" y2="72.4997" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="currentColor"></stop>
+              <stop offset="1" stop-color="currentColor" stop-opacity="0"></stop>
+            </linearGradient>
+          </defs>
         </svg>
       </div>
+      <!-- Step-->
+      <div class="row align-items-center position-relative pb-5 pb-lg-0 mb-1 mb-sm-2 mb-md-4 mb-lg-0">
+        <div class="col-md-6 col-xl-5 offset-xl-1 pb-2 pb-md-0 mb-4 mb-md-0 text-center" data-aos="fade-right" data-aos-duration="500" data-aos-offset="250" data-disable-parallax-down="md"><img class="d-dark-mode-none" src="{% static 'images/check-yourself.png' %}" width="400" alt="Image"><img class="d-none d-dark-mode-block" src="{% static 'images/check-yourself.png' %}" width="473" alt="Image">
+        </div>
+        <div class="col-md-6 col-lg-5 col-xl-4 offset-lg-1" data-aos="fade-left" data-aos-duration="500" data-aos-offset="250" data-disable-parallax-down="md">
+            <h3 class="h2 mb-3 mb-lg-4">Check yourself along the way</h3>
+            <p class="pb-1 pb-lg-0 mb-4 mb-lg-5">Relying on external validation alone can hinder the growth of independent problem-solving skills. Embracing the practice of using math to self-check work empowers individuals to cultivate self-reliance and a deeper understanding of the subject. By verifying their own work, learners gain confidence in their abilities, honing their capacity to identify and rectify errors promptly. Ultimately, this practice equips them with a valuable life skill—being proactive in seeking accuracy and learning to trust their own judgement.</p>
+        </div>
+      </div>
+      <!-- Arrow-->
+      <div class="d-none d-lg-flex justify-content-center" data-aos="fade-in" data-aos-duration="500" data-aos-offset="250">
+        <svg class="d-block text-primary" width="263" height="275" viewBox="0 0 263 275" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-top: -60px; margin-left: -120px; margin-bottom: -80px;">
+          <path d="M8.13678 249.647C7.47108 250.081 6.59001 249.602 6.59106 248.808L6.60444 238.689C6.60544 237.931 7.4158 237.45 8.08162 237.811L16.5478 242.408C17.2136 242.77 17.2512 243.712 16.6163 244.125L8.13678 249.647Z" fill="currentColor"></path>
+          <path d="M261.961 37.8891C216.908 65.6243 128.226 135.486 133.916 193.05C141.029 265.005 265.134 173.468 173.666 148.634C89.2542 125.715 30.9125 210.547 13.9796 236.702" stroke="url(#arrow2)" stroke-width="2" stroke-linecap="round" stroke-dasharray="6 6"></path>
+          <defs>
+            <linearGradient id="arrow2" x1="13.9797" y1="234.5" x2="276.704" y2="60.1939" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="currentColor"></stop>
+              <stop offset="1" stop-color="currentColor" stop-opacity="0"></stop>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <!-- Step-->
+      <div class="row align-items-center position-relative">
+        <div class="col-md-6 col-xl-5 offset-lg-1 order-md-2 d-md-flex justify-content-end pb-2 pb-md-0 mb-4 mb-md-0" data-aos="fade-left" data-aos-duration="500" data-aos-offset="250" data-disable-parallax-down="md"><img class="d-dark-mode-none" src="{% static 'images/find-and-fix.png' %}" width="700" alt="Image"><img class="d-none d-dark-mode-block" src="{% static 'images/find-and-fix.png' %}" width="473" alt="Image">
+        </div>
+        <div class="col-md-6 col-lg-5 col-xl-4 offset-xl-1 order-md-1" data-aos="fade-right" data-aos-duration="500" data-aos-offset="250" data-disable-parallax-down="md">
+          <h3 class="h2 mb-3 mb-lg-4">Find and fix mistakes</h3>
+          <p class="pb-1 pb-lg-0 mb-4 mb-lg-5">Technology offers an invaluable advantage by providing real-time feedback in the learning process. Its swift assessment capabilities enable learners to receive on-demand insights into their performance, identifying mistakes and reinforcing correct methods. This rapid feedback loop accelerates the learning curve, fostering a sense of progress and motivation. However, we find it is crucial to strike a delicate balance between abundant real-time feedback and allowing space for independent problem-solving. Over-reliance on instant gratification can hinder critical thinking and hinder the development of perseverance in tackling challenges. Sandbox Math finds the equilibrium and is powerful tool for guidance while still cultivating the essential skills of self-reliance, problem-solving, and analytical thinking.</p>
+        </div>
+      </div>
+      <!-- Arrow-->
+      <div class="d-none d-lg-flex justify-content-center" data-aos="fade-in" data-aos-duration="500" data-aos-offset="250">
+        <svg class="d-block text-primary" width="339" height="365" viewBox="0 0 339 365" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left: -150px; margin-top: -140px; margin-bottom: -108px;">
+          <path d="M324 291.371C120.111 291.37 240.756 58.7225 1.00032 73.2606" stroke="url(#arrow1)" stroke-width="2" stroke-linecap="round" stroke-dasharray="6 6"></path>
+          <path d="M337.375 290.62C338.074 290.998 338.074 292.001 337.375 292.379L328.476 297.196C327.81 297.557 327 297.074 327 296.317L327 286.683C327 285.925 327.81 285.443 328.476 285.803L337.375 290.62Z" fill="currentColor"></path>
+          <defs>
+            <linearGradient id="arrow1" x1="324" y1="291.5" x2="-2.99974" y2="72.4997" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="currentColor"></stop>
+              <stop offset="1" stop-color="currentColor" stop-opacity="0"></stop>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <!-- Step-->
+      <div class="row align-items-center position-relative pb-5 pb-lg-0 mb-1 mb-sm-2 mb-md-4 mb-lg-0">
+        <div class="col-md-6 col-xl-5 offset-xl-1 pb-2 pb-md-0 mb-4 mb-md-0" data-aos="fade-right" data-aos-duration="500" data-aos-offset="250" data-disable-parallax-down="md"><img class="d-dark-mode-none" src="{% static 'images/find-answers.png' %}" width="700" alt="Image"><img class="d-none d-dark-mode-block" src="{% static 'images/find-answers.png' %}" width="473" alt="Image">
+        </div>
+        <div class="col-md-6 col-lg-5 col-xl-4 offset-lg-1" data-aos="fade-left" data-aos-duration="500" data-aos-offset="250" data-disable-parallax-down="md">
+          <h3 class="h2 mb-3 mb-lg-4">Learn how to solve problems</h3>
+          <p class="pb-1 pb-lg-0 mb-4 mb-lg-5">Getting better at finding correct answers is undoubtedly a desired outcome, but the path to mastery involves more than just the destination. By immersing oneself in the intricacies of each step required to reach an answer, individuals develop a profound understanding of the math involved. Sandbox Math not only refines problem-solving skills but also strengthens the overall cognitive process. Focusing on the process rather than fixating solely on the answer paradoxically results in an improved ability to consistently arrive at the correct answer. In essence, by perfecting the journey, the destination becomes all the more attainable.</p>
+        </div>
+      </div>
+    </div>
+    </section>
+
+
+  <!-- Services-->
+  <section class="container py-5 my-md-2 my-lg-3 my-xl-4 my-xxl-5">
+    <div class="row align-items-center py-1 py-sm-3 py-md-4 my-lg-2">
+      <div class="col-lg-4 offset-xl-1">
+        <h2 class="h1 text-center text-lg-start pb-3 pb-lg-1">Why join Sandbox Math?</h2>
+        <!-- Show on screens > 992px-->
+        <ul class="list-unstyled d-none d-lg-block pb-3 mb-3 mb-lg-4">
+          <li class="d-flex pt-2"><i class="ai-check-alt fs-4 text-primary mt-n1 me-2"></i>Practice the process</li>
+          <li class="d-flex pt-2"><i class="ai-check-alt fs-4 text-primary mt-n1 me-2"></i>Build self-efficacy</li>
+          <li class="d-flex pt-2"><i class="ai-check-alt fs-4 text-primary mt-n1 me-2"></i>Get better at math!</li>
+        </ul><a class="btn btn-primary d-none d-lg-inline-flex" href="{% url 'account_signup' %}">Join Now For Free!</a>
+      </div>
+      <div class="col-lg-8 col-xl-7 col-xxl-6">
+        <div class="row row-cols-1 row-cols-sm-2">
+          <div class="col">
+            <div class="card border-0 bg-faded-primary">
+              <div class="card-body"><i class="ai-save fs-1 text-primary d-block mb-3"></i>
+                <h3 class="h4">Save Your Work</h3>
+                <p class="fs-sm">All your work gets saved into a sortable and searchable table. Continue unfinished problems at a later day or look at problems you already solved.</p>
+              </div>
+            </div>
+            <div class="card border-0 bg-faded-info mt-4">
+              <div class="card-body"><i class="ai-chart fs-1 text-info d-block mb-3"></i>
+                <h3 class="h4">Track Progress</h3>
+                <p class="fs-sm">Get an answer to the essential question of are you getting better at math. Sandbox Math users are able to determine this when their progress is tracked over time.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col pt-lg-3">
+            <div class="card border-0 bg-faded-warning mt-4 mt-sm-0 mt-lg-4">
+              <div class="card-body"><i class="ai-crosshair fs-1 text-warning d-block mb-3"></i>
+                <h3 class="h4">Address Weaknesses</h3>
+                <p class="fs-sm">By solving questions step-by-step using Sandbox Math, a lot more information is gathered about mistakes that you make. Find the most common types of mistakes you make and do specific work to address them.</p>
+              </div>
+            </div>
+            <div class="card border-0 bg-faded-danger mt-4">
+              <div class="card-body"><i class="ai-user fs-2 text-danger d-block mb-3"></i>
+                <h3 class="h4">Personalized Suggestions</h3>
+                <p class="fs-sm">By analyzing your most common mistakes and the types of problems you have solved in the past, Sandbox Math is able to suggest problems to work on that will test how much you are improving.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Show button on screens < 992px-->
+        <div class="d-lg-none text-center pt-3 mt-3 mt-sm-4"><a class="btn btn-primary" href="{% url 'account_signup' %}">Join Now For Free!</a></div>
+      </div>
     </div>
   </section>
+
 {% endblock content %}

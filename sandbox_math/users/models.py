@@ -54,7 +54,6 @@ class Proceed(models.Model):
     CHECK_SOLUTION = "check solution"
     PROCEED_TYPES = [
         (ADD_STEP, "User attempted to add new step to the problem"),
-        (CHECK_SOLUTION, "User attempted to check the solution to the problem"),
     ]
 
     sandbox = models.CharField(max_length=10, choices=Sandbox.SANDBOX_TYPES, default=None)
@@ -69,6 +68,11 @@ class Mistake(models.Model):
     PROCEED = "Proceed"
     CHECK_REWRITE = "CheckRewrite"
     CHECK_SOLUTION = "CheckSolution"
+
+    # HELP_CLICK mistakes can be fixed when Step.get_mistakes is called
+    # PROCEED -> ADD_STEP mistakes can be fixed when Problem.get_all_steps_mistakes is called
+    # CHECK_SOLUTION mistakes can be fixed when a problem is solved
+    # CHECK_REWRITE mistakes can be fixed after expression 1 or expression 2 is correctly substituted for
     MISTAKE_EVENT_TYPES = [
         (HELP_CLICK, "User clicked on help that showed a mistake"),
         (PROCEED, "User went to the next step when there was a mistake in a previous step"),
@@ -167,6 +171,7 @@ class Mistake(models.Model):
     mistake_event_type = models.CharField(max_length=14, choices=MISTAKE_EVENT_TYPES, default=None)
     event_id = models.PositiveIntegerField()
     mistake_time = models.DateTimeField(auto_now_add=True)
+    is_fixed = models.BooleanField(default=False)
 
     @classmethod
     def save_new(cls, mistake_event_instance, mistake_type):

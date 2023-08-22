@@ -214,6 +214,9 @@ class CheckAlgebra(models.Model):
 
                             if check_model.is_checking_new_values(check_process):
                                 responses.append(f"Ok, `/{variable}={suggested_value_str}`")
+                                mistake_model.objects.filter(
+                                    event_id=check_process.id, mistake_type=mistake_model.CHOOSE_VALUE
+                                ).update(is_fixed=True)
                             else:
                                 mistake_model.save_new(check_process, mistake_model.CHOOSE_VALUE)
 
@@ -231,7 +234,7 @@ class CheckAlgebra(models.Model):
 
                                 if check_process.__class__.__name__ == "CheckRewrite":
                                     responses.append(
-                                        f"You've already checked {checked_var_val_string} in these " f"expressions."
+                                        f"You've already checked {checked_var_val_string} in these expressions."
                                     )
                                     responses.append("Try a different value.")
                                 else:
@@ -252,7 +255,7 @@ class CheckAlgebra(models.Model):
     def create_stop_response(cls, check_process_class_name, user_message_obj, reason_for_stop):
         response_model = apps.get_model("calculator", "Response")
         check_model = apps.get_model("algebra", check_process_class_name)
-        print(check_model)
+
         active_checks = check_model.objects.filter(problem_id=user_message_obj.problem_id, end_time__isnull=True)
         for check_process in active_checks:
             check_process.end_time = timezone.now()

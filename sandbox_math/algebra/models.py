@@ -14,7 +14,7 @@ from sympy.solvers import solve
 from config.settings.base import AUTH_USER_MODEL
 from sandbox_math.calculator.models import Content, Response
 from sandbox_math.sandbox.models import CheckAlgebra, Sandbox
-from sandbox_math.users.models import Mistake, User
+from sandbox_math.users.models import HelpClick, Mistake, Proceed, User
 
 
 # Create your models here.
@@ -283,16 +283,25 @@ class Problem(models.Model):
     @classmethod
     def get_all_steps_mistakes(cls, problem):
         mistakes = {}
+        has_mistakes = False
         for step in Step.objects.filter(problem=problem):
             mistakes[step.id] = [{"title": "", "content": ""}, {"title": "", "content": ""}]
             mistake_titles = Step.get_mistakes(step)
             mistakes[step.id][0]["title"] = mistake_titles[0]
+            if mistake_titles[0] != Mistake.NONE or mistake_titles[1] != Mistake.NONE:
+                has_mistakes = True
             mistakes[step.id][1]["title"] = mistake_titles[1]
             for m in Mistake.MISTAKE_TYPES:
                 if m[0] == mistake_titles[0]:
                     mistakes[step.id][0]["content"] = m[1]
                 if m[0] == mistake_titles[1]:
                     mistakes[step.id][1]["content"] = m[1]
+
+        if not has_mistakes:
+            proceed_mistakes = Proceed.objects.filter(problem_id=problem.id, proceed_type=Proceed.ADD_STEP)
+            mistakes = Mistake.objects.filter(
+                mistake_event_type=Mistake.PROCEED, event_id__in=proceed_mistakes
+            ).update(is_fixed=True)
 
         return mistakes
 
@@ -650,6 +659,26 @@ class Step(models.Model):
                 if mistakes[1] != Mistake.BLANK_EXPR:
                     mistakes[1] = Mistake.NO_STEP_TYPE
 
+        # find any mistake objects involving this step
+        help_click_mistakes = HelpClick.objects.filter(
+            id__in=Mistake.objects.filter(mistake_event_type=Mistake.HELP_CLICK, is_fixed=False)
+            .exclude(mistake_type=Mistake.NONE)
+            .values("event_id")
+        )
+        for i in range(0, 2):
+            if mistakes[i] == Mistake.NONE:
+                exp_id = step.left_expr.id
+                if i == 1:
+                    exp_id = step.right_expr.id
+                try:
+                    Expression.objects.get(id=exp_id, id__in=help_click_mistakes.values("object_id"))
+                    help_clicks = HelpClick.objects.filter(object_id=exp_id, object_type=HelpClick.EXPRESSION)
+                    Mistake.objects.filter(
+                        mistake_event_type=Mistake.HELP_CLICK, event_id__in=help_clicks.values("id")
+                    ).update(is_fixed=True)
+                except Expression.DoesNotExist:
+                    pass
+
         return mistakes
 
 
@@ -875,6 +904,9 @@ class CheckRewrite(CheckAlgebra):
         if sympy_exprs["usr_msg"] is not None:
             if not check_process.did_expr1_subst:
                 if simplify(sympy_exprs["usr_msg"] - sympy_exprs["rewrite"]) == 0:
+                    Mistake.objects.filter(event_id=check_process.id, mistake_type=Mistake.SUB_EXPR1).update(
+                        is_fixed=True
+                    )
                     check_process.did_expr1_subst = True
                     check_process.save()
                     simplify_user_msg = latex(simplify(sympy_exprs["usr_msg"]))
@@ -887,6 +919,9 @@ class CheckRewrite(CheckAlgebra):
                     responses.append("You didn't do that substitution correctly. Try again.")
             else:
                 if simplify(sympy_exprs["usr_msg"] - sympy_exprs["prev"]) == 0:
+                    Mistake.objects.filter(event_id=check_process.id, mistake_type=Mistake.SUB_EXPR2).update(
+                        is_fixed=True
+                    )
                     response_context = Response.NO_CONTEXT
                     check_process.end_time = timezone.now()
                     check_process.save()
@@ -1116,6 +1151,15 @@ class CheckSolution(CheckAlgebra):
                                 else:
                                     responses.append("This is an interesting result!")
                                     if solved_status == CheckSolution.INFINITELY_MANY:
+                                        # Update any mistakes that were made during a check solution process to fixed
+                                        all_check_solution_mistakes = Proceed.objects.filter(
+                                            problem_id=user_message_obj.problem_id, proceed_type=Proceed.CHECK_SOLUTION
+                                        )
+                                        Mistake.objects.filter(
+                                            mistake_event_type=Mistake.PROCEED,
+                                            event_id__in=all_check_solution_mistakes.values("id"),
+                                        ).update(is_fixed=True)
+
                                         check_process.problem_solved = solved_status
                                         responses.append(
                                             f"It means that {check_process.solving_for} can be ANY real "
@@ -1127,6 +1171,16 @@ class CheckSolution(CheckAlgebra):
                                         left = Expression.get_sympy_expression_from_latex(check_process.expr1_latex)
                                         right = Expression.get_sympy_expression_from_latex(check_process.expr2_latex)
                                         if not solve(left - right):
+                                            # Update any mistakes made during a check solution process to fixed
+                                            all_check_solution_mistakes = Proceed.objects.filter(
+                                                problem_id=user_message_obj.problem_id,
+                                                proceed_type=Proceed.CHECK_SOLUTION,
+                                            )
+                                            Mistake.objects.filter(
+                                                mistake_event_type=Mistake.PROCEED,
+                                                event_id__in=all_check_solution_mistakes.values("id"),
+                                            ).update(is_fixed=True)
+
                                             check_process.problem_solved = solved_status
                                             responses.append(
                                                 f"It means that there isn't a single number you can "
@@ -1318,6 +1372,9 @@ class CheckSolution(CheckAlgebra):
         if sympy_exprs["usr_msg"]:
             if not check_process.did_expr1_subst:
                 if simplify(sympy_exprs["usr_msg"] - sympy_exprs["left"]) == 0:
+                    Mistake.objects.filter(event_id=check_process.id, mistake_type=Mistake.SUB_EXPR1).update(
+                        is_fixed=True
+                    )
                     check_process.did_expr1_subst = True
                     check_process.save()
                     simplify_user_msg = latex(simplify(sympy_exprs["usr_msg"]))
@@ -1331,12 +1388,23 @@ class CheckSolution(CheckAlgebra):
                     responses.append("You didn't do that substitution correctly. Try again.")
             else:
                 if simplify(sympy_exprs["usr_msg"] - sympy_exprs["right"]) == 0:
+                    Mistake.objects.filter(event_id=check_process.id, mistake_type=Mistake.SUB_EXPR2).update(
+                        is_fixed=True
+                    )
                     response_context = Response.NO_CONTEXT
                     check_process.end_time = timezone.now()
                     check_process.save()
 
                     # Test this user message against the rewritten expression, too
                     if simplify(sympy_exprs["usr_msg"] - sympy_exprs["left"]) == 0:
+                        # Update any mistakes that were made during a check solution process to fixed
+                        all_check_solution_mistakes = Proceed.objects.filter(
+                            problem_id=user_message_obj.problem_id, proceed_type=Proceed.CHECK_SOLUTION
+                        )
+                        Mistake.objects.filter(
+                            mistake_event_type=Mistake.PROCEED, event_id__in=all_check_solution_mistakes.values("id")
+                        ).update(is_fixed=True)
+
                         # The user has found the answer or maybe just one answer if there are inf many solutions
                         mistake_count = 0
                         all_mistakes = Problem.get_all_steps_mistakes(check_process.problem)
@@ -1347,6 +1415,9 @@ class CheckSolution(CheckAlgebra):
                                 mistake_count += 1
 
                         if mistake_count == 0:
+                            check_process.problem_solved = CheckSolution.SOLVED
+                            check_process.save()
+
                             responses.append(
                                 f"Great, that is also equal to `/{latex(simplify(sympy_exprs['usr_msg']))}`. "
                             )
@@ -1362,6 +1433,7 @@ class CheckSolution(CheckAlgebra):
                             if solve(left - right):
                                 check_process.problem_solved = CheckSolution.SOLVED
                                 check_process.save()
+
                                 responses.append(
                                     f"You have found the answer: `/{check_process.expr1_latex}="
                                     f"{check_process.expr2_latex}` when `/{check_process.solving_for}="
