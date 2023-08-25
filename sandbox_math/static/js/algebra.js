@@ -548,8 +548,9 @@ function VariableChanged(varSelected) {
 
 function AttemptNewStep() {
   let problemID = $('#unique-problem-id').html();
+  let blankExprAlert = $('#blank-expr-alert');
   if (problemID.length === 0) {
-    console.log('alert!');
+    blankExprAlert.removeClass('d-none');
   } else {
     ToggleNewAndCheckButtons(true);
     let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -563,7 +564,7 @@ function AttemptNewStep() {
         if (response['next_action'] === 'append') {
           NewStep(response['new_step_id']);
         } else if (response['next_action'] === 'alert') {
-          console.log('alert!');
+          blankExprAlert.removeClass('d-none');
         }
         ToggleNewAndCheckButtons(false);
       })
@@ -650,6 +651,8 @@ async function DeleteStep(stepID) {
 }
 
 function UpdateAllExpressionHelp(updatedHelpDict) {
+  let stillBlank = false;
+  let blankExprAlert = $('#blank-expr-alert');
   for (const [stepID, helpDict] of Object.entries(updatedHelpDict)) {
     $('#step' + stepID + 'Help .left-help-button-title').html(
       helpDict[0]['title'],
@@ -664,6 +667,17 @@ function UpdateAllExpressionHelp(updatedHelpDict) {
     $('#step' + stepID + 'Help .right-help-button-content').html(
       helpDict[1]['content'],
     );
+
+    if (
+      helpDict[0]['title'] === 'No Blank Expressions' ||
+      helpDict[1]['title'] === 'No Blank Expressions'
+    ) {
+      stillBlank = true;
+    }
+  }
+
+  if (!blankExprAlert.hasClass('d-none') && !stillBlank) {
+    blankExprAlert.addClass('d-none');
   }
 }
 
