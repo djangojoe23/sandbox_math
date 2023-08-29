@@ -1,7 +1,7 @@
 {% extends "users/user_base.html" %}
 {% load static %}
 
-{% block title %}User: {{ object.username }}{% endblock %}
+{% block title %}{{ object.username }}{% endblock %}
 
 {% block inner %}
   <!-- Page content-->
@@ -9,14 +9,81 @@
     <div class="d-sm-flex align-items-center mb-4">
       <h1 class="h2 mb-4 mb-sm-0 me-4">Your Overview</h1>
     </div>
-    <div class="card border-0 py-1 p-md-2 p-xl-3 p-xxl-4">
-      <div class="card-body">
-        <p>Practice</p>
-        <p>Fixing and Finding Mistakes</p>
-        <p>Finding solutions</p>
-        <p>Variety</p>
+    <!-- Basic info-->
+    <section class="card border-0 py-1 p-md-2 p-xl-3 p-xxl-4 mb-4">
+        <div class="card-body">
+          <div class="d-flex align-items-center mt-sm-n1 pb-4 mb-0 mb-lg-1 mb-xl-3">
+            <h2 class="h4 mb-0">Did I get better at algebra last week?<span class="badge bg-secondary text-success">New</span></h2>
+          </div>
+          <div class="">
+            <div class="accordion" id="accordionAlternative">
+              <!-- Item -->
+              <div class="accordion-item">
+                <h3 class="accordion-header" id="headingOne">
+                  <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">You need to practice more</button>
+                </h3>
+                <div class="accordion-collapse collapse show" id="collapseOne" aria-labelledby="headingOne" data-bs-parent="#accordionAlternative">
+                  <div class="accordion-body fs-sm">
+                    <ul>
+                      <li>{{ new_problems_message }}</li>
+                      <li>{{ new_steps_message }}</li>
+                      <li>{{ new_checkrewrites_message }}</li>
+                      <li>{{ new_checksolutions_message }}</li>
+                    </ul>
+                    <div class="col-12 d-flex justify-content-center pt-2">
+                      <button class="btn btn-primary" type="button">More Detail</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Item -->
+              <div class="accordion-item">
+                <h3 class="accordion-header" id="headingTwo">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">You are getting better at finding your mistakes.</button>
+                </h3>
+                <div class="accordion-collapse collapse" id="collapseTwo" aria-labelledby="headingTwo" data-bs-parent="#accordionAlternative">
+                  <div class="accordion-body fs-sm">This is the second item's accordion body. It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element.</div>
+                </div>
+              </div>
+              <!-- Item -->
+              <div class="accordion-item">
+                <h3 class="accordion-header" id="headingThree">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">You are getting better at fixing your mistakes.</button>
+                </h3>
+                <div class="accordion-collapse collapse" id="collapseThree" aria-labelledby="headingThree" data-bs-parent="#accordionAlternative">
+                  <div class="accordion-body fs-sm">This is the third item's accordion body. It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element.</div>
+                </div>
+              </div>
+              <!-- Item -->
+              <div class="accordion-item">
+                <h3 class="accordion-header" id="headingThree">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">You need to solve the problems you are starting.</button>
+                </h3>
+                <div class="accordion-collapse collapse" id="collapseThree" aria-labelledby="headingThree" data-bs-parent="#accordionAlternative">
+                  <div class="accordion-body fs-sm">This is the third item's accordion body. It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element.</div>
+                </div>
+              </div>
+              <!-- Item -->
+              <div class="accordion-item">
+                <h3 class="accordion-header" id="headingThree">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">You need to solve a wider variety of problems.</button>
+                </h3>
+                <div class="accordion-collapse collapse" id="collapseThree" aria-labelledby="headingThree" data-bs-parent="#accordionAlternative">
+                  <div class="accordion-body fs-sm">This is the third item's accordion body. It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+  <section class="card border-0 py-1 p-md-2 p-xl-3 p-xxl-4">
+    <div class="card-body">
+      <div class="d-flex align-items-center mt-sm-n1 pb-4 mb-0 mb-lg-1 mb-xl-3">
+        <h2 class="h4 mb-0">Your Most Recent Problems</h2>
+        <a class="btn btn-sm btn-secondary ms-auto" href="account-orders.html">View all</a>
       </div>
     </div>
+  </section>
   </div>
 {% endblock %}
 {#{% block content %}#}

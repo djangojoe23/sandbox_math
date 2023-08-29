@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 from django.apps import apps
@@ -275,3 +276,41 @@ class CheckAlgebra(models.Model):
             response += " You changed the answer you are checking."
 
         response_model.save_new(user_message_obj, response, response_model.NO_CONTEXT)
+
+    @classmethod
+    def get_recent_by_date(cls, check_process_class_name, student_id, day_range):
+        check_model = apps.get_model("algebra", check_process_class_name)
+
+        start_date = timezone.make_aware(
+            datetime.now() - timedelta(days=day_range), timezone.get_current_timezone(), True
+        )
+
+        # get all steps created within day range for this user that are not type define
+        if check_process_class_name == "CheckRewrite":
+            recent_checks = check_model.objects.filter(
+                problem__student__id=student_id,
+                start_time__gte=start_date,
+                did_expr1_subst=True,
+                are_equivalent__isnull=False,
+                end_time__gte=start_date,
+            ).order_by("start_time")
+        elif check_process_class_name == "CheckSolution":
+            recent_checks = (
+                check_model.objects.filter(
+                    problem__student__id=student_id,
+                    start_time__gte=start_date,
+                    did_expr1_subst=True,
+                    end_time__gte=start_date,
+                )
+                .exclude(problem_solved=check_model.INCOMPLETE)
+                .order_by("start_time")
+            )
+
+        checks_per_date = {}
+        for c in recent_checks:
+            if c.start_time in checks_per_date:
+                checks_per_date += 1
+            else:
+                checks_per_date[c.start_time] = 1
+
+        return checks_per_date

@@ -1,10 +1,11 @@
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 
 # from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Case, Count, OuterRef, Q, Subquery, When
+from django.db.models import Case, Count, Min, OuterRef, Q, Subquery, When
 from django.utils import timezone
 from sympy import UnevaluatedExpr, latex, simplify
 from sympy.core import symbol
@@ -299,9 +300,9 @@ class Problem(models.Model):
 
         if not has_mistakes:
             proceed_mistakes = Proceed.objects.filter(problem_id=problem.id, proceed_type=Proceed.ADD_STEP)
-            mistakes = Mistake.objects.filter(
-                mistake_event_type=Mistake.PROCEED, event_id__in=proceed_mistakes
-            ).update(is_fixed=True)
+            Mistake.objects.filter(mistake_event_type=Mistake.PROCEED, event_id__in=proceed_mistakes).update(
+                is_fixed=True
+            )
 
         return mistakes
 
@@ -336,6 +337,36 @@ class Problem(models.Model):
                     return None
 
         return None
+
+    @classmethod
+    def get_recent_new_by_date(cls, student_id, day_range):
+        start_date = timezone.make_aware(
+            datetime.now() - timedelta(days=day_range), timezone.get_current_timezone(), True
+        )
+
+        # get all first steps within day range for this user that are type define
+        recent_first_step_ids = (
+            Problem.objects.filter(
+                student__id=student_id,
+                step_problem__step_type=Step.DEFINE,
+                step_problem__created__gte=start_date,
+            )
+            .exclude(Q(variable="") | Q(step_problem__left_expr__latex="") | Q(step_problem__right_expr__latex=""))
+            .order_by("step_problem__created")
+            .annotate(first_step_id=Min("step_problem__id"))
+        )
+
+        problems_per_date = {}
+        for p in recent_first_step_ids:
+            first_step = Step.objects.get(id=p.first_step_id)
+            mistakes = Step.get_mistakes(first_step)
+            if mistakes[0] == Mistake.NONE and mistakes[1] == Mistake.NONE:
+                if first_step.created in problems_per_date:
+                    problems_per_date += 1
+                else:
+                    problems_per_date[first_step.created] = 1
+
+        return problems_per_date
 
 
 # Expressions can only have single letter variables
@@ -680,6 +711,28 @@ class Step(models.Model):
                     pass
 
         return mistakes
+
+    @classmethod
+    def get_recent_new_by_date(cls, student_id, day_range):
+        start_date = timezone.make_aware(
+            datetime.now() - timedelta(days=day_range), timezone.get_current_timezone(), True
+        )
+
+        # get all steps created within day range for this user that are not type define
+        recent_first_steps = (
+            Step.objects.filter(problem__student__id=student_id, created__gte=start_date)
+            .exclude(Q(step_type=Step.DEFINE) | Q(left_expr__latex="") | Q(right_expr__latex=""))
+            .order_by("created")
+        )
+
+        steps_per_date = {}
+        for s in recent_first_steps:
+            if s.created in steps_per_date:
+                steps_per_date += 1
+            else:
+                steps_per_date[s.created] = 1
+
+        return steps_per_date
 
 
 # A check rewrite process is considered completed if the are_equivalent is not null

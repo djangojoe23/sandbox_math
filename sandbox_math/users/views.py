@@ -7,6 +7,8 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, RedirectView, UpdateView
 from guest_user.functions import is_guest_user
 
+from sandbox_math.users.models import User as myUser
+
 User = get_user_model()
 
 
@@ -26,6 +28,17 @@ class UserDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
             return redirect("account_signup")
         else:
             return redirect("account_login")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        days_prior = 7
+
+        practice_messages = myUser.get_practice_overview(self.request.user.id, days_prior)
+        for key, value in practice_messages.items():
+            context[key] = value
+
+        return context
 
 
 user_detail_view = UserDetailView.as_view()

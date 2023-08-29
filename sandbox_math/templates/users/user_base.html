@@ -20,8 +20,9 @@
                   </div>
                   <nav class="nav flex-column pb-2 pb-lg-4 mb-3">
                     <h4 class="fs-xs fw-medium text-muted text-uppercase pb-1 mb-2">Account</h4>
-                    <a class="nav-link fw-semibold py-2 px-0" href="{% url "users:detail" request.user.username %}"><i class="ai-user-check fs-5 opacity-60 me-2"></i>Overview</a>
-                    <a class="nav-link fw-semibold py-2 px-0" href="{% url "users:update" %}"><i class="ai-edit fs-5 opacity-60 me-2"></i>Edit</a>
+                    <a class="nav-link fw-semibold py-2 px-0" href="{% url "users:detail" request.user.username %}"><i class="ai-dashboard fs-5 opacity-60 me-2"></i>Overview</a>
+                    <a class="nav-link fw-semibold py-2 px-0" href="#"><i class="ai-list fs-5 opacity-60 me-2"></i>Your Problems</a>
+                    <a class="nav-link fw-semibold py-2 px-0" href="{% url "users:update" %}"><i class="ai-edit fs-5 opacity-60 me-2"></i>Edit Account</a>
                   </nav>
                   <nav class="nav flex-column"><a class="nav-link fw-semibold py-2 px-0" href="{% url "account_logout" %}"><i class="ai-logout fs-5 opacity-60 me-2"></i>Sign out</a></nav>
                 </div>
