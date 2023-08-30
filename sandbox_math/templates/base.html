@@ -42,16 +42,16 @@
       <!-- Your stuff: Third-party javascript libraries go here -->
       <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
       <script defer src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
-
-      <!-- place project specific Javascript in this file -->
-      {% compress js %}
-      <script defer src="{% static 'js/project.js' %}"></script>
       <script defer src="{% static 'js/theme/smooth-scroll/smooth-scroll.min.js' %}"></script>
       <script defer src="{% static 'js/theme/simplebar/simplebar.min.js' %}"></script>
       <script defer src="{% static 'js/theme/parallax-js/parallax.min.js' %}"></script>
       <script defer src="{% static 'js/theme/swiper/swiper-bundle.min.js' %}"></script>
       <script defer src="{% static 'js/theme/aos/aos.js' %}"></script>
       <script defer type="module" src="{% static 'js/theme/theme.js' %}"></script>
+
+      <!-- place project specific Javascript in this file -->
+      {% compress js %}
+        <script defer src="{% static 'js/project.js' %}"></script>
       {% endcompress %}
 
     {% endblock javascript %}
