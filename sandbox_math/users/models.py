@@ -38,95 +38,111 @@ class User(AbstractUser):
         return reverse("users:detail", kwargs={"username": self.username})
 
     @classmethod
-    def get_practice_overview(cls, student_id, days_prior):
+    def get_activity_overview(cls, student_id, days_prior):
         problem_model = apps.get_model("algebra", "Problem")
         step_model = apps.get_model("algebra", "Step")
         checkrewrite_model = apps.get_model("algebra", "CheckRewrite")
         checksolution_model = apps.get_model("algebra", "CheckSolution")
 
         new_problems = problem_model.get_recent_new_by_date(student_id, days_prior)
-        practice_context = {}
+        activity_context = {}
+        activity_score = 0
+        activity_max = 12
         if len(new_problems) < days_prior - 2:
             if sum(new_problems.values()) / 7 >= 1:
-                practice_context[
+                activity_context[
                     "new_problems_message"
                 ] = "Consistency is more important than intensity. Try to start at least 1 new problem each day."
+                activity_score += 1
             else:
-                practice_context[
+                activity_context[
                     "new_problems_message"
                 ] = "Consistency is key! Try to start at least 1 new problem each day."
         else:
             if sum(new_problems.values()) / 7 >= 1:
-                practice_context[
+                activity_context[
                     "new_problems_message"
                 ] = "You started at least 1 new problem every day! Keep up the strong consistency!"
+                activity_score += 3
             else:
-                practice_context[
+                activity_context[
                     "new_problems_message"
                 ] = "You started at least 5 new problems last week. Don't let up!"
+                activity_score += 2
 
         new_steps = step_model.get_recent_new_by_date(student_id, days_prior)
         days_with_enough_new_steps = len([s for s in new_steps.values() if s >= 3])
         if days_with_enough_new_steps < days_prior - 2:
             if sum(new_steps.values()) / 7 >= 3:
-                practice_context[
+                activity_context[
                     "new_steps_message"
                 ] = "Consistency is more important than intensity. Try to add at least 3 new algebra steps each day."
+                activity_score += 1
             else:
-                practice_context[
+                activity_context[
                     "new_steps_message"
                 ] = "Consistency is key! Try to add at least 3 new algebra steps each day."
         else:
             if sum(new_steps.values()) / 7 >= 3:
-                practice_context[
+                activity_context[
                     "new_steps_message"
                 ] = "You added at least 3 new algebra steps every day! Keep up the strong consistency!"
+                activity_score += 3
             else:
-                practice_context[
+                activity_context[
                     "new_steps_message"
                 ] = "You added at least 15 new algebra steps last week. Don't let up!"
+                activity_score += 2
 
         new_checkrewrites = checkrewrite_model.get_recent_by_date("CheckRewrite", student_id, days_prior)
         if len(new_checkrewrites) < days_prior - 2:
             if sum(new_checkrewrites.values()) / 7 >= 1:
-                practice_context[
+                activity_context[
                     "new_checkrewrites_message"
                 ] = "Consistency is more important than intensity. Try to check at least 1 rewrite step each day."
+                activity_score += 1
             else:
-                practice_context[
+                activity_context[
                     "new_checkrewrites_message"
                 ] = "Consistency is key! Try to check at least 1 rewrite step each day."
         else:
             if sum(new_checkrewrites.values()) / 7 >= 1:
-                practice_context[
+                activity_context[
                     "new_checkrewrites_message"
                 ] = "You checked at least 1 rewrite step each day! Keep up the strong consistency!"
+                activity_score += 3
             else:
-                practice_context[
+                activity_context[
                     "new_checkrewrites_message"
                 ] = "You checked at least 5 rewrite steps last week. Don't let up!"
+                activity_score += 2
 
         new_checksolutions = checksolution_model.get_recent_by_date("CheckSolution", student_id, days_prior)
         if len(new_checksolutions) < days_prior - 2:
             if sum(new_checksolutions.values()) / 7 >= 1:
-                practice_context[
+                activity_context[
                     "new_checksolutions_message"
                 ] = "Consistency is more important than intensity. Try to check at least 1 solution each day."
+                activity_score += 1
             else:
-                practice_context[
+                activity_context[
                     "new_checksolutions_message"
                 ] = "Consistency is key! Try to check at least 1 solution each day."
         else:
             if sum(new_checksolutions.values()) / 7 >= 1:
-                practice_context[
+                activity_context[
                     "new_checksolutions_message"
                 ] = "You checked at least 1 solution each day! Keep up the strong consistency!"
+                activity_score += 3
             else:
-                practice_context[
+                activity_context[
                     "new_checksolutions_message"
                 ] = "You checked at least 5 solutions last week. Don't let up!"
+                activity_score += 2
 
-        return practice_context
+        activity_context["activity_score"] = activity_score / activity_max
+
+        return activity_context
 
 
 class HelpClick(models.Model):

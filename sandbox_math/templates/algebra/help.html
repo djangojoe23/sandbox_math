@@ -1,0 +1,182 @@
+{% load static %}
+
+<!-- Alternative accordion -->
+<div class="accordion" id="accordionHelp">
+
+  <!-- Item -->
+  <div class="accordion-item">
+    <h3 class="accordion-header" id="headingStepType">
+      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseStepType" aria-expanded="true" aria-controls="collapseStepType">Choosing a Step Type</button>
+    </h3>
+    <div class="accordion-collapse collapse show" id="collapseStepType" aria-labelledby="headingStepType" data-bs-parent="#accordionHelp">
+      <div class="accordion-body fs-sm">
+        <article class="row g-0 border-0 mb-4">
+          <div class="col-sm-4">
+            <img src="{% static 'images/help/step-types.png' %}" class="img-thumbnail" alt="Rounded thumbnail">
+          </div>
+          <div class="col-sm-8">
+            <div class="pt-4 pb-sm-4 ps-sm-4 pe-lg-4">
+              <p class="d-md-block">
+                You must choose a step type for each of your algebraic step or a mistake will be logged.
+                Define
+                Rewrite -
+                Arithmetic - Do not try to combine this step with a rewrite step.
+                Delete
+              </p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+
+  <!-- Item -->
+  <div class="accordion-item">
+    <h3 class="accordion-header" id="headingChooseVar">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseChooseVar" aria-expanded="false" aria-controls="collapseChooseVar">Choosing a Variable to Solve For</button>
+    </h3>
+    <div class="accordion-collapse collapse" id="collapseChooseVar" aria-labelledby="headingChooseVar" data-bs-parent="#accordionHelp">
+      <div class="accordion-body fs-sm">
+        <article class="row g-0 border-0 mb-4">
+          <div class="col-sm-4">
+            <img src="{% static 'images/help/choose-var.png' %}" class="img-thumbnail" alt="Rounded thumbnail">
+          </div>
+          <div class="col-sm-8">
+            <div class="pt-4 pb-sm-4 ps-sm-4 pe-lg-4">
+              <p class="d-md-block">
+                only in step 1
+                auto populates based on what you type in the equation
+              </p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+
+  <!-- Item -->
+  <div class="accordion-item">
+    <h3 class="accordion-header" id="headingNewStep">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNewStep" aria-expanded="false" aria-controls="collapseNewStep">Creating a New Step</button>
+    </h3>
+    <div class="accordion-collapse collapse" id="collapseNewStep" aria-labelledby="headingNewStep" data-bs-parent="#accordionHelp">
+      <div class="accordion-body fs-sm">
+        <article class="row g-0 border-0 mb-4">
+          <div class="col-sm-4">
+            <img src="{% static 'images/help/new-step.png' %}" class="img-thumbnail" alt="Rounded thumbnail">
+          </div>
+          <div class="col-sm-8">
+            <div class="pt-4 pb-sm-4 ps-sm-4 pe-lg-4">
+              <p class="d-md-block">
+                click  the button
+                make sure you don't have any mistakes before you click it or mistakes will be logged
+                it won't work if the previous step has a blank expression box
+                you can delete any extra steps you didn't need using the step type selection box
+              </p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+
+  <!-- Item -->
+  <div class="accordion-item">
+    <h3 class="accordion-header" id="headingFindMistakes">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFindMistakes" aria-expanded="false" aria-controls="collapseFindMistakes">Finding Your Mistakes</button>
+    </h3>
+    <div class="accordion-collapse collapse" id="collapseFindMistakes" aria-labelledby="headingFindMistakes" data-bs-parent="#accordionHelp">
+      <div class="accordion-body fs-sm">
+        <article class="row g-0 border-0 mb-4">
+          <div class="col-sm-4">
+            <img src="{% static 'images/help/finding-mistakes.png' %}" class="img-thumbnail" alt="Rounded thumbnail">
+          </div>
+          <div class="col-sm-8">
+            <div class="pt-4 pb-sm-4 ps-sm-4 pe-lg-4">
+              <p class="d-md-block">
+                click on the question mark
+                common types of mistakes are...
+                a click is logged whether there is a mistake or not so it doesn't benefit you to click a lot
+              </p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+
+  <!-- Item -->
+  <div class="accordion-item">
+    <h3 class="accordion-header" id="headingCheckRewrite">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCheckRewrite" aria-expanded="false" aria-controls="collapseCheckRewrite">Checking Your Rewrite Steps</button>
+    </h3>
+    <div class="accordion-collapse collapse" id="collapseCheckRewrite" aria-labelledby="headingCheckRewrite" data-bs-parent="#accordionHelp">
+      <div class="accordion-body fs-sm">
+        <article class="row g-0 border-0 mb-4">
+          <div class="col-sm-4">
+            <img src="{% static 'images/help/check-rewrite.png' %}" class="img-thumbnail" alt="Rounded thumbnail">
+          </div>
+          <div class="col-sm-8">
+            <div class="pt-4 pb-sm-4 ps-sm-4 pe-lg-4">
+              <p class="d-md-block">
+                this will prompt some dialog in the calculator with the hopes that you can do this on your own!
+                pick a number to substitute in for the variable in both expressions
+                check multiple times if you want, but with different values for the variable
+                if you checked it and you have already proven they are unequal, don't do it again fix your mistakes
+                type and enterr "stop" if you ever want to stop the check process
+              </p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+
+  <!-- Item -->
+  <div class="accordion-item">
+    <h3 class="accordion-header" id="headingIsolated">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIsolated" aria-expanded="false" aria-controls="collapseIsolated">Once You Isolated the Variable</button>
+    </h3>
+    <div class="accordion-collapse collapse" id="collapseIsolated" aria-labelledby="headingIsolated" data-bs-parent="#accordionHelp">
+      <div class="accordion-body fs-sm">
+        <article class="row g-0 border-0 mb-4">
+          <div class="col-sm-4">
+            <img src="{% static 'images/help/isolated-var.png' %}" class="img-thumbnail" alt="Rounded thumbnail">
+          </div>
+          <div class="col-sm-7">
+            <div class="pt-4 pb-sm-4 ps-sm-4 pe-lg-4">
+              <p class="d-md-block">
+                isolating the variable means that the variable you are solving for is by itself
+                you'll know you've done it if the check solution button appears
+              </p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+
+  <!-- Item -->
+  <div class="accordion-item">
+    <h3 class="accordion-header" id="headingCheckSolution">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCheckSolution" aria-expanded="false" aria-controls="collapseCheckSolution">Checking Your Solution</button>
+    </h3>
+    <div class="accordion-collapse collapse" id="collapseCheckSolution" aria-labelledby="headingCheckSolution" data-bs-parent="#accordionHelp">
+      <div class="accordion-body fs-sm">
+        <article class="row g-0 border-0 mb-4">
+          <img src="{% static 'images/help/check-solution.png' %}" class="img-thumbnail col-sm-5" alt="Rounded thumbnail">
+          <div class="col-sm-7">
+            <div class="pt-4 pb-sm-4 ps-sm-4 pe-lg-4">
+              <p class="d-md-block">
+                check solution is similar to check rewrite
+                leads you through a dialog
+                it will let you know if you have the right answer or not
+                it will let you know if you have any algebra mistakes...then you'll have to find and fix them all then click again to have the problem consider solved
+              </p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</div>

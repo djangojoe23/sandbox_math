@@ -23,6 +23,10 @@ function waitForElement(elementPath, callBack) {
 }
 
 $(document).ready(function () {
+  if ($('#unique-problem-id').hasClass('newProblem')) {
+    $('.navbar-toggler[data-bs-toggle="offcanvas"]').click();
+  }
+
   MQ = MathQuill.getInterface(2);
   studentID = $('#userID').html();
   let problemID = $('#unique-problem-id').html();

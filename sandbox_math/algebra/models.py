@@ -852,40 +852,40 @@ class CheckRewrite(CheckAlgebra):
 
         # Interpret the message from the user
         if "start-check-rewrite" not in message_latex:
-            if check_process.solving_for_value is None and check_process.solving_for in all_vars_to_substitute:
+            if check_process.solving_for_latex_value is None and check_process.solving_for in all_vars_to_substitute:
                 responses.extend(
                     CheckRewrite.save_substitution_value(check_process, check_process.solving_for, message_latex)
                 )
-            elif check_process.other_var and check_process.other_var_value is None:
+            elif check_process.other_var and check_process.other_var_latex_value is None:
                 responses.extend(
                     CheckRewrite.save_substitution_value(check_process, check_process.other_var, message_latex)
                 )
 
         # Ask the user to set a value of a variable
-        if check_process.solving_for_value is None and check_process.solving_for in all_vars_to_substitute:
+        if check_process.solving_for_latex_value is None and check_process.solving_for in all_vars_to_substitute:
             responses.append(f"What number do you want to substitute in for `/{check_process.solving_for}`?")
-        elif check_process.other_var and check_process.other_var_value is None:
+        elif check_process.other_var and check_process.other_var_latex_value is None:
             responses.append(f"What number do you want to substitute in for `/{check_process.other_var}`?")
         else:
             # if all values are assigned, then start substitute values response
             if not check_process.other_var:
                 response_context = Response.CHECK_REWRITE
                 responses.append(
-                    f"Great, now substitute `/{Sandbox.clean_decimal(check_process.solving_for_value)}` in "
+                    f"Great, now substitute `/{check_process.solving_for_latex_value}` in "
                     f"for `/{check_process.solving_for}` in the expression `/{check_process.expr1_latex}`."
                 )
             elif check_process.solving_for not in all_vars_to_substitute:
                 response_context = Response.CHECK_REWRITE
                 responses.append(
-                    f"Great, now substitute `/{Sandbox.clean_decimal(check_process.other_var_value)}` in "
+                    f"Great, now substitute `/{check_process.other_var_latex_value}` in "
                     f"for `/{check_process.other_var}` in the expression `/{check_process.expr1_latex}`."
                 )
             else:
                 response_context = Response.CHECK_REWRITE
                 responses.append(
                     f"Great! You have chosen `/{check_process.solving_for}="
-                    f"{Sandbox.clean_decimal(check_process.solving_for_value)}` and "
-                    f"`/{check_process.other_var}={Sandbox.clean_decimal(check_process.other_var_value)}.`"
+                    f"{check_process.solving_for_latex_value}` and "
+                    f"`/{check_process.other_var}={Sandbox.clean_decimal(check_process.other_var_latex_value)}.`"
                 )
                 responses.append(
                     f"Now, substitute those values in for those variables in "
@@ -914,21 +914,19 @@ class CheckRewrite(CheckAlgebra):
         var_val_string = ""
         if check_process.solving_for in all_vars_to_substitute:
             var_list.append("solving_for")
-            var_val_string = f"`/{check_process.solving_for}={Sandbox.clean_decimal(check_process.solving_for_value)}`"
+            var_val_string = f"`/{check_process.solving_for}={check_process.solving_for_latex_value}`"
             if check_process.other_var:
                 var_list.append("other_var")
-                var_val_string += (
-                    f"and `/{check_process.other_var}={Sandbox.clean_decimal(check_process.other_var_value)}`"
-                )
+                var_val_string += f"and `/{check_process.other_var}={check_process.other_var_latex_value}`"
         elif check_process.other_var:
             var_list.append("other_var")
-            var_val_string = f"`/{check_process.other_var}={Sandbox.clean_decimal(check_process.other_var_value)}`"
+            var_val_string = f"`/{check_process.other_var}={check_process.other_var_latex_value}`"
 
         var_val_tuple_list = []
         for v in var_list:
             if getattr(check_process, v):
                 var_val_tuple_list.append(
-                    (getattr(check_process, v), UnevaluatedExpr(Decimal(getattr(check_process, f"{v}_value"))))
+                    (getattr(check_process, v), UnevaluatedExpr(Decimal(getattr(check_process, f"{v}_latex_value"))))
                 )
 
         # Store the latex expressions in here first, then replace them with the sympy expressions in the for loop
@@ -1266,7 +1264,7 @@ class CheckSolution(CheckAlgebra):
                                     f"To do this, we will substitute `/{check_process.attempt}` in for "
                                     f"`/{check_process.solving_for}` in both sides of the starting equation."
                                 )
-                                check_process.solving_for_value = check_process.attempt
+                                check_process.solving_for_latex_value = check_process.attempt
                                 check_process.save()
                                 responses.append(
                                     f"Substitute `/{check_process.solving_for}={check_process.attempt}` in the "
@@ -1304,18 +1302,20 @@ class CheckSolution(CheckAlgebra):
         # Interpret the user message to see if it is a valid value to substitute for variable
         if message_latex == "start-check-solution":
             pass
-        elif not check_process.other_var_value:
+        elif not check_process.other_var_latex_value:
             responses.extend(
                 CheckSolution.save_substitution_value(check_process, check_process.other_var, message_latex)
             )
-        elif not check_process.solving_for_value:
+        elif not check_process.solving_for_latex_value:
             # calculate value of solving_for value based on other var values
             sympy_answer = Expression.get_sympy_expression_from_latex(check_process.attempt)
+            solving_for_sympy = Expression.get_sympy_expression_from_latex(check_process.solving_for_latex_value)
+            other_var_sympy = Expression.get_sympy_expression_from_latex(check_process.other_var_latex_value)
             answer_with_substitution = simplify(
                 sympy_answer.subs(
                     [
-                        (check_process.solving_for, check_process.solving_for_value),
-                        (check_process.other_var, check_process.other_var_value),
+                        (check_process.solving_for, solving_for_sympy),
+                        (check_process.other_var, other_var_sympy),
                     ],
                     order="none",
                 )
@@ -1327,33 +1327,34 @@ class CheckSolution(CheckAlgebra):
                 responses.append("I'm having a hard time understanding that. Try again.")
             else:
                 if simplify(sympy_message - answer_with_substitution) == 0:
-                    check_process.solving_for_value = Decimal(message_latex)
+                    # check_process.solving_for_value = Decimal(message_latex)
+                    check_process.solving_for_latex_value = message_latex
                     check_process.save()
                 else:
                     responses.append("You did not do that substitution correctly. Try again.")
 
         # Keep printing this question while there are still vars without values assigned
-        if check_process.other_var and not check_process.other_var_value:
+        if check_process.other_var and not check_process.other_var_latex_value:
             responses.append(f"What number do you want to substitute in for `/{check_process.other_var}`?")
         else:
             # Now, user has to determine the value of the variable they solved for
-            if not check_process.solving_for_value:
+            if not check_process.solving_for_latex_value:
                 response_context = Response.CHOOSE_SOLUTION_VALUES
                 responses.append(
-                    f"Now that `/{check_process.other_var}={check_process.other_var_value}`, determine the value "
-                    f"of `/{check_process.solving_for}` by substituting `/{check_process.other_var_value}` in for "
-                    f"`/{check_process.other_var}` in your answer `/{check_process.attempt}`."
+                    f"Now that `/{check_process.other_var}={check_process.other_var_latex_value}`, determine the value"
+                    f" of `/{check_process.solving_for}` by substituting `/{check_process.other_var_latex_value}` in "
+                    f"for `/{check_process.other_var}` in your answer `/{check_process.attempt}`."
                 )
             else:
                 response_context = Response.CHECK_SOLUTION
                 responses.append(
-                    f"Correct! `/{check_process.attempt}` is equal to `/{check_process.solving_for_value}`"
-                    f" when `/{check_process.other_var}={Sandbox.clean_decimal(check_process.other_var_value)}`."
+                    f"Correct! `/{check_process.attempt}` is equal to `/{check_process.solving_for_latex_value}`"
+                    f" when `/{check_process.other_var}={check_process.other_var_latex_value}`."
                 )
                 responses.append(
                     f"You have chosen the following values for the variables in your equation: "
-                    f"`/{check_process.other_var}={Sandbox.clean_decimal(check_process.other_var_value)}` and "
-                    f"`/{check_process.solving_for}={check_process.solving_for_value}`"
+                    f"`/{check_process.other_var}={check_process.other_var_latex_value}` and "
+                    f"`/{check_process.solving_for}={check_process.solving_for_latex_value}`"
                 )
                 responses.append(
                     f"Now, substitute those values in for those variables in "
@@ -1382,21 +1383,26 @@ class CheckSolution(CheckAlgebra):
         var_val_string = ""
         if check_process.solving_for in all_vars_to_substitute:
             var_list.append("solving_for")
-            var_val_string = f"`/{check_process.solving_for}={Sandbox.clean_decimal(check_process.solving_for_value)}`"
+            var_val_string = f"`/{check_process.solving_for}={check_process.solving_for_latex_value}`"
             if check_process.other_var:
                 var_list.append("other_var")
                 var_val_string += (
-                    f"and `/{check_process.other_var}={Sandbox.clean_decimal(check_process.other_var_value)}`"
+                    f"and `/{check_process.other_var}={Sandbox.clean_decimal(check_process.other_var_latex_value)}`"
                 )
         elif check_process.other_var:
             var_list.append("other_var")
-            var_val_string = f"`/{check_process.other_var}={Sandbox.clean_decimal(check_process.other_var_value)}`"
+            var_val_string = (
+                f"`/{check_process.other_var}={Sandbox.clean_decimal(check_process.other_var_latex_value)}`"
+            )
 
         var_val_tuple_list = []
         for v in var_list:
             if getattr(check_process, v):
                 var_val_tuple_list.append(
-                    (getattr(check_process, v), UnevaluatedExpr(Decimal(getattr(check_process, f"{v}_value"))))
+                    (
+                        getattr(check_process, v),
+                        Expression.get_sympy_expression_from_latex(getattr(check_process, f"{v}_latex_value")),
+                    )
                 )
 
         # Store the latex expressions in here first, then replace them with the sympy expressions in the for loop

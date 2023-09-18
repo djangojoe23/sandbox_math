@@ -45,9 +45,11 @@ class CheckAlgebra(models.Model):
     )
     expr2_latex = models.CharField(max_length=100, blank=True, null=True)
     solving_for = models.CharField(max_length=100, blank=True, null=True)
-    solving_for_value = models.DecimalField(max_digits=6, decimal_places=3, blank=True, null=True)
+    # solving_for_value = models.DecimalField(max_digits=6, decimal_places=3, blank=True, null=True)
+    solving_for_latex_value = models.CharField(max_length=100, blank=True, null=True)
     other_var = models.CharField(max_length=100, blank=True, null=True)
-    other_var_value = models.DecimalField(max_digits=6, decimal_places=3, blank=True, null=True)
+    # other_var_value = models.DecimalField(max_digits=6, decimal_places=3, blank=True, null=True)
+    other_var_latex_value = models.CharField(max_length=100, blank=True, null=True)
     end_time = models.DateTimeField(null=True)
 
     class Meta:
@@ -130,8 +132,8 @@ class CheckAlgebra(models.Model):
                     and prev_check.other_var == check_process.other_var
                 ):
                     if (
-                        prev_check.solving_for_value == check_process.solving_for_value
-                        and prev_check.other_var_value == check_process.other_var_value
+                        prev_check.solving_for_latex_value == check_process.solving_for_latex_value
+                        and prev_check.other_var_value == check_process.other_var_latex_value
                     ):
                         return False
         return True
@@ -204,10 +206,12 @@ class CheckAlgebra(models.Model):
                         else:
                             var_field = ""
                             if variable == check_process.solving_for:
-                                check_process.solving_for_value = Decimal(suggested_value_str)
+                                # check_process.solving_for_value = Decimal(suggested_value_str)
+                                check_process.solving_for_latex_value = suggested_value_str
                                 var_field = "solving_for"
                             elif variable == check_process.other_var:
-                                check_process.other_var_value = Decimal(suggested_value_str)
+                                # check_process.other_var_value = Decimal(suggested_value_str)
+                                check_process.other_var_latex_value = suggested_value_str
                                 var_field = "other_var"
                             else:
                                 print("trying to set value to unknown variablleeeee")
@@ -226,8 +230,7 @@ class CheckAlgebra(models.Model):
                                 )
                                 if check_process.other_var:
                                     checked_var_val_string += (
-                                        f"and `/{check_process.solving_for}="
-                                        f"{Sandbox.clean_decimal(check_process.solving_for_value)}`"
+                                        f"and `/{check_process.solving_for}={check_process.solving_for_latex_value}`"
                                     )
 
                                 setattr(check_process, f"{var_field}_value", None)

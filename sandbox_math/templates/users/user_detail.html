@@ -20,7 +20,9 @@
               <!-- Item -->
               <div class="accordion-item">
                 <h3 class="accordion-header" id="headingOne">
-                  <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">You need to practice more</button>
+                  <button class="accordion-button text-{{ activity_text_color }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                    {{ last_week_activity_message}}
+                  </button>
                 </h3>
                 <div class="accordion-collapse collapse show" id="collapseOne" aria-labelledby="headingOne" data-bs-parent="#accordionAlternative">
                   <div class="accordion-body fs-sm">

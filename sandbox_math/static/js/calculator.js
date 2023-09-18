@@ -108,6 +108,7 @@ function SubmitUserMessage() {
 }
 
 function GetResponse(userMessageLatex, callerFunctionName) {
+  let timeBetweenMessages = 4500;
   let responseParameters =
     'sandbox=Algebra&problem_id=' + $('#unique-problem-id').html();
   responseParameters += '&message=' + encodeURIComponent(userMessageLatex);
@@ -166,7 +167,7 @@ function GetResponse(userMessageLatex, callerFunctionName) {
           { scrollTop: simplebarWrapper.prop('scrollHeight') },
           'slow',
         );
-      }, 1200);
+      }, timeBetweenMessages);
 
       //Once the last response is shown...
       let calcInputField = MQ.MathField($('#calculatorInput')[0]);
@@ -215,7 +216,7 @@ function GetResponse(userMessageLatex, callerFunctionName) {
 
           clearInterval(appearInterval);
         },
-        lastResponses.length * 1200 + 100,
+        lastResponses.length * timeBetweenMessages + 100,
       );
 
       let simplebarWrapper = $('#calculatorDialog .simplebar-content-wrapper');

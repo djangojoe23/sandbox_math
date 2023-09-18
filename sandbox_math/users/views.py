@@ -34,7 +34,18 @@ class UserDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
 
         days_prior = 7
 
-        practice_messages = myUser.get_practice_overview(self.request.user.id, days_prior)
+        practice_messages = myUser.get_activity_overview(self.request.user.id, days_prior)
+        print(practice_messages["activity_score"])
+        if practice_messages["activity_score"] <= 0.5:
+            context["last_week_activity_message"] = "Low activity"
+            context["activity_text_color"] = "danger"
+        elif 0.5 < practice_messages["activity_score"] <= 0.75:
+            context["last_week_activity_message"] = "Medium activity"
+            context["activity_text_color"] = "warning"
+        else:
+            context["last_week_activity_message"] = "High activity"
+            context["activity_text_color"] = "success"
+
         for key, value in practice_messages.items():
             context[key] = value
 

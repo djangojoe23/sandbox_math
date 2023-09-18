@@ -75,7 +75,6 @@ class GetResponseView(TemplateView):
                 else:
                     CheckSolution.create_substitute_values_response(user_message_obj)
                     solved_states = [CheckSolution.SOLVED, CheckSolution.INFINITELY_MANY, CheckSolution.NO_SOLUTION]
-                    print(problem_id)
                     just_finished_check = (
                         CheckSolution.objects.filter(
                             problem_id=problem_id, end_time__isnull=False, problem_solved__in=solved_states
@@ -83,7 +82,6 @@ class GetResponseView(TemplateView):
                         .order_by("-end_time")
                         .first()
                     )
-                    print(just_finished_check)
                     if Response.get_context_of_last_response(user_message_obj) == Response.NO_CONTEXT:
                         problem = Problem.objects.get(id=problem_id)
                         if just_finished_check:

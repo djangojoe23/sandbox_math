@@ -28,7 +28,8 @@
         {% endif %}
       </button>
       <div class="dropdown-menu dropdown-menu-end my-1">
-        <button class="dropdown-item"><i class="ai-pause me-2" style="transform: rotate(90deg);"></i>Define</button>
+{#      <button class="btn btn-outline-secondary" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Tooltip on top">Tooltip on top</button>#}
+        <button class="dropdown-item" data-bs-toggle="tooltip" data-bs-placement="top" title="Tooltip on top"><i class="ai-pause me-2" style="transform: rotate(90deg);"></i>Define</button>
         <button class="dropdown-item"><i class="ai-repeat me-2"></i>Rewrite</button>
         <button class="dropdown-item"><i class="ai-square-plus me-2"></i>Arithmetic</button>
         {% if step_num > 1 %}

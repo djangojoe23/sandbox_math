@@ -53,11 +53,11 @@
                     <a class="nav-link" href="#recent" data-bs-toggle="tab" role="tab">Recent</a>
                   </li>
                   <li class="nav-item">
+                    <a class="nav-link" href="#help" data-bs-toggle="tab" role="tab">Help</a>
+                  </li>
+                  <li class="nav-item">
                     <a class="nav-link" href="#example" data-bs-toggle="tab" role="tab">Example</a>
                   </li>
-{#                  <li class="nav-item">#}
-{#                    <a class="nav-link" href="#suggestions" data-bs-toggle="tab" role="tab">Suggestions</a>#}
-{#                  </li>#}
                   <li class="nav-item">
                     <a class="nav-link" href="{% url 'algebra:base' %}" data-bs-toggle="" role="link">New Blank</a>
                   </li>
@@ -83,7 +83,7 @@
                       <div class="ms-auto">
                         <a href="#" data-bs-target="#sidebar" data-bs-toggle="collapse" class="fs-4"><i class="ai-arrow-left"></i><i class="ai-messages"></i><i class="ai-arrow-right"></i></a>
                       </div>
-                      <div class="d-none {{ problem_finished}}" id="unique-problem-id" >{{ problem.id }}</div>
+                      <div class="d-none {{ problem_finished}} {% if is_new_problem %}newProblem{% endif %}" id="unique-problem-id" >{{ problem.id }}</div>
                       <div id="algebra" class="steps mt-1" style="margin: 10px;">
                         {% for step in steps %}
                           <div id="step{{ step.id }}" class="step algebra-step pb-1 {{ step.step_type }} {% if forloop.counter > 2 %}pt-3{% else %}pt-0{% endif %}" style="">
@@ -121,6 +121,9 @@
                 </div>
                 <div class="tab-pane fade" id="recent" role="tabpanel">
                   {% include "algebra/recent_table/base.html" %}
+                </div>
+                <div class="tab-pane fade" id="help" role="tabpanel">
+                  {% include "algebra/help.html" %}
                 </div>
                 <div class="tab-pane fade" id="example" role="tabpanel">
                   {% include "algebra/example.html" %}
