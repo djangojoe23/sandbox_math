@@ -12,29 +12,27 @@
       <div class="accordion-body fs-sm">
         <article class="row g-0 border-0 mb-4">
           <div class="col-sm-4">
-            <img src="{% static 'images/help/step-types.png' %}" class="img-thumbnail" alt="Rounded thumbnail">
+            <img src="{% static 'images/help/step-types.png' %}" class="img-thumbnail d-block mx-auto" alt="Rounded thumbnail">
           </div>
           <div class="col-sm-8">
-            <div class="pt-4 pb-sm-4 ps-sm-4 pe-lg-4">
-              <p class="d-md-block">
-                You must choose a step type in every step. Select the appropriate option from each step's dropdown menu. Here is what each option means:
+            <div class="pt-4 pb-sm-4 ps-sm-3 pe-lg-4">
+              <p class="d-md-block">You must choose a step type in every step. Select the appropriate option from each step's dropdown menu. Here is what each option means:</p>
                 <dl class="row">
-                  <dt class="col-sm-3">Define&nbsp;</dt>
-                  <dd class="col-sm-9">The 'define' step type needs to be the first step type in every problem. You need to start by defining the equation to be solved.</dd>
-                  <dt class="col-sm-3">Rewrite</dt>
-                  <dd class="col-sm-9">
+                  <dt class="col-sm-2 text-truncate"><i class="ai-pause me-1" style="transform: rotate(90deg); vertical-align: 0;"></i>Define&nbsp;</dt>
+                  <dd class="col-sm-10">The 'define' step type needs to be the first step type in every problem. You need to start by defining the equation to be solved. The equation must include one or two variables, which you can choose to solve for.</dd>
+                  <dt class="col-sm-2 text-truncate"><i class="ai-repeat me-1" style="vertical-align: 0;"></i>Rewrite</dt>
+                  <dd class="col-sm-10">
                     <p class="mb-2">The 'rewrite' step type should be used if you are not changing the value of either side of the equation. You might be combining like terms, distributing multiplication through parentheses, or simplifying one or both sides of the equation.</p>
                     <p class="mb-0">For example, if the equation is 5x + 3 + 6 = 29, you would use a rewrite step for the equation to become 5x + 9 = 29. See the example if you're still not sure.</p>
                   </dd>
-                  <dt class="col-sm-3">Arithmetic</dt>
-                  <dd class="col-sm-9">
+                  <dt class="col-sm-2 text-truncate"><i class="ai-square-plus me-1" style="vertical-align: 0;"></i>Arithmetic</dt>
+                  <dd class="col-sm-10">
                     <p class="mb-2">The 'arithmetic' step type should be used when you are changing the value of the left and right sides of the equation. To do this step correctly, you must copy the previous step's equation exactly and then add, subtract, multiply, or divide both sides by the same value.</p>
                     <p class="mb-0"> For example, if the equation is 5x + 9 = 29, you would use an arithmetic step to subtract 9 from both sides. Your arithmetic step should look like 5x + 9 - 9 = 20 - 9. See the example if you're still not sure.</p>
                   </dd>
-                  <dt class="col-sm-3">Delete</dt>
-                  <dd class="col-sm-9">Delete steps you no longer need. After you select Delete, you will be asked to confirm. Deleting a step cannot be undone.</dd>
+                  <dt class="col-sm-2 text-truncate"><i class="ai-trash me-1" style="vertical-align: 0;"></i>Delete</dt>
+                  <dd class="col-sm-10">Delete steps you no longer need. After you select Delete, you will be asked to confirm. Deleting a step cannot be undone.</dd>
                 </dl>
-              </p>
             </div>
           </div>
         </article>
@@ -51,13 +49,15 @@
       <div class="accordion-body fs-sm">
         <article class="row g-0 border-0 mb-4">
           <div class="col-sm-4">
-            <img src="{% static 'images/help/choose-var.png' %}" class="img-thumbnail" alt="Rounded thumbnail">
+            <img src="{% static 'images/help/choose-var.png' %}" class="img-thumbnail d-block mx-auto" alt="Rounded thumbnail">
           </div>
           <div class="col-sm-8">
             <div class="pt-4 pb-sm-4 ps-sm-4 pe-lg-4">
-              <p class="d-md-block">
-                only in step 1
-                auto populates based on what you type in the equation
+              <p class="d-md-block mb-2">
+                After defining your equation and before adding a new step, choose the variable you will be solving for. If you don't choose a variable to solve for you will not be able to complete the problem.
+              </p>
+              <p class="d-md-block mb-0">
+                There is a small "Solve for" dropdown menu below step 1. Before you define your equation this menu will be blank. After you have defined your equation, any variables in your equation will become options to choose in this "Solve for" dropdown menu.
               </p>
             </div>
           </div>
@@ -75,15 +75,15 @@
       <div class="accordion-body fs-sm">
         <article class="row g-0 border-0 mb-4">
           <div class="col-sm-4">
-            <img src="{% static 'images/help/new-step.png' %}" class="img-thumbnail" alt="Rounded thumbnail">
+            <img src="{% static 'images/help/new-step.png' %}" class="img-thumbnail d-block mx-auto" alt="Rounded thumbnail">
           </div>
           <div class="col-sm-8">
             <div class="pt-4 pb-sm-4 ps-sm-4 pe-lg-4">
-              <p class="d-md-block">
-                click  the button
-                make sure you don't have any mistakes before you click it or mistakes will be logged
-                it won't work if the previous step has a blank expression box
-                you can delete any extra steps you didn't need using the step type selection box
+              <p class="d-md-block mb-2">
+                Click the "New Step" button below the last step to create a blank new step there. It won't work if either side of the last step's equation is blank. You can always delete any steps you end up not needing by using the "Delete" step type.
+              </p>
+              <p class="d-md-block mb-0">
+                It is also important to know that you should fix all mistakes before adding a new step. If there are any mistakes in any previous steps when the "New Step" button is clicked, those mistakes will be logged.
               </p>
             </div>
           </div>
@@ -101,15 +101,31 @@
       <div class="accordion-body fs-sm">
         <article class="row g-0 border-0 mb-4">
           <div class="col-sm-4">
-            <img src="{% static 'images/help/finding-mistakes.png' %}" class="img-thumbnail" alt="Rounded thumbnail">
+            <img src="{% static 'images/help/finding-mistakes.png' %}" class="img-thumbnail d-block mx-auto" alt="Rounded thumbnail">
           </div>
           <div class="col-sm-8">
             <div class="pt-4 pb-sm-4 ps-sm-4 pe-lg-4">
-              <p class="d-md-block">
-                click on the question mark
-                common types of mistakes are...
-                a click is logged whether there is a mistake or not so it doesn't benefit you to click a lot
+              <p class="d-md-block mb-2">
+                If you need help finding a mistake at a certain step, click on the <i class="ai-circle-help" style="vertical-align: 0"></i> icon in the expression input box on either side of the equation for that step.
               </p>
+              <p class="d-md-block mb-2">
+                You should not use these unless you do not know what else to do. Every time you click on a <i class="ai-circle-help" style="vertical-align: 0"></i> for help, the click is logged. As you get better, you should be clicking on these less and be able to find any mistakes on your own without the help of the computer.
+              </p>
+              <p class="d-md-block mb-1">Common types of mistakes are:</p>
+              <dl class="row">
+                <dt class="col-sm-3 text-truncate">Define the Equation&nbsp;</dt>
+                <dd class="col-sm-9">Use the dropdown in the first step to define an equation.</dd>
+                <dt class="col-sm-3 text-truncate">Incorrect Rewrite&nbsp;</dt>
+                <dd class="col-sm-9">The expression is not equivalent to the previous step.</dd>
+                <dt class="col-sm-3 text-truncate">No Variable Selected&nbsp;</dt>
+                <dd class="col-sm-9">Use the dropdown menu to select which variable to solve for.</dd>
+                <dt class="col-sm-3 text-truncate">No Step Type Selected&nbsp;</dt>
+                <dd class="col-sm-9">Use the dropdown above this step to select which step type you want here.</dd>
+                <dt class="col-sm-3 text-truncate">Unequal Arithmetic&nbsp;</dt>
+                <dd class="col-sm-9">The arithmetic is not the same on both sides of the equation.</dd>
+                <dt class="col-sm-3 text-truncate">Copy Previous Step&nbsp;</dt>
+                <dd class="col-sm-9">Please copy the previous step's expression and then do arithmetic to it.</dd>
+              </dl>
             </div>
           </div>
         </article>
@@ -126,13 +142,15 @@
       <div class="accordion-body fs-sm">
         <article class="row g-0 border-0 mb-4">
           <div class="col-sm-4">
-            <img src="{% static 'images/help/check-rewrite.png' %}" class="img-thumbnail" alt="Rounded thumbnail">
+            <img src="{% static 'images/help/check-rewrite.png' %}" class="img-thumbnail d-block mx-auto" alt="Rounded thumbnail">
           </div>
           <div class="col-sm-8">
             <div class="pt-4 pb-sm-4 ps-sm-4 pe-lg-4">
-              <p class="d-md-block">
-                this will prompt some dialog in the calculator with the hopes that you can do this on your own!
-                pick a number to substitute in for the variable in both expressions
+              <p class="d-md-block mb-2">
+                After completing a "Rewrite" step and before clicking the "New Step" button, click the "Check Rewrite" button beneath any side of an equation where you are not sure if you rewrote the step correctly.
+              </p>
+              <p class="d-md-block mb-2">
+                                pick a number to substitute in for the variable in both expressions
                 check multiple times if you want, but with different values for the variable
                 if you checked it and you have already proven they are unequal, don't do it again fix your mistakes
                 type and enterr "stop" if you ever want to stop the check process
@@ -153,7 +171,7 @@
       <div class="accordion-body fs-sm">
         <article class="row g-0 border-0 mb-4">
           <div class="col-sm-4">
-            <img src="{% static 'images/help/isolated-var.png' %}" class="img-thumbnail" alt="Rounded thumbnail">
+            <img src="{% static 'images/help/isolated-var.png' %}" class="img-thumbnail d-block mx-auto" alt="Rounded thumbnail">
           </div>
           <div class="col-sm-7">
             <div class="pt-4 pb-sm-4 ps-sm-4 pe-lg-4">
@@ -176,7 +194,7 @@
     <div class="accordion-collapse collapse" id="collapseCheckSolution" aria-labelledby="headingCheckSolution" data-bs-parent="#accordionHelp">
       <div class="accordion-body fs-sm">
         <article class="row g-0 border-0 mb-4">
-          <img src="{% static 'images/help/check-solution.png' %}" class="img-thumbnail col-sm-5" alt="Rounded thumbnail">
+          <img src="{% static 'images/help/check-solution.png' %}" class="img-thumbnail col-sm-5 d-block mx-auto" alt="Rounded thumbnail">
           <div class="col-sm-7">
             <div class="pt-4 pb-sm-4 ps-sm-4 pe-lg-4">
               <p class="d-md-block">
