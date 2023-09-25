@@ -150,10 +150,16 @@
                 After completing a "Rewrite" step and before clicking the "New Step" button, click the "Check Rewrite" button beneath any side of an equation where you are not sure if you rewrote the step correctly.
               </p>
               <p class="d-md-block mb-2">
-                                pick a number to substitute in for the variable in both expressions
-                check multiple times if you want, but with different values for the variable
-                if you checked it and you have already proven they are unequal, don't do it again fix your mistakes
-                type and enterr "stop" if you ever want to stop the check process
+                This will start a dialog in the calculator on the right side of the screen. That will lead you through the process of checking if two expressions are equivalent by substituting any value you choose in for the variable. Type and enter "stop" in the calculator if you ever want to end the check process early. Also, if you change anything about the steps you are checking, the process will automatically be cancelled.
+              </p>
+              <p class="d-md-block mb-2">
+                You can check a rewrite as many times as you want with different values for the variable each time. The number next to "Check Rewrite" on the button will increase each time you successfully do this.
+              </p>
+              <p class="d-md-block mb-2">
+                However, if you check a rewrite step and find that the rewrite is not equivalent to the previous step, you found a mistake. Nice job! The number on the Check Rewrite button will turn red indicating that you found a mistake in this expression.
+              </p>
+              <p class="d-md-block mb-0">
+                You should be able to remember the process of checking if two expressions are equivalent, so you can do it all on your own!
               </p>
             </div>
           </div>
@@ -173,11 +179,13 @@
           <div class="col-sm-4">
             <img src="{% static 'images/help/isolated-var.png' %}" class="img-thumbnail d-block mx-auto" alt="Rounded thumbnail">
           </div>
-          <div class="col-sm-7">
+          <div class="col-sm-8">
             <div class="pt-4 pb-sm-4 ps-sm-4 pe-lg-4">
-              <p class="d-md-block">
-                isolating the variable means that the variable you are solving for is by itself
-                you'll know you've done it if the check solution button appears
+              <p class="d-md-block mb-2">
+                You'll know that you've isolated the variable you are solving for if the "Check Solution" button appears above the "New Step" button. This will always happen as a result of a "Rewrite" step.
+              </p>
+              <p class="d-md-block mb-0">
+                When the variable you are solving for is isolated, it is by itself on one side of the equation and it does not appear on the other side of the equation. It does not matter which side of the equation the variable is isolated on.
               </p>
             </div>
           </div>
@@ -194,14 +202,22 @@
     <div class="accordion-collapse collapse" id="collapseCheckSolution" aria-labelledby="headingCheckSolution" data-bs-parent="#accordionHelp">
       <div class="accordion-body fs-sm">
         <article class="row g-0 border-0 mb-4">
-          <img src="{% static 'images/help/check-solution.png' %}" class="img-thumbnail col-sm-5 d-block mx-auto" alt="Rounded thumbnail">
-          <div class="col-sm-7">
+          <div class="col-sm-4">
+            <img src="{% static 'images/help/check-solution.png' %}" class="img-thumbnail d-block mx-auto" alt="Rounded thumbnail">
+          </div>
+          <div class="col-sm-8">
             <div class="pt-4 pb-sm-4 ps-sm-4 pe-lg-4">
-              <p class="d-md-block">
-                check solution is similar to check rewrite
-                leads you through a dialog
-                it will let you know if you have the right answer or not
-                it will let you know if you have any algebra mistakes...then you'll have to find and fix them all then click again to have the problem consider solved
+              <p class="d-md-block mb-2">
+                Click the "Check Solution" button to solve and finish a problem. The "Check Solution" button appears after you have isolated the variable you are solving for.
+              </p>
+              <p class="d-md-block mb-2">
+                After clicking the "Check Solution" button, a dialog will start on the right side of the screen in the calculator. This dialog will be similar to what happens when you click the "Check Rewrite" button except you will take what your variable equals in your last step and substitute it in to both sides of your starting equation.
+              </p>
+              <p class="d-md-block mb-2">
+                This "Check Solution" process will help you determine if you found the right answer and if you have any mistakes in your algebra. To have the problem considered to be solved, you need the correct answer and no mistakes in your algebra.
+              </p>
+              <p class="d-md-block mb-0">
+                Not showing all of your work even if you have the correct answer will count as a mistake. For example, let's say I define the equation x+5=7 and I am solving for x. I can find the value of x in my head, so I skip the arithmetic step and make my second step a rewrite step where I enter x=2. I click the "Check Solution" button and determine that I have found the correct answer, but the problem is not yet solved because there are mistakes in my algebra. I need the arithmetic step where I subtract 2 from both sides to show all my work and mark the problem as solved.
               </p>
             </div>
           </div>
