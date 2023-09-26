@@ -22,6 +22,10 @@ class UserMessage(models.Model):
         hidden_messages = ["start-check-rewrite", "stop-check-rewrite", "start-check-solution", "stop-check-solution"]
         if any(msg in message_latex for msg in hidden_messages):
             content_type = Content.HIDDEN
+
+        message_max_length = Content._meta.get_field("content").max_length
+        if len(message_latex.strip()) >= message_max_length:
+            message_latex = message_latex[:message_max_length]
         message_content = Content(user_message=new_message, content_type=content_type, content=message_latex)
         message_content.save()
 
@@ -69,6 +73,7 @@ class Response(models.Model):
                     content_part = content_part[1:]
                 else:
                     type_of_content = Content.TEXT
+
                 new_content = Content(
                     response_message=r,
                     content_type=type_of_content,

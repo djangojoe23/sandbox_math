@@ -640,22 +640,29 @@ class Step(models.Model):
 
     @classmethod
     def get_mistakes(cls, step):
+        expression_max_length = Expression._meta.get_field("latex").max_length
+
         # First item in list is the left expression's mistake and the second item is the right expression's
         mistakes = [Mistake.NONE, Mistake.NONE]
         if len(step.left_expr.latex.strip()) == 0:
             mistakes[0] = Mistake.BLANK_EXPR
+        elif len(step.left_expr.latex.strip()) == expression_max_length:
+            mistakes[0] = Mistake.TOO_LONG
+
         if len(step.right_expr.latex.strip()) == 0:
             mistakes[1] = Mistake.BLANK_EXPR
+        elif len(step.right_expr.latex.strip()) == expression_max_length:
+            mistakes[1] = Mistake.TOO_LONG
 
         if Step.is_first(step):
             if step.step_type != Step.DEFINE:
-                if mistakes[0] != Mistake.BLANK_EXPR:
+                if mistakes[0] not in [Mistake.BLANK_EXPR, Mistake.TOO_LONG]:
                     mistakes[0] = Mistake.NO_EQUATION
-                if mistakes[1] != Mistake.BLANK_EXPR:
+                if mistakes[1] not in [Mistake.BLANK_EXPR, Mistake.TOO_LONG]:
                     mistakes[1] = Mistake.NO_EQUATION
             else:
-                mistakes = Problem.get_define_equation_mistakes(step)
                 if mistakes[0] == mistakes[1] == Mistake.NONE:
+                    mistakes = Problem.get_define_equation_mistakes(step)
                     if not step.problem.variable:
                         mistakes[0] = Mistake.NO_VAR_SELECTED
                         mistakes[1] = Mistake.NO_VAR_SELECTED
@@ -664,30 +671,30 @@ class Step(models.Model):
                         pass
         else:
             if step.step_type == Step.DEFINE:
-                if mistakes[0] != Mistake.BLANK_EXPR:
+                if mistakes[0] not in [Mistake.BLANK_EXPR, Mistake.TOO_LONG]:
                     mistakes[0] = Mistake.ALREADY_DEFINED
-                if mistakes[1] != Mistake.BLANK_EXPR:
+                if mistakes[1] not in [Mistake.BLANK_EXPR, Mistake.TOO_LONG]:
                     mistakes[1] = Mistake.ALREADY_DEFINED
             elif step.step_type == Step.REWRITE:
                 if step.problem.variable:
                     mistakes = Problem.get_rewrite_mistakes(step)
                 else:
-                    if mistakes[0] != Mistake.BLANK_EXPR:
+                    if mistakes[0] not in [Mistake.BLANK_EXPR, Mistake.TOO_LONG]:
                         mistakes[0] = Mistake.NO_VAR_SELECTED
-                    if mistakes[1] != Mistake.BLANK_EXPR:
+                    if mistakes[1] not in [Mistake.BLANK_EXPR, Mistake.TOO_LONG]:
                         mistakes[1] = Mistake.NO_VAR_SELECTED
             elif step.step_type == Step.ARITHMETIC:
                 if step.problem.variable:
                     mistakes = Problem.get_arithmetic_mistakes(step)
                 else:
-                    if mistakes[0] != Mistake.BLANK_EXPR:
+                    if mistakes[0] not in [Mistake.BLANK_EXPR, Mistake.TOO_LONG]:
                         mistakes[0] = Mistake.NO_VAR_SELECTED
-                    if mistakes[1] != Mistake.BLANK_EXPR:
+                    if mistakes[1] not in [Mistake.BLANK_EXPR, Mistake.TOO_LONG]:
                         mistakes[1] = Mistake.NO_VAR_SELECTED
             else:
-                if mistakes[0] != Mistake.BLANK_EXPR:
+                if mistakes[0] not in [Mistake.BLANK_EXPR, Mistake.TOO_LONG]:
                     mistakes[0] = Mistake.NO_STEP_TYPE
-                if mistakes[1] != Mistake.BLANK_EXPR:
+                if mistakes[1] not in [Mistake.BLANK_EXPR, Mistake.TOO_LONG]:
                     mistakes[1] = Mistake.NO_STEP_TYPE
 
         # find any mistake objects involving this step
@@ -778,6 +785,7 @@ class CheckRewrite(CheckAlgebra):
         if not all_vars_to_substitute:
             if (
                 Mistake.BLANK_EXPR in expr_mistakes
+                or Mistake.TOO_LONG in expr_mistakes
                 or Mistake.NON_MATH in expr_mistakes
                 or Mistake.UNKNOWN_SYM in expr_mistakes
                 or Mistake.GREY_BOX in expr_mistakes
@@ -802,6 +810,7 @@ class CheckRewrite(CheckAlgebra):
             new_check = CheckRewrite.save_new(other_var, step, side)
             if (
                 Mistake.BLANK_EXPR in expr_mistakes
+                or Mistake.TOO_LONG in expr_mistakes
                 or Mistake.NON_MATH in expr_mistakes
                 or Mistake.UNKNOWN_SYM in expr_mistakes
                 or Mistake.GREY_BOX in expr_mistakes
@@ -1074,6 +1083,7 @@ class CheckSolution(CheckAlgebra):
         if not all_vars_to_substitute:
             if (
                 Mistake.BLANK_EXPR in equation_mistakes
+                or Mistake.TOO_LONG in equation_mistakes
                 or Mistake.NON_MATH in equation_mistakes
                 or Mistake.UNKNOWN_SYM in equation_mistakes
                 or Mistake.GREY_BOX in equation_mistakes
@@ -1088,6 +1098,7 @@ class CheckSolution(CheckAlgebra):
                 )
         elif (
             Mistake.BLANK_EXPR in attempt_mistakes
+            or Mistake.TOO_LONG in attempt_mistakes
             or Mistake.NON_MATH in attempt_mistakes
             or Mistake.UNKNOWN_SYM in attempt_mistakes
             or Mistake.GREY_BOX in attempt_mistakes
@@ -1105,6 +1116,7 @@ class CheckSolution(CheckAlgebra):
             check_process = CheckSolution.save_new(other_var, equation_step, None)
             if (
                 Mistake.BLANK_EXPR in equation_mistakes
+                or Mistake.TOO_LONG in equation_mistakes
                 or Mistake.NON_MATH in equation_mistakes
                 or Mistake.UNKNOWN_SYM in equation_mistakes
                 or Mistake.GREY_BOX in equation_mistakes

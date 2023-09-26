@@ -45,10 +45,8 @@ class CheckAlgebra(models.Model):
     )
     expr2_latex = models.CharField(max_length=100, blank=True, null=True)
     solving_for = models.CharField(max_length=100, blank=True, null=True)
-    # solving_for_value = models.DecimalField(max_digits=6, decimal_places=3, blank=True, null=True)
     solving_for_latex_value = models.CharField(max_length=100, blank=True, null=True)
     other_var = models.CharField(max_length=100, blank=True, null=True)
-    # other_var_value = models.DecimalField(max_digits=6, decimal_places=3, blank=True, null=True)
     other_var_latex_value = models.CharField(max_length=100, blank=True, null=True)
     end_time = models.DateTimeField(null=True)
 

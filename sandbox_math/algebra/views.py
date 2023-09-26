@@ -203,66 +203,70 @@ class UpdateExpressionView(View):
         step = Step.objects.get(id=int(request.POST["step-id"]))
 
         side = None
+        expression_max_length = Expression._meta.get_field("latex").max_length
         if "left" in request.POST["side"]:
             side = "left"
-            step.left_expr.latex = request.POST["expression"]
+            if len(request.POST["expression"]) < expression_max_length:
+                step.left_expr.latex = request.POST["expression"]
+            else:
+                step.left_expr.latex = request.POST["expression"][:expression_max_length]
             step.left_expr.save()
         elif "right" in request.POST["side"]:
             side = "right"
-            step.right_expr.latex = request.POST["expression"]
+            if len(request.POST["expression"]) < expression_max_length:
+                step.right_expr.latex = request.POST["expression"]
+            else:
+                step.right_expr.latex = request.POST["expression"][:expression_max_length]
             step.right_expr.save()
-        else:
-            response = JsonResponse({"error": "there was an error updating the expression"})
 
         stop_check = None  # could be stopping a check rewrite or a check solution
-        if not response:
-            all_steps = Step.objects.filter(problem=step.problem).order_by("created")
+        all_steps = Step.objects.filter(problem=step.problem).order_by("created")
 
-            left_var_options = Expression.get_variables_in_latex_expression(all_steps.first().left_expr.latex)
-            right_var_options = Expression.get_variables_in_latex_expression(all_steps.first().right_expr.latex)
-            variable_options = set(left_var_options + right_var_options)
+        left_var_options = Expression.get_variables_in_latex_expression(all_steps.first().left_expr.latex)
+        right_var_options = Expression.get_variables_in_latex_expression(all_steps.first().right_expr.latex)
+        variable_options = set(left_var_options + right_var_options)
 
-            if CheckRewrite.is_currently_checking(step.id, side):
-                active_process = CheckRewrite.objects.get(problem=step.problem, end_time__isnull=True)
-                if active_process.expr1 == getattr(step, f"{side}_expr"):
-                    # step with expression changed is the rewrite step
-                    if active_process.expr1_latex != getattr(step, f"{side}_expr").latex:
-                        stop_check = "rewrite"
-                else:
-                    # step with the expression changed is the previous step
-                    if active_process.expr2_latex != getattr(step, f"{side}_expr").latex:
-                        stop_check = "rewrite"
-            elif CheckSolution.objects.filter(problem=step.problem, end_time__isnull=True).count():
-                stop_check = "solution"
+        if CheckRewrite.is_currently_checking(step.id, side):
+            active_process = CheckRewrite.objects.get(problem=step.problem, end_time__isnull=True)
+            if active_process.expr1 == getattr(step, f"{side}_expr"):
+                # step with expression changed is the rewrite step
+                if active_process.expr1_latex != getattr(step, f"{side}_expr").latex:
+                    stop_check = "rewrite"
+            else:
+                # step with the expression changed is the previous step
+                if active_process.expr2_latex != getattr(step, f"{side}_expr").latex:
+                    stop_check = "rewrite"
+        elif CheckSolution.objects.filter(problem=step.problem, end_time__isnull=True).count():
+            stop_check = "solution"
 
-            # Editing an expression could have an effect on it's badge count, the previous step's badge count, or the
-            # next one's
-            badge_updates = {}
-            for e in range(0, 3):
-                step_to_match = step
-                if e == 0:
-                    step_to_match = Step.get_prev(step)
-                elif e == 1:
-                    step_to_match = Step.get_next(step)
+        # Editing an expression could have an effect on it's badge count, the previous step's badge count, or the
+        # next one's
+        badge_updates = {}
+        for e in range(0, 3):
+            step_to_match = step
+            if e == 0:
+                step_to_match = Step.get_prev(step)
+            elif e == 1:
+                step_to_match = Step.get_next(step)
 
-                if step_to_match:
-                    completed_checks = CheckRewrite.get_matching_completed_checks("CheckRewrite", step_to_match, side)
-                    badge_updates[step_to_match.id] = {
-                        "count": completed_checks.count(),
-                        "color": "info",
-                    }
-                    for p in completed_checks:
-                        if not p.are_equivalent:
-                            badge_updates[step_to_match.id]["color"] = "danger"
-            feedback = {
-                "variable_options": sorted(list(variable_options)),
-                "mistakes": Problem.get_all_steps_mistakes(step.problem),
-                "stop_check": stop_check,
-                "badge_updates": badge_updates,
-                "variable_isolated": Problem.variable_isolated_side(step.problem),
-            }
+            if step_to_match:
+                completed_checks = CheckRewrite.get_matching_completed_checks("CheckRewrite", step_to_match, side)
+                badge_updates[step_to_match.id] = {
+                    "count": completed_checks.count(),
+                    "color": "info",
+                }
+                for p in completed_checks:
+                    if not p.are_equivalent:
+                        badge_updates[step_to_match.id]["color"] = "danger"
+        feedback = {
+            "variable_options": sorted(list(variable_options)),
+            "mistakes": Problem.get_all_steps_mistakes(step.problem),
+            "stop_check": stop_check,
+            "badge_updates": badge_updates,
+            "variable_isolated": Problem.variable_isolated_side(step.problem),
+        }
 
-            response = JsonResponse(feedback)
+        response = JsonResponse(feedback)
 
         return response
 

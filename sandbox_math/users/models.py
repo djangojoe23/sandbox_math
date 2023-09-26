@@ -206,6 +206,7 @@ class Mistake(models.Model):
     UNKNOWN_SYM = "Unknown Symbol"
     ALREADY_DEFINED = "Change Step Type"
     CANNOT_REWRITE = "Check Previous Expression"
+    TOO_LONG = "Expression Too Long"
     NONE = "No Mistake Here"
 
     # Check rewrite and check solution mistakes
@@ -267,6 +268,7 @@ class Mistake(models.Model):
             CANNOT_REWRITE,
             "Fix the expression in the previous step so it makes sense, then try to rewrite it.",
         ),
+        (TOO_LONG, "This expression has too many characters in it and cannot be saved. Shorten it!"),
         (NONE, "This expression is correct at this step."),
         (ALREADY_INCORRECT, "Trying to check rewrite or answer already proven to be wrong."),
         (INVALID_EXPR, "Trying to check expression that isn't valid."),

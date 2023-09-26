@@ -62,7 +62,10 @@ function InitializeCalculator() {
         }, 100);
       },
       enter: function () {
-        if (calculatorField.latex().length) {
+        if (
+          calculatorField.latex().length &&
+          calculatorField.latex().length < 250
+        ) {
           SubmitUserMessage();
           calculatorField.latex('');
         }
@@ -205,7 +208,10 @@ function GetResponse(userMessageLatex, callerFunctionName) {
             calcInputField.config({
               handlers: {
                 enter: function () {
-                  if (calcInputField.latex().length) {
+                  if (
+                    calcInputField.latex().length &&
+                    calcInputField.latex().length < 250
+                  ) {
                     SubmitUserMessage();
                     calcInputField.latex('');
                   }
