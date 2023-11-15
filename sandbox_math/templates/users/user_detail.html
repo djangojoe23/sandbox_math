@@ -1,7 +1,7 @@
 {% extends "users/user_base.html" %}
 {% load static %}
 
-{% block title %}{{ object.username }}{% endblock %}
+{% block title %}{{ object.username }} - Overview{% endblock %}
 
 {% block inner %}
   <!-- Page content-->
@@ -13,18 +13,18 @@
     <section class="card border-0 py-1 p-md-2 p-xl-3 p-xxl-4 mb-4">
         <div class="card-body">
           <div class="d-flex align-items-center mt-sm-n1 pb-4 mb-0 mb-lg-1 mb-xl-3">
-            <h2 class="h4 mb-0">Did I get better at algebra last week?<span class="badge bg-secondary text-success">New</span></h2>
+            <h2 class="h4 mb-0">Did you get better at algebra in the past {{ days_prior }} days?</h2>
           </div>
           <div class="">
             <div class="accordion" id="accordionAlternative">
-              <!-- Item -->
+              <!-- Activity Overveiew -->
               <div class="accordion-item">
-                <h3 class="accordion-header" id="headingOne">
-                  <button class="accordion-button text-{{ activity_text_color }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                <h3 class="accordion-header" id="activityOverview">
+                  <button class="accordion-button collapsed text-{{ activity_text_color }}" type="button" data-bs-toggle="collapse" data-bs-target="#activityCollapse" aria-expanded="false" aria-controls="activityCollapse">
                     {{ last_week_activity_message}}
                   </button>
                 </h3>
-                <div class="accordion-collapse collapse show" id="collapseOne" aria-labelledby="headingOne" data-bs-parent="#accordionAlternative">
+                <div class="accordion-collapse collapse" id="activityCollapse" aria-labelledby="activityOverview" data-bs-parent="#accordionAlternative">
                   <div class="accordion-body fs-sm">
                     <ul>
                       <li>{{ new_problems_message }}</li>
@@ -33,44 +33,57 @@
                       <li>{{ new_checksolutions_message }}</li>
                     </ul>
                     <div class="col-12 d-flex justify-content-center pt-2">
-                      <button class="btn btn-primary" type="button">More Detail</button>
+                      <a class="btn btn-primary" href="{% url 'users:activity_info' request.user.username %}">More Detail</a>
                     </div>
                   </div>
                 </div>
               </div>
-              <!-- Item -->
+              <!-- Mistakes Overview -->
               <div class="accordion-item">
-                <h3 class="accordion-header" id="headingTwo">
-                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">You are getting better at finding your mistakes.</button>
+                <h3 class="accordion-header" id="mistakesOverview">
+                  <button class="accordion-button collapsed text-{{ mistakes_text_color }}" type="button" data-bs-toggle="collapse" data-bs-target="#mistakesCollapse" aria-expanded="false" aria-controls="mistakesCollapse">
+                    {{ last_week_mistakes_message }}
+                  </button>
                 </h3>
-                <div class="accordion-collapse collapse" id="collapseTwo" aria-labelledby="headingTwo" data-bs-parent="#accordionAlternative">
-                  <div class="accordion-body fs-sm">This is the second item's accordion body. It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element.</div>
+                <div class="accordion-collapse collapse" id="mistakesCollapse" aria-labelledby="mistakesOverview" data-bs-parent="#accordionAlternative">
+                  <div class="accordion-body fs-sm">
+                    <ul>
+                      <li>You made {{ recent_mistakes_count }} mistakes in the past {{ days_prior }} days.</li>
+                      <li>Your most common mistake was "{{ most_common_mistake }}".</li>
+                      {% if find_rate_message %}<li>{{ find_rate_message|safe }}</li>{% endif %}
+                      {% if fixed_rate_message %}<li>{{ fixed_rate_message }}</li>{% endif %}
+                    </ul>
+                    <div class="col-12 d-flex justify-content-center pt-2">
+                      <a class="btn btn-primary" href="{% url 'users:mistakes_info' request.user.username %}">More Detail</a>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <!-- Item -->
+              <!-- Solved Overview -->
               <div class="accordion-item">
-                <h3 class="accordion-header" id="headingThree">
-                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">You are getting better at fixing your mistakes.</button>
+                <h3 class="accordion-header" id="solvedOverview">
+                  <button class="accordion-button collapsed text-{{ solved_text_color }}" type="button" data-bs-toggle="collapse" data-bs-target="#solvedCollapse" aria-expanded="false" aria-controls="solvedCollapse">
+                    {{ solved_message }}
+                  </button>
                 </h3>
-                <div class="accordion-collapse collapse" id="collapseThree" aria-labelledby="headingThree" data-bs-parent="#accordionAlternative">
-                  <div class="accordion-body fs-sm">This is the third item's accordion body. It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element.</div>
+                <div class="accordion-collapse collapse" id="solvedCollapse" aria-labelledby="solvedOverview" data-bs-parent="#accordionAlternative">
+                  <div class="accordion-body fs-sm">
+                    <ul>
+                      <li>{{ solved_detail }}</li>
+                      <li>{{ recently_solved_detail }}</li>
+                    </ul>
+                    <div class="col-12 d-flex justify-content-center pt-2">
+                      <a class="btn btn-primary" href="{% url 'users:solutions_info' request.user.username %}">More Detail</a>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <!-- Item -->
+              <!-- Variety Overview -->
               <div class="accordion-item">
-                <h3 class="accordion-header" id="headingThree">
-                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">You need to solve the problems you are starting.</button>
+                <h3 class="accordion-header" id="varietyOverview">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#varietyCollapse" aria-expanded="false" aria-controls="varietyCollapse">You need to solve a wider variety of problems.</button>
                 </h3>
-                <div class="accordion-collapse collapse" id="collapseThree" aria-labelledby="headingThree" data-bs-parent="#accordionAlternative">
-                  <div class="accordion-body fs-sm">This is the third item's accordion body. It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element.</div>
-                </div>
-              </div>
-              <!-- Item -->
-              <div class="accordion-item">
-                <h3 class="accordion-header" id="headingThree">
-                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">You need to solve a wider variety of problems.</button>
-                </h3>
-                <div class="accordion-collapse collapse" id="collapseThree" aria-labelledby="headingThree" data-bs-parent="#accordionAlternative">
+                <div class="accordion-collapse collapse" id="varietyCollapse" aria-labelledby="varietyOverview" data-bs-parent="#accordionAlternative">
                   <div class="accordion-body fs-sm">This is the third item's accordion body. It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element.</div>
                 </div>
               </div>
@@ -78,42 +91,5 @@
           </div>
         </div>
       </section>
-  <section class="card border-0 py-1 p-md-2 p-xl-3 p-xxl-4">
-    <div class="card-body">
-      <div class="d-flex align-items-center mt-sm-n1 pb-4 mb-0 mb-lg-1 mb-xl-3">
-        <h2 class="h4 mb-0">Your Most Recent Problems</h2>
-        <a class="btn btn-sm btn-secondary ms-auto" href="account-orders.html">View all</a>
-      </div>
-    </div>
-  </section>
   </div>
 {% endblock %}
-{#{% block content %}#}
-{#<div class="container">#}
-{##}
-{#  <div class="row">#}
-{#    <div class="col-sm-12">#}
-{##}
-{#      <h2>{{ object.username }}</h2>#}
-{#      {% if object.name %}#}
-{#        <p>{{ object.name }}</p>#}
-{#      {% endif %}#}
-{#    </div>#}
-{#  </div>#}
-{##}
-{#{% if object == request.user %}#}
-{#<!-- Action buttons -->#}
-{#<div class="row">#}
-{##}
-{#  <div class="col-sm-12">#}
-{#    <a class="btn btn-primary" href="{% url 'users:update' %}" role="button">My Info</a>#}
-{#    <a class="btn btn-primary" href="{% url 'account_email' %}" role="button">E-Mail</a>#}
-{#    <!-- Your Stuff: Custom user template urls -->#}
-{#  </div>#}
-{##}
-{#</div>#}
-{#<!-- End Action buttons -->#}
-{#{% endif %}#}
-{##}
-{#</div>#}
-{#{% endblock content %}#}

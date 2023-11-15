@@ -70,7 +70,9 @@
             <div class="navbar card-header w-100 mx-0 px-4">
               <div class="d-flex align-items-center w-100 px-sm-3">
                 <button class="navbar-toggler me-3 me-sm-4" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu" aria-controls="contactsList" aria-label="Toggle contacts list"><span class="navbar-toggler-icon"></span></button>
-                <div class="h6 ps-2 ms-1 mb-0 w-100">{% if problem_finished == 'finished' %}<span class="particletext letterconfetti">This Problem is Solved!</span>{% else %}Current{% endif %}</div>
+                <div class="d-flex ps-2 ms-1 mb-0 h6 w-100">
+                  <div class="w-100">{% if problem_finished == 'finished' %}<span class="particletext letterconfetti">This Problem is Solved!</span>{% else %}Current{% endif %}</div>
+                </div>
               </div>
             </div>
             <!-- Body-->

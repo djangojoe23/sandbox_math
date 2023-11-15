@@ -20,9 +20,31 @@ from sandbox_math.users.models import HelpClick, Mistake, Proceed, User
 
 # Create your models here.
 class Problem(models.Model):
+    NONE = "none"
+    # one variable
+    # solve for one variable in terms of another
+    # variable on one side
+    # variable on both sides
+    # variable in more than 1 place on same side
+    # negative answer
+    # positive answer
+    # decimals in problem
+    # fractions in problem
+    # variable in denominator
+    # distributive property
+    # not whole number answer
+    # whole number answer
+    # whole numbers only in problem
+    # no solution
+    # infinitely many solutions
+    PROBLEM_TYPES = [
+        (NONE, "None"),
+    ]
+
     student = models.ForeignKey(AUTH_USER_MODEL, related_name="student", on_delete=models.CASCADE)
     variable = models.CharField(max_length=100, blank=True, null=True)
     last_viewed = models.DateTimeField()
+    # tag = models.CharField(max_length=10, choices=PROBLEM_TYPES, default=NONE)
 
     @classmethod
     def save_new(cls, student_id):
@@ -348,10 +370,8 @@ class Problem(models.Model):
         recent_first_step_ids = (
             Problem.objects.filter(
                 student__id=student_id,
-                step_problem__step_type=Step.DEFINE,
                 step_problem__created__gte=start_date,
             )
-            .exclude(Q(variable="") | Q(step_problem__left_expr__latex="") | Q(step_problem__right_expr__latex=""))
             .order_by("step_problem__created")
             .annotate(first_step_id=Min("step_problem__id"))
         )
@@ -590,7 +610,7 @@ class Step(models.Model):
 
     @classmethod
     def is_first(cls, this_step):
-        first_step = (Step.objects.filter(problem=this_step.problem).order_by("created").first())  # fmt: skip
+        first_step = Step.objects.filter(problem=this_step.problem).order_by("created").first()  # fmt: skip
         if first_step == this_step:
             return True
         else:
@@ -818,8 +838,7 @@ class CheckRewrite(CheckAlgebra):
                 responses.append(
                     "You have an issue with one of the expressions you are trying to check. Please fix that first."
                 )
-
-                new_mistake = Mistake.save_new(new_check, Mistake.INVALID_EXPR)
+                new_mistake = Mistake.save_new(user_message_obj.problem_id, new_check, Mistake.INVALID_EXPR)
                 new_mistake.save()
                 new_check.end_time = timezone.now()
                 new_check.save()
@@ -827,7 +846,7 @@ class CheckRewrite(CheckAlgebra):
                 if CheckRewrite.known_incorrect(new_check):
                     responses.append("You've already checked these expressions and know they are not equivalent.")
                     responses.append("Change the expressions so they are equivalent instead of checking them again.")
-                    Mistake.save_new(new_check, Mistake.ALREADY_INCORRECT)
+                    Mistake.save_new(user_message_obj.problem_id, new_check, Mistake.ALREADY_INCORRECT)
                     new_check.end_time = timezone.now()
                     new_check.save()
                 else:
@@ -975,7 +994,7 @@ class CheckRewrite(CheckAlgebra):
                         f"Now, substitute {var_val_string} in the expression " f"`/{check_process.expr2_latex}`"
                     )
                 else:
-                    Mistake.save_new(check_process, Mistake.SUB_EXPR1)
+                    Mistake.save_new(user_message_obj.problem_id, check_process, Mistake.SUB_EXPR1)
                     responses.append("You didn't do that substitution correctly. Try again.")
             else:
                 if simplify(sympy_exprs["usr_msg"] - sympy_exprs["prev"]) == 0:
@@ -1022,7 +1041,7 @@ class CheckRewrite(CheckAlgebra):
                         check_process.are_equivalent = False
                         check_process.save()
                 else:
-                    Mistake.save_new(check_process, Mistake.SUB_EXPR2)
+                    Mistake.save_new(user_message_obj.problem_id, check_process, Mistake.SUB_EXPR2)
                     responses.append("You didn't do that substitution correctly. Try again.")
 
         for r in responses:
@@ -1052,13 +1071,13 @@ class CheckSolution(CheckAlgebra):
     SOLVED = "solved"
     INFINITELY_MANY = "inf many"
     NO_SOLUTION = "no solution"
-    UNSOLVED = "unsolved"
+    NOT_SOLVED = "unsolved"
     INCOMPLETE = "incomplete"
     SOLVED_TYPES = [
         (SOLVED, "The problem has one answer."),
         (INFINITELY_MANY, "The problem has infinitely many answers."),
         (NO_SOLUTION, "The problem does not have an answer."),
-        (UNSOLVED, "The problem is not solved yet."),
+        (NOT_SOLVED, "The problem is not solved yet."),
         (INCOMPLETE, "The solution check was not completed."),
     ]
 
@@ -1125,7 +1144,7 @@ class CheckSolution(CheckAlgebra):
                     "You have an issue with your equation. Please fix that before checking your equation."
                 )
 
-                new_mistake = Mistake.save_new(check_process, Mistake.INVALID_EXPR)
+                new_mistake = Mistake.save_new(user_message_obj.problem_id, check_process, Mistake.INVALID_EXPR)
                 new_mistake.save()
                 check_process.end_time = timezone.now()
                 check_process.save()
@@ -1137,7 +1156,7 @@ class CheckSolution(CheckAlgebra):
                             f"it is not the answer."
                         )
                     responses.append("Please find and fix all your mistakes before checking another answer.")
-                    Mistake.save_new(check_process, Mistake.ALREADY_INCORRECT)
+                    Mistake.save_new(user_message_obj.problem_id, check_process, Mistake.ALREADY_INCORRECT)
                     check_process.end_time = timezone.now()
                     check_process.save()
                 else:
@@ -1173,7 +1192,7 @@ class CheckSolution(CheckAlgebra):
                                     "You still have mistakes with your algebra. Find and fix them then"
                                     " check your solution again."
                                 )
-                                Mistake.save_new(check_process, still_has_mistakes)
+                                Mistake.save_new(user_message_obj.problem_id, check_process, still_has_mistakes)
                             else:
                                 responses.append("You found and fixed all your mistakes!")
                                 responses.append(
@@ -1455,7 +1474,7 @@ class CheckSolution(CheckAlgebra):
                         f"`/({check_process.expr2_latex})`"
                     )
                 else:
-                    Mistake.save_new(check_process, Mistake.SUB_EXPR1)
+                    Mistake.save_new(user_message_obj.problem_id, check_process, Mistake.SUB_EXPR1)
                     responses.append("You didn't do that substitution correctly. Try again.")
             else:
                 if simplify(sympy_exprs["usr_msg"] - sympy_exprs["right"]) == 0:
@@ -1543,7 +1562,7 @@ class CheckSolution(CheckAlgebra):
                         )
                         responses.append("Try to find and fix your mistakes. Then change you answer and try again.")
                 else:
-                    Mistake.save_new(check_process, Mistake.SUB_EXPR2)
+                    Mistake.save_new(user_message_obj.problem_id, check_process, Mistake.SUB_EXPR2)
                     responses.append("You didn't do that substitution correctly. Try again.")
 
         for r in responses:

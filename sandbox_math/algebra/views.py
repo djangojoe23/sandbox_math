@@ -311,7 +311,7 @@ class UpdateHelpClickView(View):
             response = JsonResponse({"error": "there was an error updating the help clicks"})
 
         if not response:
-            Mistake.save_new(help_obj, mistake_titles[mistake_index])
+            Mistake.save_new(step.problem.id, help_obj, mistake_titles[mistake_index])
             # remind them how often they check for help or something?
             response = JsonResponse({})
 
@@ -332,12 +332,18 @@ class AttemptNewStepView(View):
             if mistake_titles[0] != Mistake.NONE or mistake_titles[1] != Mistake.NONE:
                 if mistake_titles[0] != Mistake.NONE:
                     mistake_obj = Mistake(
-                        mistake_type=mistake_titles[0], mistake_event_type=Mistake.PROCEED, event_id=proceed_obj.id
+                        owner=problem.student,
+                        mistake_type=mistake_titles[0],
+                        mistake_event_type=Mistake.PROCEED,
+                        event_id=proceed_obj.id,
                     )
                     mistake_obj.save()
                 if mistake_titles[1] != Mistake.NONE:
                     mistake_obj = Mistake(
-                        mistake_type=mistake_titles[1], mistake_event_type=Mistake.PROCEED, event_id=proceed_obj.id
+                        owner=problem.student,
+                        mistake_type=mistake_titles[1],
+                        mistake_event_type=Mistake.PROCEED,
+                        event_id=proceed_obj.id,
                     )
                     mistake_obj.save()
 

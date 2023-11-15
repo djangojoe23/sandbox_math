@@ -180,7 +180,7 @@ class CheckAlgebra(models.Model):
         check_model = apps.get_model("algebra", check_process.__class__.__name__)
 
         if not suggested_value_str.isnumeric():
-            mistake_model.save_new(check_process, mistake_model.CHOOSE_VALUE)
+            mistake_model.save_new(check_process.problem.id, check_process, mistake_model.CHOOSE_VALUE)
             responses.append(f"Just looking for a simple number to put in for `/{variable}`...like `/3`.")
         else:
             try:
@@ -192,14 +192,14 @@ class CheckAlgebra(models.Model):
                     if len(suggested_value_str.split(".")) > 1:
                         max_length += 1
                         if len(suggested_value_str.split(".")[1]) > 2:
-                            mistake_model.save_new(check_process, mistake_model.CHOOSE_VALUE)
+                            mistake_model.save_new(check_process.problem.id, check_process, mistake_model.CHOOSE_VALUE)
                             responses.append(f"For `/{variable}`, try a simpler whole number...like 5.")
                     else:
                         max_length = 3
 
                     if not responses:
                         if len(suggested_value_str) > max_length:
-                            mistake_model.save_new(check_process, mistake_model.CHOOSE_VALUE)
+                            mistake_model.save_new(check_process.problem.id, check_process, mistake_model.CHOOSE_VALUE)
                             responses.append(f"Try a smaller and simpler number for `/{variable}`...like `/3`.")
                         else:
                             var_field = ""
@@ -221,7 +221,9 @@ class CheckAlgebra(models.Model):
                                     event_id=check_process.id, mistake_type=mistake_model.CHOOSE_VALUE
                                 ).update(is_fixed=True)
                             else:
-                                mistake_model.save_new(check_process, mistake_model.CHOOSE_VALUE)
+                                mistake_model.save_new(
+                                    check_process.problem.id, check_process, mistake_model.CHOOSE_VALUE
+                                )
 
                                 checked_var_val_string = (
                                     f"`/{getattr(check_process, f'{var_field}')}={suggested_value_str}`"
@@ -245,7 +247,7 @@ class CheckAlgebra(models.Model):
                                     )
                                     responses.append("Find and fix your mistakes then try again different answer.")
             except ValidationError:
-                mistake_model.save_new(check_process, mistake_model.CHOOSE_VALUE)
+                mistake_model.save_new(check_process.problem.id, check_process, mistake_model.CHOOSE_VALUE)
                 responses.append(
                     f"You picked a value for `/{variable}`, but I don't recognize `/{suggested_value_str}` as "
                     f"a number. Please choose a number...like `/4`."
