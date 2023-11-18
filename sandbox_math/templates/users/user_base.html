@@ -1,5 +1,11 @@
 {% extends "base.html" %}
+
 {% load static i18n compress %}
+
+{% block javascript %}
+  {{ block.super }}
+{#    <script defer src="{% static 'js/theme/chartjs/dist/chart.umd.js' %}"></script>#}
+{% endblock javascript %}
 
 {% block content %}
 <div class="container py-5 mt-4 mt-lg-5 mb-lg-4 my-xl-5">
