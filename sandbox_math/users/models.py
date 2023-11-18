@@ -141,120 +141,123 @@ class User(AbstractUser):
             mistake_event_type=Mistake.HELP_CLICK, mistake_type=Mistake.NONE
         )
         mistakes_context["recent_made_count"] = all_recent_mistakes.count()
-        mistakes_context["recent_most_common"] = (
-            all_recent_mistakes.values("mistake_type")
-            .annotate(type_count=Count("mistake_type"))
-            .order_by("-type_count")
-            .first()["mistake_type"]
-        )
-
-        # Determine rate of mistakes per action for all time, then find recent rate of mistakes per action
-        all_check_rewrites = check_rewrite_model.objects.filter(
-            problem__student__id=student_id, did_expr1_subst=True, are_equivalent__isnull=False
-        )
-        all_check_solutions = check_solution_model.objects.filter(
-            problem__student__id=student_id, did_expr1_subst=True
-        ).exclude(problem_solved=check_solution_model.INCOMPLETE)
-        all_steps = step_model.objects.filter(problem__student__id=student_id)
-        all_mistakes = Mistake.objects.filter(owner_id=student_id).exclude(
-            mistake_event_type=Mistake.HELP_CLICK, mistake_type=Mistake.NONE
-        )
-        actions_count = all_check_rewrites.count() + all_check_solutions.count() + all_steps.count()
-        mistakes_count = all_mistakes.count()
-        mistakes_per_action = None
-        if actions_count > 0:
-            mistakes_per_action = mistakes_count / actions_count
-
-        recent_actions_count = (
-            all_check_rewrites.filter(start_time__gte=start_date, end_time__gte=start_date).count()
-            + all_check_solutions.filter(start_time__gte=start_date, end_time__gte=start_date).count()
-            + all_steps.filter(created__gte=start_date).count()
-        )
-        recent_mistakes_per_action = None
-        if recent_actions_count > 0:
-            recent_mistakes_per_action = (
-                all_mistakes.filter(mistake_time__gte=start_date).count() / recent_actions_count
+        mistakes_context["per_action"] = None
+        mistakes_context["recent_most_common"] = None
+        mistakes_context["find_rate"] = None
+        mistakes_context["fixed_rate"] = None
+        if mistakes_context["recent_made_count"]:
+            mistakes_context["recent_most_common"] = (
+                all_recent_mistakes.values("mistake_type")
+                .annotate(type_count=Count("mistake_type"))
+                .order_by("-type_count")
+                .first()["mistake_type"]
             )
 
-        # Determine rate of mistakes found per mistake all time, then find recent rate of mistakes found per mistake
-        help_clicks = Mistake.objects.filter(owner_id=student_id, mistake_event_type=Mistake.HELP_CLICK)
-        help_click_count = help_clicks.count()
-        help_click_mistake_found_count = help_clicks.exclude(mistake_type=Mistake.NONE).count()
-        recent_help_clicks = help_clicks.filter(mistake_time__gte=start_date)
-        recent_help_click_count = recent_help_clicks.count()
-        recent_help_click_mistake_found_count = recent_help_clicks.exclude(mistake_type=Mistake.NONE).count()
+            # Determine rate of mistakes per action for all time, then find recent rate of mistakes per action
+            all_check_rewrites = check_rewrite_model.objects.filter(
+                problem__student__id=student_id, did_expr1_subst=True, are_equivalent__isnull=False
+            )
+            all_check_solutions = check_solution_model.objects.filter(
+                problem__student__id=student_id, did_expr1_subst=True
+            ).exclude(problem_solved=check_solution_model.INCOMPLETE)
+            all_steps = step_model.objects.filter(problem__student__id=student_id)
+            all_mistakes = Mistake.objects.filter(owner_id=student_id).exclude(
+                mistake_event_type=Mistake.HELP_CLICK, mistake_type=Mistake.NONE
+            )
+            actions_count = all_check_rewrites.count() + all_check_solutions.count() + all_steps.count()
+            mistakes_count = all_mistakes.count()
+            mistakes_per_action = None
+            if actions_count > 0:
+                mistakes_per_action = mistakes_count / actions_count
 
-        check_rewrites = check_rewrite_model.objects.filter(
-            problem__student_id=student_id, are_equivalent__isnull=False
-        )
-        check_rewrites_count = check_rewrites.count()
-        check_rewrites_mistake_found = check_rewrites.filter(are_equivalent=False).count()
-        recent_check_rewrites = check_rewrites.filter(end_time__gte=start_date)
-        recent_check_rewrites_count = recent_check_rewrites.count()
-        recent_check_rewrites_mistake_found = recent_check_rewrites.filter(are_equivalent=False).count()
+            recent_actions_count = (
+                all_check_rewrites.filter(start_time__gte=start_date, end_time__gte=start_date).count()
+                + all_check_solutions.filter(start_time__gte=start_date, end_time__gte=start_date).count()
+                + all_steps.filter(created__gte=start_date).count()
+            )
+            recent_mistakes_per_action = None
+            if recent_actions_count > 0:
+                recent_mistakes_per_action = (
+                    all_mistakes.filter(mistake_time__gte=start_date).count() / recent_actions_count
+                )
 
-        check_solutions = check_solution_model.objects.filter(problem__student_id=student_id).exclude(
-            problem_solved=check_solution_model.INCOMPLETE
-        )
-        check_solutions_count = check_solutions.count()
-        check_solutions_mistake_found = check_solutions.filter(problem_solved=check_solution_model.NOT_SOLVED).count()
-        recent_check_solutions = check_solutions.filter(end_time__gte=start_date)
-        recent_check_solutions_count = recent_check_solutions.count()
-        recent_check_solutions_mistake_found = recent_check_solutions.filter(
-            problem_solved=check_solution_model.NOT_SOLVED
-        ).count()
+            # Determine rate of mistakes found per mistake all time, then find recent rate of mistakes found/mistake
+            help_clicks = Mistake.objects.filter(owner_id=student_id, mistake_event_type=Mistake.HELP_CLICK)
+            help_click_count = help_clicks.count()
+            help_click_mistake_found_count = help_clicks.exclude(mistake_type=Mistake.NONE).count()
+            recent_help_clicks = help_clicks.filter(mistake_time__gte=start_date)
+            recent_help_click_count = recent_help_clicks.count()
+            recent_help_click_mistake_found_count = recent_help_clicks.exclude(mistake_type=Mistake.NONE).count()
 
-        find_rate = None
-        if help_click_count + check_rewrites_count + check_solutions_count > 0:
-            find_rate = (
-                check_solutions_mistake_found + check_rewrites_mistake_found + help_click_mistake_found_count
-            ) / (help_click_count + check_rewrites_count + check_solutions_count)
-        recent_find_rate = None
-        if recent_help_click_count + recent_check_rewrites_count + recent_check_solutions_count > 0:
-            recent_find_rate = (
-                recent_check_solutions_mistake_found
-                + recent_check_rewrites_mistake_found
-                + recent_help_click_mistake_found_count
-            ) / (recent_help_click_count + recent_check_rewrites_count + recent_check_solutions_count)
+            check_rewrites = check_rewrite_model.objects.filter(
+                problem__student_id=student_id, are_equivalent__isnull=False
+            )
+            check_rewrites_count = check_rewrites.count()
+            check_rewrites_mistake_found = check_rewrites.filter(are_equivalent=False).count()
+            recent_check_rewrites = check_rewrites.filter(end_time__gte=start_date)
+            recent_check_rewrites_count = recent_check_rewrites.count()
+            recent_check_rewrites_mistake_found = recent_check_rewrites.filter(are_equivalent=False).count()
 
-        # Determine rate of mistake fixed per mistake all time, then find recent rate of mistake fixed per mistake
-        fixed_rate = None
-        if mistakes_count > 0:
-            fixed_rate = all_mistakes.filter(is_fixed=True).count() / mistakes_count
-        recent_fixed_rate = None
-        if mistakes_context["recent_made_count"] > 0:
+            check_solutions = check_solution_model.objects.filter(problem__student_id=student_id).exclude(
+                problem_solved=check_solution_model.INCOMPLETE
+            )
+            check_solutions_count = check_solutions.count()
+            check_solutions_mistake_found = check_solutions.filter(
+                problem_solved=check_solution_model.NOT_SOLVED
+            ).count()
+            recent_check_solutions = check_solutions.filter(end_time__gte=start_date)
+            recent_check_solutions_count = recent_check_solutions.count()
+            recent_check_solutions_mistake_found = recent_check_solutions.filter(
+                problem_solved=check_solution_model.NOT_SOLVED
+            ).count()
+
+            find_rate = None
+            if help_click_count + check_rewrites_count + check_solutions_count > 0:
+                find_rate = (
+                    check_solutions_mistake_found + check_rewrites_mistake_found + help_click_mistake_found_count
+                ) / (help_click_count + check_rewrites_count + check_solutions_count)
+            recent_find_rate = None
+            if recent_help_click_count + recent_check_rewrites_count + recent_check_solutions_count > 0:
+                recent_find_rate = (
+                    recent_check_solutions_mistake_found
+                    + recent_check_rewrites_mistake_found
+                    + recent_help_click_mistake_found_count
+                ) / (recent_help_click_count + recent_check_rewrites_count + recent_check_solutions_count)
+
+            # Determine rate of mistake fixed per mistake all time, then find recent rate of mistake fixed per mistake
+            fixed_rate = None
+            if mistakes_count > 0:
+                fixed_rate = all_mistakes.filter(is_fixed=True).count() / mistakes_count
+            recent_fixed_rate = None
             recent_fixed_rate = (
                 all_recent_mistakes.filter(is_fixed=True).count() / mistakes_context["recent_made_count"]
             )
 
-        # Compare
-        mistakes_context["per_action"] = None
-        if mistakes_per_action is not None and recent_mistakes_per_action is not None:
-            if mistakes_per_action > recent_mistakes_per_action:
-                mistakes_context["per_action"] = "worse"
-            elif mistakes_per_action == recent_mistakes_per_action:
-                mistakes_context["per_action"] = "same"
-            else:
-                mistakes_context["per_action"] = "better"
+            # Compare
+            if mistakes_per_action is not None and recent_mistakes_per_action is not None:
+                if mistakes_per_action > recent_mistakes_per_action:
+                    mistakes_context["per_action"] = "worse"
+                elif mistakes_per_action == recent_mistakes_per_action:
+                    mistakes_context["per_action"] = "same"
+                else:
+                    mistakes_context["per_action"] = "better"
 
-        # found_rate vs. recent_found_rate
-        mistakes_context["find_rate"] = None
-        if find_rate is not None and recent_find_rate is not None:
-            if find_rate > recent_find_rate:
-                mistakes_context["find_rate"] = "better"
-            elif find_rate == recent_find_rate:
-                mistakes_context["find_rate"] = "same"
-            else:
-                mistakes_context["find_rate"] = "worse"
+            # found_rate vs. recent_found_rate
+            if find_rate is not None and recent_find_rate is not None:
+                if find_rate > recent_find_rate:
+                    mistakes_context["find_rate"] = "better"
+                elif find_rate == recent_find_rate:
+                    mistakes_context["find_rate"] = "same"
+                else:
+                    mistakes_context["find_rate"] = "worse"
 
-        mistakes_context["fixed_rate"] = None
-        if fixed_rate is not None and recent_fixed_rate is not None:
-            if fixed_rate > recent_fixed_rate:
-                mistakes_context["fixed_rate"] = "better"
-            elif fixed_rate == recent_fixed_rate:
-                mistakes_context["fixed_rate"] = "same"
-            else:
-                mistakes_context["fixed_rate"] = "worse"
+            if fixed_rate is not None and recent_fixed_rate is not None:
+                if fixed_rate > recent_fixed_rate:
+                    mistakes_context["fixed_rate"] = "better"
+                elif fixed_rate == recent_fixed_rate:
+                    mistakes_context["fixed_rate"] = "same"
+                else:
+                    mistakes_context["fixed_rate"] = "worse"
 
         return mistakes_context
 

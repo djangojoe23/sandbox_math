@@ -21,7 +21,7 @@ from sandbox_math.users.models import HelpClick, Mistake, Proceed, User
 # Create your models here.
 class Problem(models.Model):
     NONE = "none"
-    # one variable
+    # probone variable
     # solve for one variable in terms of another
     # variable on one side
     # variable on both sides
