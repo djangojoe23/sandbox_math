@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 
 # from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Case, Count, Min, OuterRef, Q, Subquery, When
+from django.db.models import Case, Count, OuterRef, Q, Subquery, When
 from django.utils import timezone
 from sympy import UnevaluatedExpr, latex, simplify
 from sympy.core import symbol
@@ -116,7 +116,7 @@ class Problem(models.Model):
                 )
             )
             .filter(and_filter)
-            .annotate(step_count=Count("step_problem", distinct=True))
+            .annotate(step_count=Count("step", distinct=True))
             .annotate(created=Subquery(step_qs.values("created")[:1]))
             .annotate(left_expr=Subquery(step_qs.values("left_expr__latex")[:1]))
             .annotate(right_expr=Subquery(step_qs.values("right_expr__latex")[:1]))
@@ -361,30 +361,24 @@ class Problem(models.Model):
         return None
 
     @classmethod
-    def get_recent_new_by_date(cls, student_id, day_range):
+    def get_recent_by_date(cls, student_id, day_range):
         start_date = timezone.make_aware(
             datetime.now() - timedelta(days=day_range), timezone.get_current_timezone(), True
         )
 
         # get all first steps within day range for this user that are type define
-        recent_first_step_ids = (
-            Problem.objects.filter(
-                student__id=student_id,
-                step_problem__created__gte=start_date,
-            )
-            .order_by("step_problem__created")
-            .annotate(first_step_id=Min("step_problem__id"))
-        )
+        recent_problems = Problem.objects.filter(student__id=student_id, step__created__gte=start_date).distinct("id")
 
         problems_per_date = {}
-        for p in recent_first_step_ids:
-            first_step = Step.objects.get(id=p.first_step_id)
+        for p in recent_problems:
+            first_step = Step.objects.filter(problem_id=p.id).order_by("created").first()
+            date_string = first_step.created.strftime('"%b %-d, %Y"')
             mistakes = Step.get_mistakes(first_step)
             if mistakes[0] == Mistake.NONE and mistakes[1] == Mistake.NONE:
-                if first_step.created in problems_per_date:
-                    problems_per_date += 1
+                if date_string in problems_per_date:
+                    problems_per_date[date_string] += 1
                 else:
-                    problems_per_date[first_step.created] = 1
+                    problems_per_date[date_string] = 1
 
         return problems_per_date
 
@@ -579,7 +573,7 @@ class Step(models.Model):
         (NONE, "None"),
     ]
 
-    problem = models.ForeignKey(Problem, related_name="step_problem", on_delete=models.CASCADE, default=None)
+    problem = models.ForeignKey(Problem, related_name="step", on_delete=models.CASCADE, default=None)
     created = models.DateTimeField(auto_now_add=True)
     step_type = models.CharField(max_length=10, choices=STEP_TYPES, default=NONE)
     test_count = models.PositiveSmallIntegerField(default=0)
@@ -740,24 +734,25 @@ class Step(models.Model):
         return mistakes
 
     @classmethod
-    def get_recent_new_by_date(cls, student_id, day_range):
+    def get_recent_by_date(cls, student_id, day_range):
         start_date = timezone.make_aware(
             datetime.now() - timedelta(days=day_range), timezone.get_current_timezone(), True
         )
 
         # get all steps created within day range for this user that are not type define
-        recent_first_steps = (
+        recent_steps = (
             Step.objects.filter(problem__student__id=student_id, created__gte=start_date)
-            .exclude(Q(step_type=Step.DEFINE) | Q(left_expr__latex="") | Q(right_expr__latex=""))
+            .exclude(Q(left_expr__latex="") | Q(right_expr__latex=""))
             .order_by("created")
         )
 
         steps_per_date = {}
-        for s in recent_first_steps:
-            if s.created in steps_per_date:
-                steps_per_date += 1
+        for s in recent_steps:
+            date_string = s.created.strftime('"%b %-d, %Y"')
+            if date_string in steps_per_date:
+                steps_per_date[date_string] += 1
             else:
-                steps_per_date[s.created] = 1
+                steps_per_date[date_string] = 1
 
         return steps_per_date
 

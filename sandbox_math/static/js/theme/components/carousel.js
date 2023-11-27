@@ -3,7 +3,7 @@
  * @requires https://github.com/nolimits4web/swiper
  */
 
-const carousel = (() => {
+export default (() => {
   // forEach function
   const forEach = (array, callback, scope) => {
     for (let i = 0; i < array.length; i++) {
@@ -35,33 +35,35 @@ const carousel = (() => {
       });
     }
 
-    const swiper = new Swiper(value, options);
+    const swiper = new Swiper(value, options); // eslint-disable-line no-undef
 
     // Controlled slider
     if (options.controlledSlider) {
-      let controlledSlider = document.querySelector(options.controlledSlider),
-        controlledSliderOptions;
+      const controlledSlider = document.querySelector(options.controlledSlider);
+      let controlledSliderOptions;
+
       if (controlledSlider.dataset.swiperOptions != undefined)
         controlledSliderOptions = JSON.parse(
           controlledSlider.dataset.swiperOptions,
         );
-
-      var swiperControlled = new Swiper(
+      /* eslint-disable no-undef */
+      const swiperControlled = new Swiper(
         controlledSlider,
         controlledSliderOptions,
       );
+      /* eslint-enable no-undef */
       swiper.controller.control = swiperControlled;
     }
 
     // Binded content
     if (options.bindedContent) {
       swiper.on('activeIndexChange', (e) => {
-        let targetItem = document.querySelector(
-            e.slides[e.activeIndex].dataset.swiperBinded,
-          ),
-          previousItem = document.querySelector(
-            e.slides[e.previousIndex].dataset.swiperBinded,
-          );
+        const targetItem = document.querySelector(
+          e.slides[e.activeIndex].dataset.swiperBinded,
+        );
+        const previousItem = document.querySelector(
+          e.slides[e.previousIndex].dataset.swiperBinded,
+        );
 
         previousItem.classList.remove('active');
         targetItem.classList.add('active');
@@ -69,5 +71,3 @@ const carousel = (() => {
     }
   });
 })();
-
-export default carousel;

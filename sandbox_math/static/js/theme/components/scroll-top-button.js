@@ -2,25 +2,25 @@
  * Animate scroll to top button in/off view
  */
 
-const scrollTopButton = (() => {
-  let button = document.querySelector('.btn-scroll-top'),
-    scrollOffset = 450;
+export default (() => {
+  const button = document.querySelector('.btn-scroll-top');
+  const scrollOffset = 450;
 
   if (button == null) return;
 
-  let offsetFromTop = parseInt(scrollOffset, 10),
-    progress = button.querySelector('svg circle'),
-    length = progress.getTotalLength();
+  const offsetFromTop = parseInt(scrollOffset, 10);
+  const progress = button.querySelector('svg circle');
+  const length = progress.getTotalLength();
 
   progress.style.strokeDasharray = length;
   progress.style.strokeDashoffset = length;
 
   const showProgress = () => {
-    let scrollPercent =
-        (document.body.scrollTop + document.documentElement.scrollTop) /
-        (document.documentElement.scrollHeight -
-          document.documentElement.clientHeight),
-      draw = length * scrollPercent;
+    const scrollPercent =
+      (document.body.scrollTop + document.documentElement.scrollTop) /
+      (document.documentElement.scrollHeight -
+        document.documentElement.clientHeight);
+    const draw = length * scrollPercent;
     progress.style.strokeDashoffset = length - draw;
   };
 
@@ -34,5 +34,3 @@ const scrollTopButton = (() => {
     showProgress();
   });
 })();
-
-export default scrollTopButton;

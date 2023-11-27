@@ -1,8 +1,13 @@
+from datetime import datetime, timedelta
+
+from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
+from django.db.models import Count
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, RedirectView, UpdateView
 from guest_user.functions import is_guest_user
@@ -181,7 +186,54 @@ class UserActivityInfoView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context["hello"] = "howdy!"
+        context["chart_title"] = "Activity per Day All Time"
+        activity_per_day = {}
+        date_dict = {"Problems Started": 0, "Steps Added": 0, "Rewrite Checks": 0, "Solution Checks": 0}
+        label_model_dict = {
+            "Problems Started": "Problem",
+            "Steps Added": "Step",
+            "Rewrite Checks": "CheckRewrite",
+            "Solution Checks": "CheckSolution",
+        }
+
+        context["data_labels"] = []
+        user_obj = User.objects.get(id=self.request.user.id)
+        if user_obj:
+            next_date = user_obj.date_joined
+            today = timezone.make_aware(datetime.now())
+            time_since_joining = today - user_obj.date_joined
+            while next_date < today:
+                date_string = next_date.strftime('"%b %-d, %Y"')
+                activity_per_day[date_string] = date_dict.copy()
+
+                next_date += timedelta(days=1)
+
+            # then put the activity dict into context variables that i can inject into my template
+            for d in activity_per_day:
+                if not len(context["data_labels"]) or d.startswith("Jan 1"):
+                    context["data_labels"].append(d)
+                else:
+                    context["data_labels"].append(f'{d.split(",")[0]}"')
+
+            count = 0
+            for label in date_dict:
+                count += 1
+                context[f"dataset_{count}_label"] = label
+                label_model = apps.get_model("algebra", label_model_dict[label])
+                if label in ["Problems Started", "Steps Added"]:
+                    count_by_date = label_model.get_recent_by_date(self.request.user.id, time_since_joining.days)
+                else:
+                    count_by_date = label_model.get_recent_by_date(
+                        label_model_dict[label], self.request.user.id, time_since_joining.days
+                    )
+
+                for d in count_by_date:
+                    if d in activity_per_day:
+                        activity_per_day[d][label] = count_by_date[d]
+
+                context[f"dataset_{count}_data"] = []
+                for d in activity_per_day:
+                    context[f"dataset_{count}_data"].append(activity_per_day[d][label])
 
         return context
 
@@ -210,7 +262,66 @@ class UserMistakesInfoView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context["hello"] = "howdy!"
+        context["bar_chart_title"] = "Mistakes per Day All Time"
+        context["pie_chart_title"] = "Most Common Mistakes All Time"
+
+        # get count of mistakes made found and fixed per day
+        date_dict = {"Mistakes Made": 0, "Mistakes Found": 0, "Mistakes Fixed": 0}
+
+        date_list = []
+        context["data_labels"] = []
+        user_obj = User.objects.get(id=self.request.user.id)
+        if user_obj:
+            next_date = user_obj.date_joined
+            today = timezone.make_aware(datetime.now())
+            time_since_joining = today - user_obj.date_joined
+            while next_date < today:
+                date_string = next_date.strftime('"%b %-d, %Y"')
+                date_list.append(date_string)
+                next_date += timedelta(days=1)
+
+            for d in date_list:
+                if not len(context["data_labels"]) or d.startswith("Jan 1"):
+                    context["data_labels"].append(d)
+                else:
+                    context["data_labels"].append(f'{d.split(",")[0]}"')
+
+            count = 0
+            mistake_model = apps.get_model("users", "Mistake")
+            count_by_date = mistake_model.get_recent_by_date(self.request.user.id, time_since_joining.days)
+
+            for label in date_dict:
+                count += 1
+                context[f"dataset_{count}_label"] = label
+
+                context[f"dataset_{count}_data"] = []
+                for d in date_list:
+                    if d in count_by_date:
+                        context[f"dataset_{count}_data"].append(count_by_date[d][label])
+                    else:
+                        context[f"dataset_{count}_data"].append(0)
+
+            mistakes_by_type = (
+                mistake_model.objects.exclude(mistake_type=mistake_model.NONE)
+                .values("mistake_type")
+                .annotate(type_count=Count("mistake_type"))
+                .order_by("-type_count")
+            )
+            other_sum = 0
+            count = 0
+            context["pie_labels"] = []
+            context["pie_data"] = []
+            for m_dict in mistakes_by_type:
+                if m_dict["type_count"] > 0:
+                    if count < 9:
+                        context["pie_labels"].append(f'"{mistake_model.get_mistake_message(m_dict["mistake_type"])}"')
+                        context["pie_data"].append(m_dict["type_count"])
+                    else:
+                        if count == 9:
+                            context["pie_labels"].append('"Other"')
+                        other_sum += m_dict["type_count"]
+                    count += 1
+            context["pie_data"].append(other_sum)
 
         return context
 

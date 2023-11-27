@@ -4,15 +4,15 @@
  * @requires https://popper.js.org/
  */
 
-const tooltip = (() => {
-  let tooltipTriggerList = [].slice.call(
-    document.querySelectorAll('[data-bs-toggle="tooltip"]'),
+export default (() => {
+  const tooltipTriggerList = document.querySelectorAll(
+    '[data-bs-toggle="tooltip"]',
   );
 
-  let tooltipList = tooltipTriggerList.map(
+  /* eslint-disable no-unused-vars, no-undef */
+  const tooltipList = [...tooltipTriggerList].map(
     (tooltipTriggerEl) =>
       new bootstrap.Tooltip(tooltipTriggerEl, { trigger: 'hover' }),
   );
+  /* eslint-enable no-unused-vars, no-undef */
 })();
-
-export default tooltip;

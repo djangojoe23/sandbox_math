@@ -4,12 +4,10 @@
  * @requires https://github.com/michalsnik/aos
  */
 
-const animateOnscroll = (() => {
-  let animationToggle = document.querySelector('[data-aos]');
+export default (() => {
+  const animationToggle = document.querySelector('[data-aos]');
 
   if (animationToggle === null) return;
 
-  AOS.init();
+  AOS.init(); // eslint-disable-line no-undef
 })();
-
-export default animateOnscroll;

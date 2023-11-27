@@ -2,16 +2,18 @@
  * Form validation
  */
 
-const formValidation = (() => {
+export default (() => {
   const selector = 'needs-validation';
 
   window.addEventListener(
     'load',
     () => {
       // Fetch all the forms we want to apply custom Bootstrap validation styles to
-      let forms = document.getElementsByClassName(selector);
+      const forms = document.getElementsByClassName(selector);
       // Loop over them and prevent submission
-      let validation = Array.prototype.filter.call(forms, (form) => {
+
+      /* eslint-disable no-unused-vars */
+      const validation = Array.prototype.filter.call(forms, (form) => {
         form.addEventListener(
           'submit',
           (e) => {
@@ -24,9 +26,8 @@ const formValidation = (() => {
           false,
         );
       });
+      /* eslint-enable no-unused-vars */
     },
     false,
   );
 })();
-
-export default formValidation;

@@ -6,10 +6,137 @@
 {% block inner %}
   <div class="col-lg-9 pt-4 pb-2 pb-sm-4">
     <div class="d-sm-flex align-items-center mb-4">
-      <h1 class="h2 mb-4 mb-sm-0 me-4">{{ hello }}</h1>
-      stacked bar chart mistakes per day/found per day/fixed per day
-      pie chart of most common mistakes
+      <h1 class="h2 mb-4 mb-sm-0 me-4"></h1>
     </div>
-  </div>
+     <section class="card border-0 py-1 p-md-2 p-xl-3 p-xxl-4 mb-4">
+        <div class="card-body">
+          <div class="d-flex align-items-center mt-sm-n1 pb-4 mb-0 mb-lg-1 mb-xl-3">
+            <h2 class="h4 mb-0">{{ bar_chart_title }}</h2>
+          </div>
+          <div>
+            <canvas data-chart='{
+              "type": "bar",
+              "data": {
+                "labels": [{{ data_labels|safeseq|join:','}}],
+                "datasets": [
+                  {
+                    "label": "{{ dataset_1_label }}",
+                    "data": {{ dataset_1_data}},
+                    "borderWidth": 2,
+                    "borderColor": "#448c74",
+                    "backgroundColor": "rgba(68,140,116,.35)",
+                    "hoverBackgroundColor": "rgba(68,140,116,.75)"
+                  },
+                  {
+                    "label": "{{ dataset_2_label }}",
+                    "data": {{ dataset_2_data}},
+                    "borderWidth": 2,
+                    "borderColor": "#edcb50",
+                    "backgroundColor": "rgba(237,203,80,.35)",
+                    "hoverBackgroundColor": "rgba(237,203,80,.75)"
+                  },
+                  {
+                    "label": "{{ dataset_3_label }}",
+                    "data": {{ dataset_3_data}},
+                    "borderWidth": 2,
+                    "borderColor": "#3f7fca",
+                    "backgroundColor": "rgba(63,127,202,.35)",
+                    "hoverBackgroundColor": "rgba(63,127,202,.75)"
+                  }
+                ]
+              },
+              "options": {
+                "scales": {
+                  "y": {
+                    "stacked": true,
+                    "beginAtZero": true,
+                    "border": {
+                      "color": "rgba(133,140,151,.18)"
+                    },
+                    "grid": {
+                      "color": "rgba(133,140,151,.18)"
+                    }
+                  },
+                  "x": {
+                    "stacked": true,
+                    "border": {
+                      "color": "rgba(133,140,151,.18)"
+                    },
+                    "grid": {
+                      "color": "rgba(133,140,151,.18)"
+                    }
+                  }
+                }
+              }
+            }'></canvas>
 
+          </div>
+        </div>
+
+     <div class="card-body">
+        <div class="d-flex align-items-center mt-sm-n1 pb-4 mb-0 mb-lg-1 mb-xl-3">
+          <h2 class="h4 mb-0">{{ pie_chart_title}}</h2>
+        </div>
+        <div>
+          <!-- Pie chart: Multiple slices of different color + Legend -->
+          <canvas data-chart='{
+            "type": "pie",
+            "data": {
+              "labels": [{{ pie_labels|safeseq|join:','}}],
+              "datasets": [
+                {
+                  "label": "Total: ",
+                  "data": {{ pie_data}},
+                  "borderWidth": 0,
+                  "backgroundColor": [
+                    "#74a198",
+                    "#235960",
+                    "#ffa07a",
+                    "#ffd700",
+                    "#7f7f7f",
+                    "#6a5acd",
+                    "#ff6347",
+                    "#32cd32",
+                    "#ff8c00",
+                    "#9370db"
+                  ],
+                  "hoverBackgroundColor": [
+                    "#74a198",
+                    "#235960",
+                    "#ffa07a",
+                    "#ffd700",
+                    "#7f7f7f",
+                    "#6a5acd",
+                    "#ff6347",
+                    "#32cd32",
+                    "#ff8c00",
+                    "#9370db"
+                  ]
+                }
+              ]
+            },
+            "options": {
+              "plugins": {
+                "legend": {
+                  "position": "top",
+                  "labels": {
+                    "usePointStyle": true,
+                    "boxWidth": 12,
+                    "boxHeight": 12,
+                    "useBorderRadius": true,
+                    "borderRadius": 8,
+                    "padding": 20,
+                    "font": {
+                      "size": 15
+                    }
+                  }
+                }
+              }
+            }
+          }'></canvas>
+        </div>
+      </div>
+
+     </section>
+  </div>
 {% endblock inner %}

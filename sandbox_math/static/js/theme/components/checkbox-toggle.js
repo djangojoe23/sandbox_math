@@ -2,7 +2,7 @@
  * Toggle that checkes / unchecks all target checkboxes at once
  */
 
-const checkboxToggle = (() => {
+export default (() => {
   const toggler = document.querySelectorAll('[data-bs-toggle="checkbox"]');
 
   if (toggler.length === 0) return;
@@ -32,5 +32,3 @@ const checkboxToggle = (() => {
     });
   }
 })();
-
-export default checkboxToggle;

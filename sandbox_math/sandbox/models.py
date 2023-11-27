@@ -289,6 +289,7 @@ class CheckAlgebra(models.Model):
         )
 
         # get all steps created within day range for this user that are not type define
+        recent_checks = None
         if check_process_class_name == "CheckRewrite":
             recent_checks = check_model.objects.filter(
                 problem__student__id=student_id,
@@ -311,9 +312,10 @@ class CheckAlgebra(models.Model):
 
         checks_per_date = {}
         for c in recent_checks:
-            if c.start_time in checks_per_date:
-                checks_per_date += 1
+            date_string = c.start_time.strftime('"%b %-d, %Y"')
+            if date_string in checks_per_date:
+                checks_per_date[date_string] += 1
             else:
-                checks_per_date[c.start_time] = 1
+                checks_per_date[date_string] = 1
 
         return checks_per_date

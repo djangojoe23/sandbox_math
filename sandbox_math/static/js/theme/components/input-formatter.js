@@ -3,8 +3,8 @@
  * @requires https://github.com/nosir/cleave.js
  */
 
-const inputFormatter = (() => {
-  let input = document.querySelectorAll('[data-format]');
+export default (() => {
+  const input = document.querySelectorAll('[data-format]');
   if (input.length === 0) return;
 
   for (let i = 0; i < input.length; i++) {
@@ -15,6 +15,7 @@ const inputFormatter = (() => {
     if (targetInput.dataset.format != undefined)
       options = JSON.parse(targetInput.dataset.format);
 
+    /* eslint-disable no-unused-vars, no-undef */
     if (cardIcon) {
       formatter = new Cleave(targetInput, {
         ...options,
@@ -25,7 +26,6 @@ const inputFormatter = (() => {
     } else {
       formatter = new Cleave(targetInput, options);
     }
+    /* eslint-enable no-unused-vars, no-undef */
   }
 })();
-
-export default inputFormatter;

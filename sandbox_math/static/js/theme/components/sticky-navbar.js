@@ -2,25 +2,19 @@
  * Add solid background to fixed to top navigation bar
  */
 
-const stickyNavbar = (() => {
-  let navbar = document.querySelector('.navbar.fixed-top');
+export default (() => {
+  const navbar = document.querySelector('.navbar.fixed-top');
 
   if (navbar == null) return;
 
-  let navbarClass = navbar.classList,
-    scrollOffset = 20;
+  const navbarClass = navbar.classList;
+  const scrollOffset = 20;
 
   const navbarStuck = (e) => {
     if (e.currentTarget.pageYOffset > scrollOffset) {
-      navbar.classList.add('navbar-stuck');
-      if (navbar.classList.contains('navbar-ignore-dark-mode')) {
-        navbar.classList.remove('ignore-dark-mode');
-      }
+      navbarClass.add('navbar-stuck');
     } else {
-      navbar.classList.remove('navbar-stuck');
-      if (navbar.classList.contains('navbar-ignore-dark-mode')) {
-        navbar.classList.add('ignore-dark-mode');
-      }
+      navbarClass.remove('navbar-stuck');
     }
   };
 
@@ -34,5 +28,3 @@ const stickyNavbar = (() => {
     navbarStuck(e);
   });
 })();
-
-export default stickyNavbar;

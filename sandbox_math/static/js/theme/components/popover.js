@@ -4,14 +4,14 @@
  * @requires https://popper.js.org/
  */
 
-const popover = (() => {
-  let popoverTriggerList = [].slice.call(
-    document.querySelectorAll('[data-bs-toggle="popover"]'),
+export default (() => {
+  const popoverTriggerList = document.querySelectorAll(
+    '[data-bs-toggle="popover"]',
   );
 
-  let popoverList = popoverTriggerList.map(
+  /* eslint-disable no-unused-vars, no-undef */
+  const popoverList = [...popoverTriggerList].map(
     (popoverTriggerEl) => new bootstrap.Popover(popoverTriggerEl),
   );
+  /* eslint-enable no-unused-vars, no-undef */
 })();
-
-export default popover;

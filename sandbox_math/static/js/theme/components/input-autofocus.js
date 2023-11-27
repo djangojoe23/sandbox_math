@@ -3,20 +3,18 @@
  *
  */
 
-const inputAutoFocus = (() => {
-  let targetInput = document.querySelectorAll('[data-focus-on-open]');
+export default (() => {
+  const targetInput = document.querySelectorAll('[data-focus-on-open]');
 
   if (targetInput === null) return;
 
   for (let i = 0; i < targetInput.length; i++) {
-    let toggler = JSON.parse(targetInput[i].dataset.focusOnOpen);
+    const toggler = JSON.parse(targetInput[i].dataset.focusOnOpen);
 
     document
       .querySelector(toggler[1])
-      .addEventListener(`shown.bs.${toggler[0]}`, (e) => {
+      .addEventListener(`shown.bs.${toggler[0]}`, () => {
         targetInput[i].focus();
       });
   }
 })();
-
-export default inputAutoFocus;

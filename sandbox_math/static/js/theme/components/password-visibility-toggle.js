@@ -2,12 +2,12 @@
  * Toggling password visibility in password input
  */
 
-const passwordVisibilityToggle = (() => {
-  let elements = document.querySelectorAll('.password-toggle');
+export default (() => {
+  const elements = document.querySelectorAll('.password-toggle');
 
   for (let i = 0; i < elements.length; i++) {
-    let passInput = elements[i].querySelector('.form-control'),
-      passToggle = elements[i].querySelector('.password-toggle-btn');
+    const passInput = elements[i].querySelector('.form-control');
+    const passToggle = elements[i].querySelector('.password-toggle-btn');
 
     passToggle.addEventListener(
       'click',
@@ -23,5 +23,3 @@ const passwordVisibilityToggle = (() => {
     );
   }
 })();
-
-export default passwordVisibilityToggle;

@@ -48,7 +48,7 @@ class User(AbstractUser):
         checkrewrite_model = apps.get_model("algebra", "CheckRewrite")
         checksolution_model = apps.get_model("algebra", "CheckSolution")
 
-        new_problems = problem_model.get_recent_new_by_date(student_id, days_prior)
+        new_problems = problem_model.get_recent_by_date(student_id, days_prior)
         activity_context = {}
         activity_score = 0
         activity_max = 12
@@ -69,7 +69,7 @@ class User(AbstractUser):
                 ] = f"You started at least {days_prior-2} new problems in the past {days_prior} days. Don't let up!"
                 activity_score += 2
 
-        new_steps = step_model.get_recent_new_by_date(student_id, days_prior)
+        new_steps = step_model.get_recent_by_date(student_id, days_prior)
         days_with_enough_new_steps = len([s for s in new_steps.values() if s >= 3])
         if days_with_enough_new_steps < days_prior - 2:
             if sum(new_steps.values()) / days_prior >= 3:
@@ -271,44 +271,49 @@ class User(AbstractUser):
             datetime.now() - timedelta(days=days_prior), timezone.get_current_timezone(), True
         )
 
-        all_problems_started = problem_model.objects.filter(student_id=student_id)
-        all_problems_with_recent_steps = (
-            all_problems_started.filter(step_problem__created__gte=start_date).values("id").distinct()
-        )
-
-        all_problems_recently_started = []
-        for p in all_problems_with_recent_steps:
-            first_step = step_model.objects.filter(problem_id=p["id"]).order_by("created").first()
-            if first_step.created >= start_date:
-                all_problems_recently_started.append(first_step.problem)
-
-        all_problems_solved_count = (
-            checksolution_model.objects.filter(problem__in=all_problems_started)
-            .exclude(problem_solved__in=[checksolution_model.NOT_SOLVED, checksolution_model.INCOMPLETE])
-            .count()
-        )
-        solved_rate = all_problems_solved_count / all_problems_started.count()
-
-        all_problems_recently_solved_count = (
-            checksolution_model.objects.filter(problem__in=all_problems_recently_started)
-            .exclude(problem_solved__in=[checksolution_model.NOT_SOLVED, checksolution_model.INCOMPLETE])
-            .count()
-        )
-        recently_solved_rate = all_problems_recently_solved_count / len(all_problems_recently_started)
-
         solved_context = {}
-        # If recently solved rate is higher than all time solved rate then message is good
-        if recently_solved_rate > solved_rate:
-            solved_context["solved_rate_status"] = "better"
-        elif recently_solved_rate < solved_rate:
-            solved_context["solved_rate_status"] = "worse"
-        else:
-            solved_context["solved_rate_status"] = "same"
-
+        all_problems_started = problem_model.objects.filter(student_id=student_id)
         solved_context["problems_started"] = all_problems_started.count()
-        solved_context["problems_solved"] = all_problems_solved_count
-        solved_context["recently_started"] = len(all_problems_recently_started)
-        solved_context["recently_solved"] = all_problems_recently_solved_count
+        solved_context["solved_rate_status"] = "same"
+        solved_context["problems_solved"] = 0
+        solved_context["recently_started"] = 0
+        solved_context["recently_solved"] = 0
+        if solved_context["problems_started"]:
+            all_problems_with_recent_steps = (
+                all_problems_started.filter(step__created__gte=start_date).values("id").distinct()
+            )
+
+            all_problems_recently_started = []
+            for p in all_problems_with_recent_steps:
+                first_step = step_model.objects.filter(problem_id=p["id"]).order_by("created").first()
+                if first_step.created >= start_date:
+                    all_problems_recently_started.append(first_step.problem)
+
+            all_problems_solved_count = (
+                checksolution_model.objects.filter(problem__in=all_problems_started)
+                .exclude(problem_solved__in=[checksolution_model.NOT_SOLVED, checksolution_model.INCOMPLETE])
+                .count()
+            )
+            solved_rate = all_problems_solved_count / all_problems_started.count()
+
+            all_problems_recently_solved_count = (
+                checksolution_model.objects.filter(problem__in=all_problems_recently_started)
+                .exclude(problem_solved__in=[checksolution_model.NOT_SOLVED, checksolution_model.INCOMPLETE])
+                .count()
+            )
+            recently_solved_rate = all_problems_recently_solved_count / len(all_problems_recently_started)
+
+            # If recently solved rate is higher than all time solved rate then message is good
+            if recently_solved_rate > solved_rate:
+                solved_context["solved_rate_status"] = "better"
+            elif recently_solved_rate < solved_rate:
+                solved_context["solved_rate_status"] = "worse"
+            else:
+                solved_context["solved_rate_status"] = "same"
+
+            solved_context["problems_solved"] = all_problems_solved_count
+            solved_context["recently_started"] = len(all_problems_recently_started)
+            solved_context["recently_solved"] = all_problems_recently_solved_count
 
         return solved_context
 
@@ -389,11 +394,11 @@ class Mistake(models.Model):
         (NO_EQUATION, "Use the dropdown in the first step to define an equation."),
         (
             NONLINEAR,
-            "Please make sure the equation you defined in the first step is linear.",
+            "Make sure the equation you defined in the first step is linear.",
         ),
         (
             NO_VAR,
-            "Please provide a variable to solve in the equation in the first step.",
+            "Provide a variable to solve in the equation in the first step.",
         ),
         (
             NO_VAR_SELECTED,
@@ -416,33 +421,33 @@ class Mistake(models.Model):
         (NO_ARITHMETIC, "Do some arithmetic to this expression."),
         (
             MISSING_PREV_EXPR,
-            "Please copy the previous step's expression and then do arithmetic to it.",
+            "Copy the expression from the previous step and then do arithmetic to it.",
         ),
         (
             MISSING_PARENS,
-            "Please use parentheses to do arithmetic to the entire expression.",
+            "Use parentheses to do arithmetic to the entire expression.",
         ),
         (NON_MATH, "This isn't an expression that makes sense in this context."),
         (
             GREY_BOX,
-            "Please remove the grey box from the expression or enter something in it.",
+            "Remove the grey box from the expression or enter something in it.",
         ),
         (ALREADY_DEFINED, "The equation was already defined in the first step."),
         (
             UNKNOWN_SYM,
-            "Please remove the symbol in this expression that has no meaning in this context.",
+            "Remove the symbol in this expression that has no meaning in this context.",
         ),
         (
             CANNOT_REWRITE,
-            "Fix the expression in the previous step so it makes sense, then try to rewrite it.",
+            "Fix the expression in the previous step so it makes sense then try to rewrite it.",
         ),
         (TOO_LONG, "This expression has too many characters in it and cannot be saved. Shorten it!"),
         (NONE, "This expression is correct at this step."),
         (ALREADY_INCORRECT, "Trying to check rewrite or answer already proven to be wrong."),
-        (INVALID_EXPR, "Trying to check expression that isn't valid."),
+        (INVALID_EXPR, "Trying to check expression that is not valid."),
         (CHOOSE_VALUE, "Mistake made while choosing a value to substitute in for a variable."),
-        (SUB_EXPR1, "Mistake made while substituting into the first expression"),
-        (SUB_EXPR2, "Mistake made while substituting into the second expression"),
+        (SUB_EXPR1, "Mistake made while substituting a value in for a variable."),
+        (SUB_EXPR2, "Mistake made while substituting a value in for a variable."),
     ]
 
     owner = models.ForeignKey(AUTH_USER_MODEL, related_name="owner", on_delete=models.CASCADE)
@@ -477,3 +482,75 @@ class Mistake(models.Model):
             if m[0] == mistake_type:
                 return m[1]
         return None
+
+    @classmethod
+    def get_recent_by_date(cls, student_id, day_range):
+        # mistake status in ['Mistakes Made', 'Mistakes Found', 'Mistakes Fixed']
+        start_date = timezone.make_aware(
+            datetime.now() - timedelta(days=day_range), timezone.get_current_timezone(), True
+        )
+
+        all_mistakes = (
+            Mistake.objects.filter(owner_id=student_id, mistake_time__gte=start_date)
+            .exclude(mistake_event_type=Mistake.HELP_CLICK, mistake_type=Mistake.NONE)
+            .order_by("mistake_time")
+        )
+
+        mistakes_per_date = {}
+        mistake_dict = {"Mistakes Made": 0, "Mistakes Found": 0, "Mistakes Fixed": 0}
+        for m in all_mistakes:
+            date_string = m.mistake_time.strftime('"%b %-d, %Y"')
+            if date_string in mistakes_per_date:
+                mistakes_per_date[date_string]["Mistakes Made"] += 1
+            else:
+                mistakes_per_date[date_string] = mistake_dict.copy()
+                mistakes_per_date[date_string]["Mistakes Made"] = 1
+
+        # need to get mistakes found
+        all_help_clicks = (
+            Mistake.objects.filter(owner_id=student_id, mistake_event_type=Mistake.HELP_CLICK)
+            .exclude(mistake_type=Mistake.NONE)
+            .order_by("mistake_time")
+        )
+        for m in all_help_clicks:
+            date_string = m.mistake_time.strftime('"%b %-d, %Y"')
+            if date_string in mistakes_per_date:
+                mistakes_per_date[date_string]["Mistakes Found"] += 1
+            else:
+                mistakes_per_date[date_string] = mistake_dict.copy()
+                mistakes_per_date[date_string]["Mistakes Found"] = 1
+
+        check_rewrite_model = apps.get_model("algebra", "CheckRewrite")
+        all_check_rewrites = check_rewrite_model.objects.filter(
+            problem__student_id=student_id, are_equivalent=False
+        ).order_by("end_time")
+        for m in all_check_rewrites:
+            date_string = m.end_time.strftime('"%b %-d, %Y"')
+            if date_string in mistakes_per_date:
+                mistakes_per_date[date_string]["Mistakes Found"] += 1
+            else:
+                mistakes_per_date[date_string] = mistake_dict.copy()
+                mistakes_per_date[date_string]["Mistakes Found"] = 1
+
+        check_solution_model = apps.get_model("algebra", "CheckSolution")
+        all_check_solutions = check_solution_model.objects.filter(
+            problem__student_id=student_id, problem_solved=check_solution_model.NOT_SOLVED
+        ).order_by("end_time")
+        for m in all_check_solutions:
+            date_string = m.end_time.strftime('"%b %-d, %Y"')
+            if date_string in mistakes_per_date:
+                mistakes_per_date[date_string]["Mistakes Found"] += 1
+            else:
+                mistakes_per_date[date_string] = mistake_dict.copy()
+                mistakes_per_date[date_string]["Mistakes Found"] = 1
+
+        all_mistakes_fixed = all_mistakes.filter(is_fixed=True).order_by("mistake_time")
+        for m in all_mistakes_fixed:
+            date_string = m.mistake_time.strftime('"%b %-d, %Y"')
+            if date_string in mistakes_per_date:
+                mistakes_per_date[date_string]["Mistakes Fixed"] += 1
+            else:
+                mistakes_per_date[date_string] = mistake_dict.copy()
+                mistakes_per_date[date_string]["Mistakes Fixed"] = 1
+
+        return mistakes_per_date

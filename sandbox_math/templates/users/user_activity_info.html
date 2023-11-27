@@ -5,80 +5,86 @@
 {% block title %}{{ object.username }} - Activity Info{% endblock %}
 
 {% block inner %}
-{#  <div class="col-lg-9 pt-4 pb-2 pb-sm-4">#}
-{#    <div class="d-sm-flex align-items-center mb-4">#}
-{#      <h1 class="h2 mb-4 mb-sm-0 me-4">{{ hello }}</h1>#}
-{#      stacked bar chart of problems started per day/steps per day/check rewrites per day/check solutions per day#}
-{#    </div>#}
-{#  </div>#}
+  <div class="col-lg-9 pt-4 pb-2 pb-sm-4">
+    <div class="d-sm-flex align-items-center mb-4">
+      <h1 class="h2 mb-4 mb-sm-0 me-4"></h1>
+    </div>
+     <section class="card border-0 py-1 p-md-2 p-xl-3 p-xxl-4 mb-4">
+        <div class="card-body">
+          <div class="d-flex align-items-center mt-sm-n1 pb-4 mb-0 mb-lg-1 mb-xl-3">
+            <h2 class="h4 mb-0">{{ chart_title }}</h2>
+          </div>
+          <div>
+            <canvas data-chart='{
+              "type": "bar",
+              "data": {
+                "labels": [{{ data_labels|safeseq|join:','}}],
+                "datasets": [
+                  {
+                    "label": "{{ dataset_1_label }}",
+                    "data": {{ dataset_1_data}},
+                    "borderWidth": 2,
+                    "borderColor": "#448c74",
+                    "backgroundColor": "rgba(68,140,116,.35)",
+                    "hoverBackgroundColor": "rgba(68,140,116,.75)"
+                  },
+                  {
+                    "label": "{{ dataset_2_label }}",
+                    "data": {{ dataset_2_data}},
+                    "borderWidth": 2,
+                    "borderColor": "#edcb50",
+                    "backgroundColor": "rgba(237,203,80,.35)",
+                    "hoverBackgroundColor": "rgba(237,203,80,.75)"
+                  },
+                  {
+                    "label": "{{ dataset_3_label }}",
+                    "data": {{ dataset_3_data}},
+                    "borderWidth": 2,
+                    "borderColor": "#3f7fca",
+                    "backgroundColor": "rgba(63,127,202,.35)",
+                    "hoverBackgroundColor": "rgba(63,127,202,.75)"
+                  },
+                  {
+                    "label": "{{ dataset_4_label }}",
+                    "data": {{ dataset_4_data}},
+                    "borderWidth": 2,
+                    "borderColor": "#ed5050",
+                    "backgroundColor": "rgba(237,80,80,.35)",
+                    "hoverBackgroundColor": "rgba(237,80,80,.75)"
+                  }
+                ]
+              },
+              "options": {
+                "scales": {
+                  "y": {
+                    "stacked": true,
+                    "beginAtZero": true,
+                    "border": {
+                      "color": "rgba(133,140,151,.18)"
+                    },
+                    "grid": {
+                      "color": "rgba(133,140,151,.18)"
+                    }
+                  },
+                  "x": {
+                    "stacked": true,
+                    "border": {
+                      "color": "rgba(133,140,151,.18)"
+                    },
+                    "grid": {
+                      "color": "rgba(133,140,151,.18)"
+                    }
+                  }
+                }
+              }
+            }'></canvas>
+          </div>
+        </div>
+     </section>
 
-<div>
-<!-- Line chart: Multiple lines of different color + Legend -->
-<canvas data-chart='{
-  "type": "line",
-  "data": {
-    "labels": ["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9"],
-    "datasets": [
-      {
-        "label": "Dataset 1",
-        "data": [12, 9, 7, 8, 6, 4, 3, 2, 0],
-        "backgroundColor": "rgba(68,140,116,.35)",
-        "borderWidth": 2,
-        "borderColor": "#448c74",
-        "pointBackgroundColor": "#448c74",
-        "pointBorderWidth": 8,
-        "pointBorderColor": "rgba(68,140,116,.35)",
-        "pointHoverBorderColor": "#448c74",
-        "pointHoverBorderWidth": 6
-      },
-      {
-        "label": "Dataset 2",
-        "data": [2, 1, 3, 7, 9, 6, 7.7, 4, 7],
-        "backgroundColor": "rgba(237,203,80,.35)",
-        "borderWidth": 2,
-        "borderColor": "#edcb50",
-        "pointBackgroundColor": "#edcb50",
-        "pointBorderWidth": 8,
-        "pointBorderColor": "rgba(237,203,80,.35)",
-        "pointHoverBorderColor": "#edcb50",
-        "pointHoverBorderWidth": 6
-      },
-      {
-        "label": "Dataset 2",
-        "data": [1, 3, 4, 5, 6, 8, 9, 10, 11],
-        "backgroundColor": "rgba(237,80,80,.35)",
-        "borderWidth": 2,
-        "borderColor": "#ed5050",
-        "pointBackgroundColor": "#ed5050",
-        "pointBorderWidth": 8,
-        "pointBorderColor": "rgba(237,80,80,.35)",
-        "pointHoverBorderColor": "#ed5050",
-        "pointHoverBorderWidth": 6
-      }
-    ]
-  },
-  "options": {
-    "scales": {
-      "y": {
-        "beginAtZero": true,
-        "border": {
-          "color": "rgba(133,140,151,.18)"
-        },
-        "grid": {
-          "color": "rgba(133,140,151,.18)"
-        }
-      },
-      "x": {
-        "border": {
-          "color": "rgba(133,140,151,.18)"
-        },
-        "grid": {
-          "color": "rgba(133,140,151,.18)"
-        }
-      }
-    }
-  }
-}'></canvas>
-</div>
+
+  </div>
+
+
 
 {% endblock inner %}

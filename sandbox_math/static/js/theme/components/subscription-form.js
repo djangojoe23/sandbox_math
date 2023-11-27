@@ -2,13 +2,13 @@
  * Ajaxify MailChimp subscription form
  */
 
-const subscriptionForm = (() => {
+export default (() => {
   const form = document.querySelectorAll('.subscription-form');
 
   if (form === null) return;
 
   for (let i = 0; i < form.length; i++) {
-    let button = form[i].querySelector('button[type="submit"]'),
+    const button = form[i].querySelector('button[type="submit"]'),
       buttonText = button.innerHTML,
       input = form[i].querySelector('.form-control'),
       antispam = form[i].querySelector('.subscription-form-antispam'),
@@ -21,22 +21,22 @@ const subscriptionForm = (() => {
     });
   }
 
-  let register = (form, button, input, buttonText, status) => {
+  const register = (form, button, input, buttonText, status) => {
     button.innerHTML = 'Sending...';
 
     // Get url for MailChimp
-    let url = form.action.replace('/post?', '/post-json?');
+    const url = form.action.replace('/post?', '/post-json?');
 
     // Add form data to object
-    let data = '&' + input.name + '=' + encodeURIComponent(input.value);
+    const data = '&' + input.name + '=' + encodeURIComponent(input.value);
 
     // Create and add post script to the DOM
-    let script = document.createElement('script');
+    const script = document.createElement('script');
     script.src = url + '&c=callback' + data;
     document.body.appendChild(script);
 
     // Callback function
-    let callback = 'callback';
+    const callback = 'callback';
     window[callback] = (response) => {
       // Remove post script from the DOM
       delete window[callback];
@@ -72,5 +72,3 @@ const subscriptionForm = (() => {
     };
   };
 })();
-
-export default subscriptionForm;
